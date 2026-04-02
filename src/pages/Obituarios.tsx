@@ -60,7 +60,7 @@ const Obituarios = () => {
   // Reset page when search changes
   useEffect(() => setCurrentPage(1), [search]);
 
-  const totalPages = Math.min(Math.ceil(filtered.length / ITEMS_PER_PAGE), MAX_PAGES);
+  const totalPages = Math.max(1, Math.min(Math.ceil(filtered.length / ITEMS_PER_PAGE), MAX_PAGES));
   const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
@@ -200,7 +200,7 @@ const Obituarios = () => {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {filtered.length > 0 && (
             <nav aria-label="Paginación de obituarios" className="mt-12 flex justify-center">
               <div className="inline-flex items-center gap-1 bg-card border border-border/50 rounded-full px-2 py-1.5 shadow-sm">
                 {/* Previous */}
@@ -244,7 +244,7 @@ const Obituarios = () => {
           )}
 
           {/* Page indicator */}
-          {totalPages > 1 && (
+          {filtered.length > 0 && (
             <p className="text-center text-xs text-muted-foreground/60 mt-4">
               Página {currentPage} de {totalPages}
             </p>

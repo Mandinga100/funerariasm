@@ -11,12 +11,12 @@ const CROWN_IMAGES: Record<number, string> = {
   4: crownTier4,
 };
 
-// Per-tier inset to ensure border is hidden but face is visible
+// Per-tier inset calibrated to each crown's inner opening ratio
 const CROWN_INSET: Record<number, string> = {
-  1: "-20%",
-  2: "-18%",
-  3: "-20%",
-  4: "-18%",
+  1: "-15%",  // ~50% inner opening — moderate expansion
+  2: "-14%",  // ~50% inner opening — slightly less
+  3: "-16%",  // ~48% inner opening — bit more expansion
+  4: "-15%",  // ~55% inner opening — moderate
 };
 
 interface Offering {

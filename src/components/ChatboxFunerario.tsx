@@ -68,8 +68,7 @@ const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; l
   },
 };
 
-const ChatboxFunerario = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");
@@ -236,7 +235,7 @@ const ChatboxFunerario = () => {
     }
   };
 
-  if (!isOpen) return null; // Rendered by ChatboxToggle
+  
 
   return (
     <div className="fixed bottom-20 right-5 z-50 w-[360px] max-w-[calc(100vw-40px)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up"
@@ -256,7 +255,7 @@ const ChatboxFunerario = () => {
           </div>
         </div>
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
           className="text-primary-foreground/60 hover:text-primary-foreground transition-brand p-1"
           aria-label="Cerrar chat"
         >

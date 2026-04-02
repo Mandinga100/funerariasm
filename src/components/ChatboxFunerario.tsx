@@ -394,10 +394,22 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           </div>
           <button
             onClick={handleClose}
-            className="text-primary-foreground/60 hover:text-primary-foreground transition-all duration-300 p-1.5 rounded-full hover:bg-primary-foreground/10"
+            className={`relative p-1.5 rounded-full text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-all duration-500 ${
+              isClosing ? "scale-75 rotate-180 opacity-0" : "scale-100 rotate-0 opacity-100"
+            }`}
             aria-label="Cerrar chat"
           >
-            <X className={`w-5 h-5 transition-transform duration-300 ${isClosing ? "rotate-90 scale-75" : ""}`} />
+            <span
+              className={`absolute inset-0 rounded-full border border-primary-foreground/20 transition-all duration-500 ${
+                isClosing ? "scale-150 opacity-0" : "scale-100 opacity-100"
+              }`}
+              aria-hidden="true"
+            />
+            <X
+              className={`relative w-5 h-5 transition-all duration-500 ${
+                isClosing ? "rotate-180 scale-50" : "rotate-0 scale-100"
+              }`}
+            />
           </button>
         </div>
 

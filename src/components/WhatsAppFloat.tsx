@@ -25,25 +25,25 @@ const WhatsAppFloat = () => {
       </button>
 
       {/* Emergency bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-destructive text-destructive-foreground">
-        <div className="container flex items-center justify-center gap-4 py-2.5">
-          <span className="text-xs sm:text-sm font-medium">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary text-primary-foreground">
+        <div className="container flex items-center justify-center gap-3 sm:gap-4 py-2.5">
+          <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
             ¿Necesita ayuda inmediata?
           </span>
           <a
             href="tel:+56964333760"
-            className="group flex items-center gap-1.5 bg-destructive-foreground/20 hover:bg-destructive-foreground/30 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200"
+            className="group flex items-center gap-1.5 bg-gold hover:bg-gold-dark text-primary px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase transition-all duration-200"
           >
-            <Phone className="w-3 h-3 transition-transform duration-200 group-hover:-rotate-12" />
+            <Phone className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-rotate-12" />
             Llamar ahora
           </a>
           <a
             href={buildWhatsAppUrlDirect("URGENTE: Necesito asistencia inmediata por un fallecimiento reciente.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-1.5 bg-accent text-accent-foreground hover:bg-gold-dark px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200"
+            className="group flex items-center gap-1.5 bg-gold hover:bg-gold-dark text-primary px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase transition-all duration-200"
           >
-            <MessageCircle className="w-3 h-3 transition-transform duration-200 group-hover:scale-110" />
+            <MessageCircle className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110" />
             WhatsApp
           </a>
         </div>

@@ -20,10 +20,14 @@ interface Obituary {
   published_at: string | null;
 }
 
+const ITEMS_PER_PAGE = 6;
+const MAX_PAGES = 10;
+
 const Obituarios = () => {
   const [obituaries, setObituaries] = useState<Obituary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     document.title = "Obituarios | Funeraria Santa Margarita";

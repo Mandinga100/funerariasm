@@ -106,7 +106,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         item.type === "candle" ? (
           <div
             key={`candle-${i}`}
-            className="absolute z-[3] pointer-events-none"
+            className="absolute z-[4] pointer-events-none"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,

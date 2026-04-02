@@ -157,6 +157,50 @@ export type Database = {
         }
         Relationships: []
       }
+      memorial_offerings: {
+        Row: {
+          amount: number | null
+          created_at: string
+          crown_tier: number | null
+          donor_message: string | null
+          donor_name: string
+          id: string
+          memorial_id: string
+          offering_type: string
+          payment_status: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          crown_tier?: number | null
+          donor_message?: string | null
+          donor_name?: string
+          id?: string
+          memorial_id: string
+          offering_type: string
+          payment_status?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          crown_tier?: number | null
+          donor_message?: string | null
+          donor_name?: string
+          id?: string
+          memorial_id?: string
+          offering_type?: string
+          payment_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_offerings_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorials: {
         Row: {
           biography: string | null

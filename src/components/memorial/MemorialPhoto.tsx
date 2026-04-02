@@ -13,10 +13,17 @@ const CROWN_IMAGES: Record<number, string> = {
 
 // Per-tier inset calibrated to each crown's inner opening ratio
 const CROWN_INSET: Record<number, string> = {
-  1: "-15%",  // ~50% inner opening — moderate expansion
-  2: "-14%",  // ~50% inner opening — slightly less
-  3: "-16%",  // ~48% inner opening — bit more expansion
-  4: "-14%",  // premium crown keeps its footprint, but with a thinner floral band
+  1: "-14%",
+  2: "-13%",
+  3: "-15%",
+  4: "-13%",
+};
+
+const CROWN_SCALE: Record<number, number> = {
+  1: 0.98,
+  2: 0.97,
+  3: 0.985,
+  4: 0.94,
 };
 
 interface Offering {
@@ -41,6 +48,9 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   }, [offerings]);
 
   const initials = fullName.split(" ").map((n) => n[0]).slice(0, 2).join("");
+
+  const crownInset = bestCrown?.crown_tier ? CROWN_INSET[bestCrown.crown_tier] || "-14%" : "-14%";
+  const crownScale = bestCrown?.crown_tier ? CROWN_SCALE[bestCrown.crown_tier] || 1 : 1;
 
   // Total items to place around circle (alternating candles and flowers)
   const totalCandles = Math.min(candles.length, 16);
@@ -88,12 +98,12 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-20">
       {/* Crown overlay — ON TOP of the photo for realism */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute z-[3] animate-scale-in pointer-events-none" style={{ inset: CROWN_INSET[bestCrown.crown_tier] || "-18%" }}>
+        <div className="absolute z-[3] animate-scale-in pointer-events-none" style={{ inset: crownInset }}>
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"
             className="w-full h-full object-contain"
-            style={{ filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))", imageRendering: "auto" }}
+            style={{ filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))", imageRendering: "auto", transform: `scale(${crownScale})` }}
             loading="lazy"
             width={1024}
             height={1024}

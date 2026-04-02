@@ -180,8 +180,8 @@ const MemorialDetail = () => {
   const flowerCount = sessionOfferings.filter((o) => o.offering_type === "flower").length;
   const crownCount = sessionOfferings.filter((o) => o.offering_type === "flower_crown").length;
 
-  const candleUsed = memorial ? hasSessionAction(memorial.id, "candle") : false;
-  const flowerUsed = memorial ? hasSessionAction(memorial.id, "flower") : false;
+  const candleUsed = memorial ? hasPageAction(memorial.id, "candle") : false;
+  const flowerUsed = memorial ? hasPageAction(memorial.id, "flower") : false;
 
   if (loading) {
     return (

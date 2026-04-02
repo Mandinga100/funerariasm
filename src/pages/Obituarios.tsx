@@ -244,7 +244,7 @@ const Obituarios = () => {
           )}
 
           {/* Page indicator */}
-          {totalPages > 1 && (
+          {filtered.length > 0 && (
             <p className="text-center text-xs text-muted-foreground/60 mt-4">
               Página {currentPage} de {totalPages}
             </p>

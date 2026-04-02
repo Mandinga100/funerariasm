@@ -426,12 +426,12 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
                     {msg.content}
                   </div>
                   {msg.chips && msg.chips.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
                       {msg.chips.map((chip, ci) => (
                         <button
                           key={ci}
                           onClick={chip.action}
-                          className="text-xs bg-background border border-gold/30 text-foreground hover:bg-gold/10 hover:border-gold/50 px-3 py-1.5 rounded-full transition-all duration-200"
+                          className="text-xs bg-background border border-gold/30 text-foreground hover:bg-gold/10 hover:border-gold/50 px-2.5 py-1.5 rounded-full transition-all duration-200 text-center truncate"
                         >
                           {chip.label}
                         </button>

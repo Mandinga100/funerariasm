@@ -122,6 +122,75 @@ export type Database = {
         }
         Relationships: []
       }
+      obituaries: {
+        Row: {
+          biography: string | null
+          birth_date: string | null
+          ceremony_location: string | null
+          ceremony_schedule: string | null
+          city: string | null
+          created_at: string
+          death_date: string
+          family_message: string | null
+          family_names: string | null
+          full_name: string
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          photo_url: string | null
+          published: boolean
+          published_at: string | null
+          slug: string
+          updated_at: string
+          wake_location: string | null
+          wake_schedule: string | null
+        }
+        Insert: {
+          biography?: string | null
+          birth_date?: string | null
+          ceremony_location?: string | null
+          ceremony_schedule?: string | null
+          city?: string | null
+          created_at?: string
+          death_date: string
+          family_message?: string | null
+          family_names?: string | null
+          full_name: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          photo_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          updated_at?: string
+          wake_location?: string | null
+          wake_schedule?: string | null
+        }
+        Update: {
+          biography?: string | null
+          birth_date?: string | null
+          ceremony_location?: string | null
+          ceremony_schedule?: string | null
+          city?: string | null
+          created_at?: string
+          death_date?: string
+          family_message?: string | null
+          family_names?: string | null
+          full_name?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          photo_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          updated_at?: string
+          wake_location?: string | null
+          wake_schedule?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

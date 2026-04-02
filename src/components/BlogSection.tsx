@@ -84,8 +84,26 @@ const BlogSection = () => {
           return cat === activeFilter || tags.includes(activeFilter);
         });
       }
+    } else {
+      // Default: novedades first, then guías, then the rest
+      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
+      result = [...allPosts].sort((a, b) => {
+        const catA = a.category ? normalize(a.category) : "";
+        const catB = b.category ? normalize(b.category) : "";
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const aIsNew = a.published_at && new Date(a.published_at) >= thirtyDaysAgo;
+        const bIsNew = b.published_at && new Date(b.published_at) >= thirtyDaysAgo;
+        if (aIsNew && !bIsNew) return -1;
+        if (!aIsNew && bIsNew) return 1;
+        const aIsGuia = catA === "guias";
+        const bIsGuia = catB === "guias";
+        if (aIsGuia && !bIsGuia) return -1;
+        if (!aIsGuia && bIsGuia) return 1;
+        return 0;
+      });
     }
-    return result.slice(0, 3);
+    return result.slice(0, 6);
   }, [allPosts, activeFilter]);
 
   return (
@@ -103,19 +121,20 @@ const BlogSection = () => {
 
         <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
 
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {filteredPosts.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">No hay artículos en esta categoría aún.</p>
             </div>
           ) : (
-            filteredPosts.map((post) => {
+            filteredPosts.map((post, index) => {
               const image = post.cover_image || getCategoryImage(post.category);
+              const mobileHidden = index >= 3 ? "hidden sm:block" : "";
               return (
                 <Link
                   key={post.id}
                   to={post.slug === "#" ? "/blog" : `/blog/${post.slug}`}
-                  className="group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
+                  className={`group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)] ${mobileHidden}`}
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-muted">
                     <img src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow" loading="lazy" />

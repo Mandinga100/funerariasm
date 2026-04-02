@@ -59,7 +59,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     }
     // Now position them in a circle outside the crown
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 62 : 56; // % from center — outside the crown overlay
+    const radius = hasCrown ? 72 : 56; // % from center — outside the crown overlay
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;

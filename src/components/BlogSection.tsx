@@ -84,8 +84,26 @@ const BlogSection = () => {
           return cat === activeFilter || tags.includes(activeFilter);
         });
       }
+    } else {
+      // Default: novedades first, then guías, then the rest
+      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
+      result = [...allPosts].sort((a, b) => {
+        const catA = a.category ? normalize(a.category) : "";
+        const catB = b.category ? normalize(b.category) : "";
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const aIsNew = a.published_at && new Date(a.published_at) >= thirtyDaysAgo;
+        const bIsNew = b.published_at && new Date(b.published_at) >= thirtyDaysAgo;
+        if (aIsNew && !bIsNew) return -1;
+        if (!aIsNew && bIsNew) return 1;
+        const aIsGuia = catA === "guias";
+        const bIsGuia = catB === "guias";
+        if (aIsGuia && !bIsGuia) return -1;
+        if (!aIsGuia && bIsGuia) return 1;
+        return 0;
+      });
     }
-    return result.slice(0, 3);
+    return result.slice(0, 6);
   }, [allPosts, activeFilter]);
 
   return (

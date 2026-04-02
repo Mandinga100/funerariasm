@@ -7,6 +7,8 @@ import Index from "./pages/Index.tsx";
 import Contacto from "./pages/Contacto.tsx";
 import Blog from "./pages/Blog.tsx";
 import BlogPostPage from "./pages/BlogPost.tsx";
+import Obituarios from "./pages/Obituarios.tsx";
+import ObituarioDetail from "./pages/ObituarioDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

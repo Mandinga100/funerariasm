@@ -141,7 +141,7 @@ const Obituarios = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {filtered.map((obit) => {
+              {paginatedItems.map((obit) => {
                 const age = getYears(obit.birth_date, obit.death_date);
                 return (
                   <Link
@@ -150,7 +150,6 @@ const Obituarios = () => {
                     className="group block bg-card rounded-lg border border-border/50 hover:border-gold/30 p-6 md:p-8 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
                   >
                     <div className="flex flex-col sm:flex-row gap-5 items-start">
-                      {/* Photo or initials */}
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted border-2 border-gold/20 shrink-0 flex items-center justify-center overflow-hidden mx-auto sm:mx-0">
                         {obit.photo_url ? (
                           <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover" />
@@ -160,7 +159,6 @@ const Obituarios = () => {
                           </span>
                         )}
                       </div>
-
                       <div className="flex-1 text-center sm:text-left">
                         <h2 className="font-playfair text-xl text-foreground mb-1 group-hover:text-gold transition-brand">
                           {obit.full_name}
@@ -170,9 +168,7 @@ const Obituarios = () => {
                             <Calendar className="w-3 h-3" />
                             {formatDate(obit.death_date)}
                           </span>
-                          {age !== null && (
-                            <span className="text-gold/60">✦ {age} años</span>
-                          )}
+                          {age !== null && <span className="text-gold/60">✦ {age} años</span>}
                           {obit.city && (
                             <span className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
@@ -191,7 +187,6 @@ const Obituarios = () => {
                           </p>
                         )}
                       </div>
-
                       <div className="hidden md:flex items-center">
                         <span className="text-gold text-xs tracking-wide-brand uppercase opacity-0 group-hover:opacity-100 transition-brand">
                           Ver homenaje →
@@ -202,6 +197,57 @@ const Obituarios = () => {
                 );
               })}
             </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <nav aria-label="Paginación de obituarios" className="mt-12 flex justify-center">
+              <div className="inline-flex items-center gap-1 bg-card border border-border/50 rounded-full px-2 py-1.5 shadow-sm">
+                {/* Previous */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
+                  aria-label="Página anterior"
+                >
+                  <span className="text-sm">‹</span>
+                </button>
+
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                      currentPage === page
+                        ? "bg-gold text-primary-foreground shadow-[0_0_12px_-2px_hsl(var(--gold)/0.5)]"
+                        : "text-muted-foreground hover:text-gold hover:bg-gold/10"
+                    }`}
+                    aria-label={`Página ${page}`}
+                    aria-current={currentPage === page ? "page" : undefined}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {/* Next */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
+                  aria-label="Página siguiente"
+                >
+                  <span className="text-sm">›</span>
+                </button>
+              </div>
+            </nav>
+          )}
+
+          {/* Page indicator */}
+          {totalPages > 1 && (
+            <p className="text-center text-xs text-muted-foreground/60 mt-4">
+              Página {currentPage} de {totalPages}
+            </p>
           )}
         </div>
       </section>

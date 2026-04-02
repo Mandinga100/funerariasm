@@ -80,12 +80,12 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-20">
       {/* Crown overlay — ON TOP of the photo for realism */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute inset-[-12%] z-[3] animate-scale-in pointer-events-none">
+        <div className="absolute inset-[-18%] z-[3] animate-scale-in pointer-events-none">
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"
-            className="w-full h-full object-contain drop-shadow-lg"
-            style={{ filter: "sharpen(1) contrast(1.05)", imageRendering: "auto", WebkitFilter: "contrast(1.05) saturate(1.1)" }}
+            className="w-full h-full object-contain"
+            style={{ filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))", imageRendering: "auto" }}
             loading="lazy"
             width={1024}
             height={1024}

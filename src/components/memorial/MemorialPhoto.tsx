@@ -38,28 +38,34 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   const totalCandles = Math.min(candles.length, 16);
   const totalFlowers = Math.min(flowers.length, 16);
 
-  // Build alternating positions outside the photo+crown area
+  const ROSE_COLORS = [
+    { petal: "#e11d48", center: "#fbbf24" },  // Red rose
+    { petal: "#f472b6", center: "#fde68a" },  // Pink rose
+    { petal: "#fbbf24", center: "#f59e0b" },  // Yellow rose
+    { petal: "#f9fafb", center: "#fde68a" },  // White rose
+    { petal: "#c084fc", center: "#fbbf24" },  // Purple rose
+    { petal: "#fb923c", center: "#fde68a" },  // Orange rose
+  ];
+
   const orbitItems = useMemo(() => {
-    const items: { type: "candle" | "flower"; x: number; y: number; angle: number; delay: number }[] = [];
-    // Interleave candles and flowers
+    const items: { type: "candle" | "flower"; x: number; y: number; angle: number; delay: number; colorIdx: number }[] = [];
     const maxCount = Math.max(totalCandles, totalFlowers);
     let candleIdx = 0;
     let flowerIdx = 0;
     for (let i = 0; i < maxCount * 2; i++) {
       if (i % 2 === 0 && candleIdx < totalCandles) {
         candleIdx++;
-        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
+        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: 0 });
       } else if (flowerIdx < totalFlowers) {
+        items.push({ type: "flower", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: flowerIdx % ROSE_COLORS.length });
         flowerIdx++;
-        items.push({ type: "flower", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
       } else if (candleIdx < totalCandles) {
         candleIdx++;
-        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
+        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: 0 });
       }
     }
-    // Now position them in a circle outside the crown
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 72 : 56; // % from center — outside the crown overlay
+    const radius = hasCrown ? 82 : 64;
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;

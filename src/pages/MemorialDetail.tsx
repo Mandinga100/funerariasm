@@ -154,7 +154,7 @@ const MemorialDetail = () => {
       crown_tier: data.tier,
       created_at: new Date().toISOString(),
     };
-    addSessionOffering(memorial.id, offering);
+    markPageAction(memorial.id, "flower_crown");
     setSessionOfferings((prev) => [...prev, offering]);
     setCrownSending(false);
     toast.success("🌺 Corona de flores ofrecida en su memoria");

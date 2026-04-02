@@ -68,6 +68,41 @@ export type Database = {
         }
         Relationships: []
       }
+      condolences: {
+        Row: {
+          approved: boolean
+          author_name: string
+          created_at: string
+          id: string
+          memorial_id: string
+          message: string
+        }
+        Insert: {
+          approved?: boolean
+          author_name: string
+          created_at?: string
+          id?: string
+          memorial_id: string
+          message: string
+        }
+        Update: {
+          approved?: boolean
+          author_name?: string
+          created_at?: string
+          id?: string
+          memorial_id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condolences_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_leads: {
         Row: {
           comuna: string | null
@@ -119,6 +154,60 @@ export type Database = {
           status?: string | null
           urgency?: string | null
           whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
+      memorials: {
+        Row: {
+          biography: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          death_date: string
+          full_name: string
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          photo_url: string | null
+          published: boolean
+          published_at: string | null
+          slug: string
+          tribute_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          biography?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          death_date: string
+          full_name: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          photo_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          tribute_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          biography?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          death_date?: string
+          full_name?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          photo_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          tribute_text?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

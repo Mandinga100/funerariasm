@@ -9,6 +9,8 @@ import Blog from "./pages/Blog.tsx";
 import BlogPostPage from "./pages/BlogPost.tsx";
 import Obituarios from "./pages/Obituarios.tsx";
 import ObituarioDetail from "./pages/ObituarioDetail.tsx";
+import Memoriales from "./pages/Memoriales.tsx";
+import MemorialDetail from "./pages/MemorialDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/obituarios" element={<Obituarios />} />
           <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
+          <Route path="/memoriales" element={<Memoriales />} />
+          <Route path="/memoriales/:slug" element={<MemorialDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

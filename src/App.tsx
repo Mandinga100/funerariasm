@@ -9,6 +9,8 @@ import Blog from "./pages/Blog.tsx";
 import BlogPostPage from "./pages/BlogPost.tsx";
 import Obituarios from "./pages/Obituarios.tsx";
 import ObituarioDetail from "./pages/ObituarioDetail.tsx";
+import Memoriales from "./pages/Memoriales.tsx";
+import MemorialDetail from "./pages/MemorialDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

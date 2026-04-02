@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { label: "Servicios", sectionId: "servicios" },
   { label: "Previsión", sectionId: "prevision" },
   { label: "Obituarios", sectionId: "obituarios" },
-  { label: "Memoriales", sectionId: "memoriales" },
+  { label: "Legados Eternos", sectionId: "memoriales" },
   { label: "Nosotros", sectionId: "nosotros" },
   { label: "Blog", sectionId: "blog" },
   { label: "Contacto", sectionId: "contacto" },

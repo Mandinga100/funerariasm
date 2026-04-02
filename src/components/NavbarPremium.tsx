@@ -35,20 +35,12 @@ const NavbarPremium = () => {
     >
       <div className="container flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center group">
           <img
             src="/assets/images/brand/logo-white.webp"
             alt="Funeraria Santa Margarita"
             className="h-10 w-auto"
           />
-          <div className="hidden sm:block">
-            <span className="text-primary-foreground font-playfair text-lg leading-tight block">
-              Santa Margarita
-            </span>
-            <span className="text-gold text-[10px] tracking-solemn uppercase block">
-              Funeraria
-            </span>
-          </div>
         </Link>
 
         {/* Desktop nav */}

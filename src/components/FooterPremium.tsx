@@ -10,13 +10,7 @@ const FooterPremium = () => (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <img src="/assets/images/brand/logo-white.webp" alt="Logo" className="h-10 w-auto" />
-            <div>
-              <span className="font-playfair text-lg block">Santa Margarita</span>
-              <span className="text-gold text-[10px] tracking-solemn uppercase">Funeraria</span>
-            </div>
-          </div>
+          <img src="/assets/images/brand/logo-white.webp" alt="Funeraria Santa Margarita" className="h-10 w-auto" />
           <p className="text-primary-foreground/60 text-sm leading-relaxed">
             Acompañamos a las familias con respeto, calidez y profesionalismo en los momentos más difíciles.
           </p>

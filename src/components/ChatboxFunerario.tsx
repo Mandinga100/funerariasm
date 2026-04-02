@@ -103,7 +103,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-    }, 350);
+    }, 500);
   }, [onClose]);
 
   const resetChat = useCallback(() => {
@@ -355,7 +355,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-350 ${
+        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-500 ${
           isClosing ? "opacity-0" : "opacity-100"
         }`}
       />
@@ -363,10 +363,10 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       {/* Chat window */}
       <div
         ref={chatRef}
-        className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           isClosing
-            ? "opacity-0 scale-[0.15] duration-350"
-            : "opacity-100 scale-100 duration-300 animate-fade-in-up"
+            ? "opacity-0 scale-[0.15]"
+            : "opacity-100 scale-100 animate-fade-in-up"
         }`}
         style={{
           width: "min(calc(100vw - 24px), 380px)",

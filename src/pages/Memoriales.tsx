@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { Calendar, Search, MapPin } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Memorial {
   id: string;
@@ -25,11 +25,11 @@ const Memoriales = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    document.title = "Memoriales | Funeraria Santa Margarita";
+    document.title = "Legados Eternos | Funeraria Santa Margarita";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Memoriales digitales para honrar la memoria de quienes partieron. Comparta condolencias y tributos. Funeraria Santa Margarita, Chile.");
+    if (meta) meta.setAttribute("content", "Legados eternos para honrar la memoria de quienes partieron. Comparta condolencias y tributos. Funeraria Santa Margarita, Chile.");
 
-    const fetch = async () => {
+    const fetchData = async () => {
       const { data } = await supabase
         .from("memorials")
         .select("id, slug, full_name, birth_date, death_date, photo_url, tribute_text, city, published_at")
@@ -38,7 +38,7 @@ const Memoriales = () => {
       setMemorials((data as Memorial[]) || []);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, []);
 
   const filtered = useMemo(() => {
@@ -61,9 +61,6 @@ const Memoriales = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr + "T12:00:00").toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
-
   const getYears = (birth: string | null, death: string) => {
     if (!birth) return null;
     const b = new Date(birth);
@@ -76,8 +73,8 @@ const Memoriales = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Memoriales - Funeraria Santa Margarita",
-    description: "Memoriales digitales para honrar la memoria de quienes partieron.",
+    name: "Legados Eternos - Funeraria Santa Margarita",
+    description: "Legados eternos para honrar la memoria de quienes partieron.",
     url: "https://funerariasantamargarita.cl/memoriales",
     publisher: { "@type": "Organization", name: "Funeraria Santa Margarita" },
   };
@@ -86,90 +83,99 @@ const Memoriales = () => {
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="pt-28 pb-16 bg-primary text-primary-foreground">
+      {/* Hero */}
+      <section className="pt-28 pb-20 bg-primary text-primary-foreground">
         <div className="container text-center">
-          <p className="text-gold text-xs tracking-solemn uppercase mb-4">Espacios del Recuerdo</p>
-          <h1 className="text-section font-playfair italic mb-4">Memoriales</h1>
-          <p className="text-primary-foreground/60 max-w-xl mx-auto mb-8">
-            Espacios digitales para honrar y recordar a quienes amamos. Comparta sus condolencias y tributos.
-          </p>
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <p className="text-gold/60 text-xs tracking-[0.35em] uppercase mb-8">Muro de la Memoria</p>
+          <h1 className="font-playfair italic text-primary-foreground/90 mb-2" style={{ fontSize: "clamp(3rem, 8vw, 6rem)", lineHeight: 1 }}>
+            Legados
+          </h1>
+          <h1 className="font-playfair italic text-primary-foreground/50 mb-10" style={{ fontSize: "clamp(3rem, 8vw, 6rem)", lineHeight: 1 }}>
+            Eternos
+          </h1>
+          <blockquote className="max-w-2xl mx-auto border-l-2 border-gold/20 pl-6 mb-12">
+            <p className="text-primary-foreground/40 text-base md:text-lg italic font-playfair leading-relaxed">
+              "En cada historia reside un legado que trasciende el tiempo, habitando eternamente en la serenidad de nuestro recuerdo."
+            </p>
+          </blockquote>
+          <div className="w-16 h-[1px] bg-gold/30 mx-auto mb-12" />
+        </div>
+      </section>
+
+      {/* Search + Cards */}
+      <section className="py-16 bg-primary">
+        <div className="container max-w-5xl">
+          {/* Search bar */}
+          <div className="max-w-xl mx-auto mb-16 relative">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/30" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre o ciudad..."
-              className="w-full pl-11 pr-4 py-3 rounded-full bg-background/10 backdrop-blur-sm border border-gold/20 text-primary-foreground placeholder:text-primary-foreground/40 text-sm focus:outline-none focus:border-gold/50 transition-brand"
+              placeholder="Buscar un legado..."
+              className="w-full pl-14 pr-6 py-4 rounded-full bg-primary-foreground/5 border border-primary-foreground/10 text-primary-foreground placeholder:text-primary-foreground/30 text-sm focus:outline-none focus:border-gold/40 transition-all duration-300"
             />
           </div>
-        </div>
-      </section>
 
-      <section className="py-16 bg-background">
-        <div className="container max-w-5xl">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-card rounded-lg border border-border/50 p-6 animate-pulse">
-                  <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4" />
-                  <div className="h-5 bg-muted rounded w-1/2 mx-auto mb-2" />
-                  <div className="h-3 bg-muted rounded w-1/3 mx-auto mb-4" />
-                  <div className="h-3 bg-muted rounded w-full mb-2" />
-                  <div className="h-3 bg-muted rounded w-2/3 mx-auto" />
-                </div>
+                <div key={i} className="aspect-[3/4] rounded-xl bg-primary-foreground/5 animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-muted-foreground">
-                {search ? "No se encontraron resultados para su búsqueda." : "No hay memoriales publicados actualmente."}
+              <p className="text-primary-foreground/40">
+                {search ? "No se encontraron resultados para su búsqueda." : "No hay legados publicados actualmente."}
               </p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {paginated.map((mem) => {
-                  const age = getYears(mem.birth_date, mem.death_date);
+                  const birthYear = mem.birth_date ? new Date(mem.birth_date).getFullYear() : null;
+                  const deathYear = new Date(mem.death_date).getFullYear();
                   return (
                     <Link
                       key={mem.id}
                       to={`/memoriales/${mem.slug}`}
-                      className="group bg-card rounded-lg border border-border/50 hover:border-gold/30 p-6 text-center transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
+                      className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-primary-foreground/5"
                     >
-                      <div className="w-20 h-20 rounded-full bg-muted border-2 border-gold/20 mx-auto mb-4 flex items-center justify-center overflow-hidden">
-                        {mem.photo_url ? (
-                          <img src={mem.photo_url} alt={mem.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-2xl font-playfair text-gold/60">
+                      {/* Photo */}
+                      {mem.photo_url ? (
+                        <img
+                          src={mem.photo_url}
+                          alt={`Retrato de ${mem.full_name}`}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-primary-foreground/5">
+                          <span className="text-5xl font-playfair text-gold/30">
                             {mem.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                           </span>
-                        )}
-                      </div>
-                      <h2 className="font-playfair text-xl text-foreground mb-1 group-hover:text-gold transition-brand">
-                        {mem.full_name}
-                      </h2>
-                      <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground mb-3">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(mem.death_date)}
-                        </span>
-                        {age !== null && <span className="text-gold/60">✦ {age} años</span>}
-                        {mem.city && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {mem.city}
-                          </span>
-                        )}
-                      </div>
-                      {mem.tribute_text && (
-                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 italic">
-                          "{mem.tribute_text}"
-                        </p>
+                        </div>
                       )}
-                      <p className="text-gold text-xs tracking-wide-brand uppercase mt-4 opacity-0 group-hover:opacity-100 transition-brand">
-                        Ver memorial →
-                      </p>
+
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                        <span className="text-primary-foreground/80 text-sm tracking-[0.2em] uppercase font-light">
+                          Habitar su Legado
+                        </span>
+                      </div>
+
+                      {/* Info */}
+                      <div className="absolute bottom-0 left-0 right-0 p-5">
+                        <h2 className="font-playfair text-lg text-primary-foreground font-medium leading-tight mb-1">
+                          {mem.full_name}
+                        </h2>
+                        <p className="text-primary-foreground/50 text-sm">
+                          {birthYear ? `${birthYear} — ${deathYear}` : deathYear}
+                        </p>
+                      </div>
                     </Link>
                   );
                 })}
@@ -177,18 +183,18 @@ const Memoriales = () => {
 
               {/* Pagination */}
               {filtered.length > 0 && (
-                <nav aria-label="Paginación de memoriales" className="mt-12 flex justify-center">
-                  <div className="inline-flex items-center gap-1 bg-card border border-border/50 rounded-full px-2 py-1.5 shadow-sm">
-                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300" aria-label="Página anterior"><span className="text-sm">‹</span></button>
+                <nav aria-label="Paginación de legados" className="mt-16 flex justify-center">
+                  <div className="inline-flex items-center gap-1 bg-primary-foreground/5 border border-primary-foreground/10 rounded-full px-2 py-1.5">
+                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground/40 hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300" aria-label="Página anterior"><span className="text-sm">‹</span></button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button key={page} onClick={() => handlePageChange(page)} className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${currentPage === page ? "bg-gold text-primary-foreground shadow-[0_0_12px_-2px_hsl(var(--gold)/0.5)]" : "text-muted-foreground hover:text-gold hover:bg-gold/10"}`} aria-label={`Página ${page}`} aria-current={currentPage === page ? "page" : undefined}>{page}</button>
+                      <button key={page} onClick={() => handlePageChange(page)} className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${currentPage === page ? "bg-gold text-primary-foreground shadow-[0_0_12px_-2px_hsl(var(--gold)/0.5)]" : "text-primary-foreground/40 hover:text-gold hover:bg-gold/10"}`} aria-label={`Página ${page}`} aria-current={currentPage === page ? "page" : undefined}>{page}</button>
                     ))}
-                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300" aria-label="Página siguiente"><span className="text-sm">›</span></button>
+                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground/40 hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300" aria-label="Página siguiente"><span className="text-sm">›</span></button>
                   </div>
                 </nav>
               )}
               {filtered.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground/60 mt-4">Página {currentPage} de {totalPages}</p>
+                <p className="text-center text-xs text-primary-foreground/30 mt-4">Página {currentPage} de {totalPages}</p>
               )}
             </>
           )}

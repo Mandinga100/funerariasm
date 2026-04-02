@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { Calendar, MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
+import { MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Memorial {
@@ -45,7 +45,7 @@ const MemorialDetail = () => {
       const mem = data?.[0] as Memorial | undefined;
       if (mem) {
         setMemorial(mem);
-        document.title = `${mem.full_name} — Memorial | Funeraria Santa Margarita`;
+        document.title = `${mem.full_name} — Legado Eterno | Funeraria Santa Margarita`;
 
         const { data: conds } = await supabase
           .from("condolences")
@@ -60,7 +60,6 @@ const MemorialDetail = () => {
     load();
   }, [slug]);
 
-  // Realtime condolences
   useEffect(() => {
     if (!memorial) return;
     const channel = supabase
@@ -113,9 +112,9 @@ const MemorialDetail = () => {
         <section className="pt-28 pb-16 bg-primary">
           <div className="container max-w-3xl">
             <div className="animate-pulse space-y-6">
-              <div className="w-32 h-32 rounded-full bg-muted mx-auto" />
-              <div className="h-8 bg-muted rounded w-1/2 mx-auto" />
-              <div className="h-4 bg-muted rounded w-1/3 mx-auto" />
+              <div className="w-32 h-32 rounded-full bg-primary-foreground/10 mx-auto" />
+              <div className="h-8 bg-primary-foreground/10 rounded w-1/2 mx-auto" />
+              <div className="h-4 bg-primary-foreground/10 rounded w-1/3 mx-auto" />
             </div>
           </div>
         </section>
@@ -128,8 +127,8 @@ const MemorialDetail = () => {
       <Layout>
         <section className="pt-28 pb-16 bg-primary text-primary-foreground">
           <div className="container text-center">
-            <h1 className="text-section font-playfair italic mb-4">Memorial no encontrado</h1>
-            <Link to="/memoriales" className="text-gold hover:text-gold-light transition-brand">← Volver a Memoriales</Link>
+            <h1 className="text-section font-playfair italic mb-4">Legado no encontrado</h1>
+            <Link to="/memoriales" className="text-gold hover:text-gold-light transition-brand">← Volver a Legados Eternos</Link>
           </div>
         </section>
       </Layout>
@@ -155,27 +154,31 @@ const MemorialDetail = () => {
       {/* Header */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">
-          <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/80 hover:text-gold text-sm mb-8 px-5 py-2.5 rounded-full border border-gold/30 hover:border-gold/60 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.2)] hover:shadow-[0_0_16px_-4px_hsl(var(--gold)/0.4)]">
+          <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
             <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
-            Volver a Memoriales
+            Volver a Legados Eternos
           </Link>
 
           <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-muted border-4 border-gold/30 mx-auto mb-6 flex items-center justify-center overflow-hidden">
+            {/* Photo */}
+            <div className="w-36 h-36 rounded-full border-4 border-gold/20 mx-auto mb-6 overflow-hidden bg-primary-foreground/5">
               {memorial.photo_url ? (
                 <img src={memorial.photo_url} alt={memorial.full_name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-4xl font-playfair text-gold/60">
-                  {memorial.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                </span>
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-4xl font-playfair text-gold/40">
+                    {memorial.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  </span>
+                </div>
               )}
             </div>
-            <h1 className="text-3xl md:text-4xl font-playfair italic text-primary-foreground mb-3">{memorial.full_name}</h1>
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-primary-foreground/60">
+
+            <h1 className="text-3xl md:text-4xl font-playfair italic text-primary-foreground mb-4">{memorial.full_name}</h1>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-primary-foreground/50">
               {memorial.birth_date && <span>{formatDate(memorial.birth_date)}</span>}
-              {memorial.birth_date && <span className="text-gold">✦</span>}
+              {memorial.birth_date && <span className="text-gold/60">✦</span>}
               <span>{formatDate(memorial.death_date)}</span>
-              {age !== null && <span className="text-gold/70">({age} años)</span>}
+              {age !== null && <span className="text-gold/50">({age} años)</span>}
               {memorial.city && (
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {memorial.city}</span>
               )}
@@ -185,13 +188,13 @@ const MemorialDetail = () => {
       </section>
 
       {/* Content */}
-      <section className="py-16 bg-background">
+      <section className="py-16 bg-primary">
         <div className="container max-w-3xl space-y-12">
           {/* Tribute */}
           {memorial.tribute_text && (
-            <div className="text-center border border-gold/20 rounded-lg p-8 bg-card">
-              <Heart className="w-6 h-6 text-gold/60 mx-auto mb-4" />
-              <p className="text-lg text-foreground italic font-playfair leading-relaxed">
+            <div className="text-center border border-gold/15 rounded-lg p-8 bg-primary-foreground/3">
+              <Heart className="w-6 h-6 text-gold/40 mx-auto mb-4" />
+              <p className="text-lg text-primary-foreground/70 italic font-playfair leading-relaxed">
                 "{memorial.tribute_text}"
               </p>
             </div>
@@ -200,23 +203,22 @@ const MemorialDetail = () => {
           {/* Biography */}
           {memorial.biography && (
             <div>
-              <h2 className="font-playfair text-xl text-foreground mb-4">Biografía</h2>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{memorial.biography}</p>
+              <h2 className="font-playfair text-xl text-primary-foreground mb-4">Biografía</h2>
+              <p className="text-primary-foreground/50 leading-relaxed whitespace-pre-line">{memorial.biography}</p>
             </div>
           )}
 
           {/* Condolences section */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <MessageCircle className="w-5 h-5 text-gold/60" />
-              <h2 className="font-playfair text-xl text-foreground">
+              <MessageCircle className="w-5 h-5 text-gold/40" />
+              <h2 className="font-playfair text-xl text-primary-foreground">
                 Condolencias ({condolences.length})
               </h2>
             </div>
 
-            {/* Submit form */}
-            <form onSubmit={handleSubmit} className="bg-card border border-border/50 rounded-lg p-6 mb-8">
-              <h3 className="text-sm font-medium text-foreground mb-4">Envíe sus condolencias</h3>
+            <form onSubmit={handleSubmit} className="bg-primary-foreground/3 border border-primary-foreground/10 rounded-lg p-6 mb-8">
+              <h3 className="text-sm font-medium text-primary-foreground/70 mb-4">Envíe sus condolencias</h3>
               <div className="space-y-4">
                 <input
                   type="text"
@@ -225,7 +227,7 @@ const MemorialDetail = () => {
                   placeholder="Su nombre"
                   maxLength={100}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-background border border-border hover:border-gold/30 focus:border-gold/50 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-gold/20 transition-brand"
+                  className="w-full px-4 py-3 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 hover:border-gold/20 focus:border-gold/40 text-primary-foreground placeholder:text-primary-foreground/30 text-sm focus:outline-none focus:ring-1 focus:ring-gold/15 transition-all duration-300"
                 />
                 <textarea
                   value={message}
@@ -234,7 +236,7 @@ const MemorialDetail = () => {
                   maxLength={500}
                   required
                   rows={3}
-                  className="w-full px-4 py-3 rounded-lg bg-background border border-border hover:border-gold/30 focus:border-gold/50 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-gold/20 transition-brand resize-none"
+                  className="w-full px-4 py-3 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 hover:border-gold/20 focus:border-gold/40 text-primary-foreground placeholder:text-primary-foreground/30 text-sm focus:outline-none focus:ring-1 focus:ring-gold/15 transition-all duration-300 resize-none"
                 />
                 <button
                   type="submit"
@@ -247,20 +249,19 @@ const MemorialDetail = () => {
               </div>
             </form>
 
-            {/* Condolences list */}
             {condolences.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">
+              <p className="text-primary-foreground/30 text-sm text-center py-8">
                 Sea el primero en dejar un mensaje de condolencia.
               </p>
             ) : (
               <div className="space-y-4">
                 {condolences.map((c) => (
-                  <div key={c.id} className="bg-card border border-border/50 rounded-lg p-5">
+                  <div key={c.id} className="bg-primary-foreground/3 border border-primary-foreground/10 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm text-foreground">{c.author_name}</span>
-                      <span className="text-xs text-muted-foreground">{formatCondolenceDate(c.created_at)}</span>
+                      <span className="font-medium text-sm text-primary-foreground/80">{c.author_name}</span>
+                      <span className="text-xs text-primary-foreground/30">{formatCondolenceDate(c.created_at)}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{c.message}</p>
+                    <p className="text-sm text-primary-foreground/50 leading-relaxed">{c.message}</p>
                   </div>
                 ))}
               </div>
@@ -269,9 +270,9 @@ const MemorialDetail = () => {
 
           {/* Back link */}
           <div className="text-center pt-8">
-            <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/80 hover:text-gold text-sm px-6 py-3 rounded-full border border-gold/30 hover:border-gold/60 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.2)] hover:shadow-[0_0_16px_-4px_hsl(var(--gold)/0.4)]">
+            <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm px-6 py-3 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
               <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
-              Volver a Memoriales
+              Volver a Legados Eternos
             </Link>
           </div>
         </div>

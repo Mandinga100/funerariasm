@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
-import ChatboxFunerario, { ChatboxToggle } from "./ChatboxFunerario";
+import ChatboxFunerario from "./ChatboxFunerario";
 
 const WhatsAppFloat = () => {
   const [chatOpen, setChatOpen] = useState(false);
@@ -10,7 +10,19 @@ const WhatsAppFloat = () => {
     <>
       {/* Chatbox */}
       {chatOpen && <ChatboxFunerario onClose={() => setChatOpen(false)} />}
-      <ChatboxToggle isOpen={chatOpen} toggle={() => setChatOpen(!chatOpen)} />
+
+      {/* Toggle button */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className={`fixed bottom-20 right-3 sm:right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out ${
+          chatOpen
+            ? "scale-0 opacity-0 pointer-events-none"
+            : "bg-gold text-accent-foreground hover:bg-gold-dark hover:scale-110 scale-100 opacity-100"
+        }`}
+        aria-label="Abrir chat"
+      >
+        <MessageCircle className="w-7 h-7" />
+      </button>
 
       {/* Emergency bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#8B0000] text-primary-foreground">
@@ -20,7 +32,7 @@ const WhatsAppFloat = () => {
           </span>
           <a
             href="tel:+56964333760"
-            className="flex items-center gap-1.5 bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1 rounded-full text-xs font-semibold transition-brand"
+            className="flex items-center gap-1.5 bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200"
           >
             <Phone className="w-3 h-3" />
             Llamar ahora
@@ -29,7 +41,7 @@ const WhatsAppFloat = () => {
             href={buildWhatsAppUrlDirect("URGENTE: Necesito asistencia inmediata por un fallecimiento reciente.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] px-3 py-1 rounded-full text-xs font-semibold transition-brand"
+            className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200"
           >
             <MessageCircle className="w-3 h-3" />
             WhatsApp

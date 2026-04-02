@@ -16,7 +16,7 @@ const CROWN_INSET: Record<number, string> = {
   1: "-15%",  // ~50% inner opening — moderate expansion
   2: "-14%",  // ~50% inner opening — slightly less
   3: "-16%",  // ~48% inner opening — bit more expansion
-  4: "-15%",  // ~55% inner opening — moderate
+  4: "-10%",  // thinner premium crown — preserve face and tribute visibility
 };
 
 interface Offering {

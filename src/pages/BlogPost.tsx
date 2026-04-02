@@ -141,8 +141,8 @@ const BlogPost = () => {
       {/* Header */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">
-          <Link to="/blog" className="inline-flex items-center gap-2 text-gold/60 hover:text-gold text-xs tracking-wide-brand uppercase mb-8 transition-brand">
-            <ArrowLeft className="w-3 h-3" /> Volver al blog
+          <Link to="/blog" className="inline-flex items-center gap-2 bg-gold/20 hover:bg-gold/30 text-gold hover:text-gold-light border border-gold/30 px-4 py-2 rounded-full text-sm font-medium tracking-wide-brand uppercase mb-8 transition-brand backdrop-blur-sm">
+            <ArrowLeft className="w-4 h-4" /> Volver al blog
           </Link>
           <div className="flex items-center gap-3 mb-4 text-xs text-primary-foreground/50">
             {post.category && (

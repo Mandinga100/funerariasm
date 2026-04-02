@@ -1,17 +1,23 @@
 import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
-import ServicesSection from "@/components/ServicesSection";
 import PlansSection from "@/components/PlansSection";
+import ServicesSection from "@/components/ServicesSection";
+import PrevisionSection from "@/components/PrevisionSection";
+import MemorialesSection from "@/components/MemorialesSection";
 import AboutSection from "@/components/AboutSection";
-import CTASection from "@/components/CTASection";
+import BlogSection from "@/components/BlogSection";
+import ContactoSection from "@/components/ContactoSection";
 
 const Index = () => (
   <Layout>
     <HeroSection />
-    <ServicesSection />
     <PlansSection />
+    <ServicesSection />
+    <PrevisionSection />
+    <MemorialesSection />
     <AboutSection />
-    <CTASection />
+    <BlogSection />
+    <ContactoSection />
   </Layout>
 );
 

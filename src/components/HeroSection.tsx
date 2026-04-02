@@ -3,7 +3,7 @@ import { Phone, MessageCircle, ArrowDown } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 
 const HeroSection = () => (
-  <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
     {/* Background */}
     <div className="absolute inset-0">
       <img

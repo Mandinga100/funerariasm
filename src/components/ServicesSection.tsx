@@ -45,7 +45,7 @@ const ServicesSection = () => {
   const gridRef = useStaggerReveal(120);
 
   return (
-    <section className="py-24 bg-background">
+    <section id="servicios" className="py-24 bg-background">
       <div className="container">
         <div ref={headerRef} className="text-center mb-16">
           <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestros Servicios</p>

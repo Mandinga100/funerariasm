@@ -132,7 +132,7 @@ const MemorialDetail = () => {
       donor_name: "Anónimo",
       created_at: new Date().toISOString(),
     };
-    addSessionOffering(memorial.id, offering);
+    markPageAction(memorial.id, type);
     setSessionOfferings((prev) => [...prev, offering]);
     toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);

@@ -38,28 +38,34 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   const totalCandles = Math.min(candles.length, 16);
   const totalFlowers = Math.min(flowers.length, 16);
 
-  // Build alternating positions outside the photo+crown area
+  const ROSE_COLORS = [
+    { petal: "#e11d48", center: "#fbbf24" },  // Red rose
+    { petal: "#f472b6", center: "#fde68a" },  // Pink rose
+    { petal: "#fbbf24", center: "#f59e0b" },  // Yellow rose
+    { petal: "#f9fafb", center: "#fde68a" },  // White rose
+    { petal: "#c084fc", center: "#fbbf24" },  // Purple rose
+    { petal: "#fb923c", center: "#fde68a" },  // Orange rose
+  ];
+
   const orbitItems = useMemo(() => {
-    const items: { type: "candle" | "flower"; x: number; y: number; angle: number; delay: number }[] = [];
-    // Interleave candles and flowers
+    const items: { type: "candle" | "flower"; x: number; y: number; angle: number; delay: number; colorIdx: number }[] = [];
     const maxCount = Math.max(totalCandles, totalFlowers);
     let candleIdx = 0;
     let flowerIdx = 0;
     for (let i = 0; i < maxCount * 2; i++) {
       if (i % 2 === 0 && candleIdx < totalCandles) {
         candleIdx++;
-        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
+        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: 0 });
       } else if (flowerIdx < totalFlowers) {
+        items.push({ type: "flower", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: flowerIdx % ROSE_COLORS.length });
         flowerIdx++;
-        items.push({ type: "flower", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
       } else if (candleIdx < totalCandles) {
         candleIdx++;
-        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1 });
+        items.push({ type: "candle", x: 0, y: 0, angle: 0, delay: items.length * 0.1, colorIdx: 0 });
       }
     }
-    // Now position them in a circle outside the crown
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 72 : 56; // % from center — outside the crown overlay
+    const radius = hasCrown ? 82 : 64;
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -119,20 +125,24 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         ) : (
           <div
             key={`flower-${i}`}
-            className="absolute z-[3] pointer-events-none text-rose-300"
+            className="absolute z-[3] pointer-events-none"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transform: `translate(-50%, -50%) rotate(${item.angle + 90}deg)`,
+              transform: `translate(-50%, -50%)`,
               animation: `fade-in 0.6s ease-out ${item.delay}s both`,
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="drop-shadow-sm">
-              <path d="M12 2C9.5 2 8 4.5 8 6.5C8 8.5 9.5 10 12 10C14.5 10 16 8.5 16 6.5C16 4.5 14.5 2 12 2Z" opacity="0.8" />
-              <path d="M6.5 8C4.5 8 2 9.5 2 12C2 14.5 4.5 16 6.5 16C8.5 16 10 14.5 10 12C10 9.5 8.5 8 6.5 8Z" opacity="0.7" />
-              <path d="M17.5 8C15.5 8 14 9.5 14 12C14 14.5 15.5 16 17.5 16C19.5 16 22 14.5 22 12C22 9.5 19.5 8 17.5 8Z" opacity="0.7" />
-              <path d="M12 14C9.5 14 8 15.5 8 17.5C8 19.5 9.5 22 12 22C14.5 22 16 19.5 16 17.5C16 15.5 14.5 14 12 14Z" opacity="0.8" />
-              <circle cx="12" cy="12" r="3" fill="rgb(251 191 36)" opacity="0.9" />
+            <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
+              {/* Petals */}
+              <ellipse cx="16" cy="8" rx="5" ry="7" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.85" />
+              <ellipse cx="8" cy="14" rx="5" ry="7" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.75" transform="rotate(-40 8 14)" />
+              <ellipse cx="24" cy="14" rx="5" ry="7" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.75" transform="rotate(40 24 14)" />
+              <ellipse cx="10" cy="22" rx="5" ry="7" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.7" transform="rotate(-70 10 22)" />
+              <ellipse cx="22" cy="22" rx="5" ry="7" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.7" transform="rotate(70 22 22)" />
+              {/* Center */}
+              <circle cx="16" cy="16" r="4" fill={ROSE_COLORS[item.colorIdx].center} opacity="0.9" />
+              <circle cx="16" cy="16" r="2" fill={ROSE_COLORS[item.colorIdx].petal} opacity="0.5" />
             </svg>
           </div>
         )

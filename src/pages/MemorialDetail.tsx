@@ -38,27 +38,16 @@ interface Offering {
   created_at?: string;
 }
 
-// Session-only offerings key
-const SESSION_KEY = "memorial_offerings_session";
+// Pure in-memory tracking — resets on reload or navigation
+let memoryActions: Record<string, Set<string>> = {};
 
-function getSessionOfferings(memorialId: string): Offering[] {
-  try {
-    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
-    return data[memorialId] || [];
-  } catch { return []; }
+function hasPageAction(memorialId: string, type: string): boolean {
+  return memoryActions[memorialId]?.has(type) ?? false;
 }
 
-function addSessionOffering(memorialId: string, offering: Offering) {
-  try {
-    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
-    if (!data[memorialId]) data[memorialId] = [];
-    data[memorialId].push(offering);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
-  } catch {}
-}
-
-function hasSessionAction(memorialId: string, type: string): boolean {
-  return getSessionOfferings(memorialId).some((o) => o.offering_type === type);
+function markPageAction(memorialId: string, type: string) {
+  if (!memoryActions[memorialId]) memoryActions[memorialId] = new Set();
+  memoryActions[memorialId].add(type);
 }
 
 const MemorialDetail = () => {
@@ -93,8 +82,7 @@ const MemorialDetail = () => {
           .eq("approved", true)
           .order("created_at", { ascending: false });
         setCondolences((condsRes.data as Condolence[]) || []);
-        // Load session offerings (ephemeral — not from DB for test memorials)
-        setSessionOfferings(getSessionOfferings(mem.id));
+        // Offerings start empty — ephemeral, reset on reload
       }
       setLoading(false);
     };
@@ -134,7 +122,7 @@ const MemorialDetail = () => {
 
   const addOffering = useCallback((type: "candle" | "flower") => {
     if (!memorial) return;
-    if (hasSessionAction(memorial.id, type)) {
+    if (hasPageAction(memorial.id, type)) {
       toast.info(type === "candle" ? "Ya encendió una vela en esta sesión" : "Ya ofreció flores en esta sesión");
       return;
     }
@@ -144,7 +132,7 @@ const MemorialDetail = () => {
       donor_name: "Anónimo",
       created_at: new Date().toISOString(),
     };
-    addSessionOffering(memorial.id, offering);
+    markPageAction(memorial.id, type);
     setSessionOfferings((prev) => [...prev, offering]);
     toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);
@@ -166,7 +154,7 @@ const MemorialDetail = () => {
       crown_tier: data.tier,
       created_at: new Date().toISOString(),
     };
-    addSessionOffering(memorial.id, offering);
+    markPageAction(memorial.id, "flower_crown");
     setSessionOfferings((prev) => [...prev, offering]);
     setCrownSending(false);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
@@ -192,8 +180,8 @@ const MemorialDetail = () => {
   const flowerCount = sessionOfferings.filter((o) => o.offering_type === "flower").length;
   const crownCount = sessionOfferings.filter((o) => o.offering_type === "flower_crown").length;
 
-  const candleUsed = memorial ? hasSessionAction(memorial.id, "candle") : false;
-  const flowerUsed = memorial ? hasSessionAction(memorial.id, "flower") : false;
+  const candleUsed = memorial ? hasPageAction(memorial.id, "candle") : false;
+  const flowerUsed = memorial ? hasPageAction(memorial.id, "flower") : false;
 
   if (loading) {
     return (

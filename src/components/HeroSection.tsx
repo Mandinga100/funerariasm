@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, ArrowDown } from "lucide-react";
-import { buildWhatsAppUrl } from "./WhatsAppFloat";
+import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 
 const HeroSection = () => (
   <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

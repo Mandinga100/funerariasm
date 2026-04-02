@@ -1,4 +1,4 @@
-import { buildWhatsAppUrl } from "./WhatsAppFloat";
+import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import { Phone, MessageCircle } from "lucide-react";
 
 const AboutSection = () => (

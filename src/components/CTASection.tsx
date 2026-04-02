@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, FileText, Heart } from "lucide-react";
-import { buildWhatsAppUrl } from "./WhatsAppFloat";
+import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 
 const CTASection = () => (
   <section className="relative py-24 overflow-hidden">

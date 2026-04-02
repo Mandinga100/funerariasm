@@ -82,8 +82,7 @@ const MemorialDetail = () => {
           .eq("approved", true)
           .order("created_at", { ascending: false });
         setCondolences((condsRes.data as Condolence[]) || []);
-        // Load session offerings (ephemeral — not from DB for test memorials)
-        setSessionOfferings(getSessionOfferings(mem.id));
+        // Offerings start empty — ephemeral, reset on reload
       }
       setLoading(false);
     };

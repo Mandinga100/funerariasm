@@ -355,7 +355,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-350 ${
+        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-500 ${
           isClosing ? "opacity-0" : "opacity-100"
         }`}
       />

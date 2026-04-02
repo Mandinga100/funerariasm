@@ -64,6 +64,10 @@ const MemorialDetail = () => {
   const [crownSending, setCrownSending] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [slug]);
+
+  useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from("memorials")

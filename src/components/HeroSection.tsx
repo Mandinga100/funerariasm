@@ -44,27 +44,28 @@ const HeroSection = () => (
       >
         <a
           href="tel:+56964333760"
-          className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide-brand uppercase transition-brand font-medium"
+          className="group relative flex items-center gap-2 bg-gold hover:bg-gold-dark text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide-brand uppercase transition-brand font-medium overflow-hidden hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.4)]"
         >
-          <Phone className="w-4 h-4" />
+          <Phone className="w-4 h-4 transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110" />
           Solicitar ayuda inmediata
         </a>
         <a
           href={buildWhatsAppUrlDirect("Hola, necesito orientación sobre sus servicios funerarios. ¿Podrían asesorarme?")}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 border border-primary-foreground/20 text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide-brand uppercase transition-brand"
+          className="group flex items-center gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 border border-primary-foreground/20 hover:border-gold/40 text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide-brand uppercase transition-brand hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.15)]"
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
           Hablar por WhatsApp
         </a>
       </div>
       <Link
         to="/planes"
-        className="inline-block mt-6 text-gold/60 hover:text-gold text-xs tracking-wide-brand uppercase transition-brand animate-fade-in"
+        className="inline-block mt-6 text-gold/60 hover:text-gold text-xs tracking-wide-brand uppercase transition-brand animate-fade-in group"
         style={{ animationDelay: "1s", opacity: 0 }}
       >
-        Ver planes funerarios →
+        Ver planes funerarios{" "}
+        <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
       </Link>
     </div>
 

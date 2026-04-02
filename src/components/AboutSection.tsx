@@ -1,4 +1,4 @@
-import { buildWhatsAppUrl } from "./WhatsAppFloat";
+import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import { Phone, MessageCircle } from "lucide-react";
 
 const AboutSection = () => (
@@ -53,7 +53,7 @@ const AboutSection = () => (
 
           <div className="flex flex-wrap gap-3">
             <a
-              href={buildWhatsAppUrl("Hola, me gustaría conocer más sobre Funeraria Santa Margarita y sus servicios.")}
+              href={buildWhatsAppUrlDirect("Hola, me gustaría conocer más sobre Funeraria Santa Margarita y sus servicios.")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-accent-foreground px-6 py-3 rounded-full text-sm tracking-wide-brand uppercase transition-brand"

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, ArrowDown } from "lucide-react";
-import { buildWhatsAppUrl } from "./WhatsAppFloat";
+import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 
 const HeroSection = () => (
   <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -50,7 +50,7 @@ const HeroSection = () => (
           Solicitar ayuda inmediata
         </a>
         <a
-          href={buildWhatsAppUrl("Hola, necesito orientación sobre sus servicios funerarios. ¿Podrían asesorarme?")}
+          href={buildWhatsAppUrlDirect("Hola, necesito orientación sobre sus servicios funerarios. ¿Podrían asesorarme?")}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 border border-primary-foreground/20 text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide-brand uppercase transition-brand"

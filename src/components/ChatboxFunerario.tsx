@@ -103,7 +103,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-    }, 350);
+    }, 500);
   }, [onClose]);
 
   const resetChat = useCallback(() => {

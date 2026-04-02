@@ -68,8 +68,7 @@ const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; l
   },
 };
 
-const ChatboxFunerario = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");

@@ -38,27 +38,16 @@ interface Offering {
   created_at?: string;
 }
 
-// Session-only offerings key
-const SESSION_KEY = "memorial_offerings_session";
+// Pure in-memory tracking — resets on reload or navigation
+let memoryActions: Record<string, Set<string>> = {};
 
-function getSessionOfferings(memorialId: string): Offering[] {
-  try {
-    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
-    return data[memorialId] || [];
-  } catch { return []; }
+function hasPageAction(memorialId: string, type: string): boolean {
+  return memoryActions[memorialId]?.has(type) ?? false;
 }
 
-function addSessionOffering(memorialId: string, offering: Offering) {
-  try {
-    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
-    if (!data[memorialId]) data[memorialId] = [];
-    data[memorialId].push(offering);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
-  } catch {}
-}
-
-function hasSessionAction(memorialId: string, type: string): boolean {
-  return getSessionOfferings(memorialId).some((o) => o.offering_type === type);
+function markPageAction(memorialId: string, type: string) {
+  if (!memoryActions[memorialId]) memoryActions[memorialId] = new Set();
+  memoryActions[memorialId].add(type);
 }
 
 const MemorialDetail = () => {

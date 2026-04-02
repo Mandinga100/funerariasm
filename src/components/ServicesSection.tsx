@@ -1,4 +1,5 @@
 import { Heart, Shield, Clock, Award, Users, Truck } from "lucide-react";
+import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 
 const SERVICES = [
   {
@@ -39,45 +40,50 @@ const SERVICES = [
   },
 ];
 
-const ServicesSection = () => (
-  <section className="py-24 bg-background">
-    <div className="container">
-      <div className="text-center mb-16">
-        <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestros Servicios</p>
-        <h2 className="text-section font-playfair italic text-foreground mb-4">
-          Acompañamiento integral y profesional
-        </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Cada detalle importa. Ofrecemos un servicio completo para que usted pueda concentrarse en lo que realmente importa: despedirse con amor.
-        </p>
-      </div>
+const ServicesSection = () => {
+  const headerRef = useScrollReveal();
+  const gridRef = useStaggerReveal(120);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {SERVICES.map((service) => (
-          <div
-            key={service.title}
-            className="group bg-card rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-lg"
-          >
-            <div className="aspect-[16/10] overflow-hidden">
-              <img
-                src={service.image}
-                alt={service.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow"
-                loading="lazy"
-              />
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <service.icon className="w-5 h-5 text-gold" />
-                <h3 className="font-playfair text-lg text-foreground">{service.title}</h3>
+  return (
+    <section className="py-24 bg-background">
+      <div className="container">
+        <div ref={headerRef} className="text-center mb-16">
+          <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestros Servicios</p>
+          <h2 className="text-section font-playfair italic text-foreground mb-4">
+            Acompañamiento integral y profesional
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Cada detalle importa. Ofrecemos un servicio completo para que usted pueda concentrarse en lo que realmente importa: despedirse con amor.
+          </p>
+        </div>
+
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {SERVICES.map((service) => (
+            <div
+              key={service.title}
+              className="group bg-card rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
+            >
+              <div className="aspect-[16/10] overflow-hidden">
+                <img
+                  src={service.image}
+                  alt={service.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow"
+                  loading="lazy"
+                />
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <service.icon className="w-5 h-5 text-gold transition-transform duration-300 group-hover:scale-110" />
+                  <h3 className="font-playfair text-lg text-foreground">{service.title}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default ServicesSection;

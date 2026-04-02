@@ -65,7 +65,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
       }
     }
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 68 : 58;
+    const radius = hasCrown ? 62 : 52;
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;

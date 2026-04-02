@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Phone, Bot, User, ArrowLeft } from "lucide-react";
+import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
 import assistantAvatar from "@/assets/assistant-avatar.png";
@@ -8,7 +8,6 @@ interface ChatMessage {
   role: "assistant" | "user";
   content: string;
   chips?: ChatChip[];
-  collectContact?: boolean;
 }
 
 interface ChatChip {
@@ -57,6 +56,11 @@ const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; l
   },
 };
 
+// Web Speech API types
+interface SpeechRecognitionEvent {
+  results: { [index: number]: { [index: number]: { transcript: string } } };
+}
+
 const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
@@ -67,24 +71,20 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const [currentIntent, setCurrentIntent] = useState<ContactIntent>("general");
   const [contactStep, setContactStep] = useState<ContactStep>("idle");
   const [contactData, setContactData] = useState<ContactFormData>({ name: "", rut: "", phone: "" });
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Lock body scroll when chat is open
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Click outside to close
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
@@ -96,10 +96,14 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   }, []);
 
   const handleClose = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      setIsListening(false);
+    }
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-    }, 300);
+    }, 350);
   }, [onClose]);
 
   const resetChat = useCallback(() => {
@@ -111,16 +115,48 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setInputText("");
   }, []);
 
-  // Contact collection flow
+  // Voice input via Web Speech API
+  const toggleVoice = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Su navegador no soporta reconocimiento de voz. Por favor, escriba su mensaje." },
+      ]);
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-CL";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setInputText(transcript);
+      setIsListening(false);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
+
   const startContactCollection = (intent: ContactIntent) => {
     setCurrentIntent(intent);
     setContactStep("name");
     setMessages((prev) => [
       ...prev,
-      {
-        role: "assistant",
-        content: "Para contactarle de forma personalizada, necesito algunos datos.\n\n¿Cuál es su nombre completo?",
-      },
+      { role: "assistant", content: "Para contactarle de forma personalizada, necesito algunos datos.\n\n¿Cuál es su nombre completo?" },
     ]);
   };
 
@@ -146,7 +182,6 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       setContactData(finalData);
       setContactStep("done");
 
-      // Save to DB
       try {
         await submitContact({
           contactType: "chatbox",
@@ -157,16 +192,13 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           message: `RUT: ${finalData.rut}`,
           urgency: currentIntent === "fallecimiento" ? "immediate" : "normal",
         });
-      } catch {
-        // non-blocking
-      }
+      } catch { /* non-blocking */ }
 
       const intentLabels: Record<string, string> = {
         fallecimiento: "asistencia inmediata por fallecimiento",
         cotizacion: "cotización de servicio funerario",
         planificacion: "planificación de servicio a futuro",
       };
-
       const serviceDesc = intentLabels[currentIntent] || "consulta general";
       const whatsappMsg = `Hola, soy ${finalData.name} (RUT: ${finalData.rut}). Necesito ${serviceDesc}. Mi número de contacto es ${finalData.phone}. Agradezco su pronta respuesta.`;
 
@@ -176,18 +208,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           role: "assistant",
           content: `Perfecto, ${finalData.name}. Hemos registrado sus datos. Un asesor le contactará a la brevedad.\n\nTambién puede iniciar la conversación directamente:`,
           chips: [
-            {
-              label: "💬 Abrir WhatsApp",
-              action: () => window.open(buildWhatsAppUrlDirect(whatsappMsg), "_blank"),
-            },
-            {
-              label: "📞 Llamar ahora",
-              action: () => window.open("tel:+56964333760"),
-            },
-            {
-              label: "↩️ Nueva consulta",
-              action: resetChat,
-            },
+            { label: "💬 Abrir WhatsApp", action: () => window.open(buildWhatsAppUrlDirect(whatsappMsg), "_blank") },
+            { label: "📞 Llamar ahora", action: () => window.open("tel:+56964333760") },
+            { label: "↩️ Nueva consulta", action: resetChat },
           ],
         },
       ]);
@@ -196,7 +219,6 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
 
   const handleTreeOption = async (label: string, intent: ContactIntent) => {
     const isAI = label.includes("Asistente");
-
     setMessages((prev) => [...prev, { role: "user", content: label }]);
     setShowMainOptions(false);
 
@@ -204,55 +226,27 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       setMode("ai");
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "Soy la asistente virtual de Funeraria Santa Margarita. Puede hacerme cualquier pregunta sobre nuestros servicios, planes y procesos. ¿En qué puedo ayudarle?",
-        },
+        { role: "assistant", content: "Soy la asistente virtual de Funeraria Santa Margarita. Puede hacerme cualquier pregunta sobre nuestros servicios, planes y procesos. También puede usar el micrófono para hablar. ¿En qué puedo ayudarle?" },
       ]);
       return;
     }
 
     const response = TREE_RESPONSES[intent] || TREE_RESPONSES.fallecimiento;
-
-    // Log interaction
     try {
-      await submitContact({
-        contactType: "chatbox",
-        intent,
-        source: "chatbox",
-        urgency: intent === "fallecimiento" ? "immediate" : "normal",
-      });
-    } catch {
-      // non-blocking
-    }
+      await submitContact({ contactType: "chatbox", intent, source: "chatbox", urgency: intent === "fallecimiento" ? "immediate" : "normal" });
+    } catch { /* non-blocking */ }
 
     const chips: ChatChip[] = [];
     if (response.showContact) {
-      chips.push({
-        label: "✅ Sí, contactarme",
-        action: () => startContactCollection(intent),
-      });
-      chips.push({
-        label: "📞 Llamar directo",
-        action: () => window.open("tel:+56964333760"),
-      });
+      chips.push({ label: "✅ Sí, contactarme", action: () => startContactCollection(intent) });
+      chips.push({ label: "📞 Llamar directo", action: () => window.open("tel:+56964333760") });
     }
     if (response.link) {
-      chips.push({
-        label: "🔗 Ver planes",
-        action: () => (window.location.href = response.link!),
-      });
+      chips.push({ label: "🔗 Ver planes", action: () => (window.location.href = response.link!) });
     }
-    chips.push({
-      label: "↩️ Volver al inicio",
-      action: resetChat,
-    });
+    chips.push({ label: "↩️ Volver al inicio", action: resetChat });
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: response.message, chips },
-    ]);
+    setMessages((prev) => [...prev, { role: "assistant", content: response.message, chips }]);
   };
 
   const handleSendMessage = async () => {
@@ -260,13 +254,11 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     const value = inputText.trim();
     setInputText("");
 
-    // If collecting contact data
     if (contactStep !== "idle" && contactStep !== "done") {
       handleContactInput(value);
       return;
     }
 
-    // AI mode
     if (mode === "ai") {
       await handleAIMessage(value);
     }
@@ -274,7 +266,6 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
 
   const handleAIMessage = async (userMsg: string) => {
     if (isLoading) return;
-
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
@@ -325,16 +316,12 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
               setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant" && !last.chips) {
-                  return prev.map((m, i) =>
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
+                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
                 }
                 return [...prev, { role: "assistant", content: assistantContent }];
               });
             }
-          } catch {
-            // partial JSON
-          }
+          } catch { /* partial JSON */ }
         }
       }
     } catch (e) {
@@ -343,8 +330,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
         ...prev,
         {
           role: "assistant",
-          content:
-            "Disculpe, no pude procesar su consulta. Le recomiendo comunicarse directamente:",
+          content: "Disculpe, no pude procesar su consulta. Le recomiendo comunicarse directamente:",
           chips: [
             { label: "📞 Llamar", action: () => window.open("tel:+56964333760") },
             { label: "💬 WhatsApp", action: () => window.open(buildWhatsAppUrl({ intent: "general" }), "_blank") },
@@ -367,9 +353,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <>
-      {/* Backdrop overlay */}
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-350 ${
           isClosing ? "opacity-0" : "opacity-100"
         }`}
       />
@@ -377,30 +363,29 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       {/* Chat window */}
       <div
         ref={chatRef}
-        className={`fixed bottom-20 right-3 sm:right-5 z-50 w-[calc(100vw-24px)] sm:w-[380px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+        className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all ease-[cubic-bezier(0.4,0,0.2,1)] ${
           isClosing
-            ? "opacity-0 scale-90 translate-y-4"
-            : "opacity-100 scale-100 translate-y-0 animate-fade-in-up"
+            ? "opacity-0 scale-[0.15] duration-350"
+            : "opacity-100 scale-100 duration-300 animate-fade-in-up"
         }`}
-        style={{ height: "min(560px, calc(100vh - 140px))" }}
+        style={{
+          width: "min(calc(100vw - 24px), 380px)",
+          height: "min(560px, calc(100vh - 140px))",
+          bottom: isClosing ? "5rem" : "5rem",
+          right: isClosing ? "0.75rem" : "0.75rem",
+          transformOrigin: "bottom right",
+        }}
       >
         {/* Header */}
         <div className="bg-primary text-primary-foreground p-3 sm:p-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/40 shrink-0">
-              <img
-                src={assistantAvatar}
-                alt="Asistente virtual"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                width={40}
-                height={40}
-              />
+              <img src={assistantAvatar} alt="Asistente virtual" className="w-full h-full object-cover" loading="lazy" width={40} height={40} />
             </div>
             <div>
               <p className="font-playfair text-sm font-semibold leading-tight">Santa Margarita</p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-soft" />
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase">
                   {mode === "ai" ? "Asistente IA" : "En línea · 24/7"}
                 </p>
@@ -408,19 +393,16 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
             </div>
           </div>
           <button
-            onClick={() => {
-              handleClose();
-            }}
-            className="text-primary-foreground/60 hover:text-primary-foreground hover:rotate-90 transition-all duration-300 p-1.5 rounded-full hover:bg-primary-foreground/10"
+            onClick={handleClose}
+            className="text-primary-foreground/60 hover:text-primary-foreground transition-all duration-300 p-1.5 rounded-full hover:bg-primary-foreground/10"
             aria-label="Cerrar chat"
           >
-            <X className="w-5 h-5" />
+            <X className={`w-5 h-5 transition-transform duration-300 ${isClosing ? "rotate-90 scale-75" : ""}`} />
           </button>
         </div>
 
-        {/* Messages area - scroll isolated */}
+        {/* Messages */}
         <div
-          ref={scrollContainerRef}
           className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 bg-soft-gray/30"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
@@ -430,13 +412,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
               <div className={`flex items-start gap-2 ${msg.role === "user" ? "max-w-[80%]" : "max-w-[88%]"}`}>
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1">
-                    <img
-                      src={assistantAvatar}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      width={28}
-                      height={28}
-                    />
+                    <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
                   </div>
                 )}
                 <div className="flex-1">
@@ -481,7 +457,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
                   onClick={() => handleTreeOption(opt.label, opt.intent)}
                   className={`text-left text-[12px] sm:text-[13px] leading-snug bg-background border hover:border-gold/50 hover:bg-gold/5 rounded-xl px-3 py-3 transition-all duration-200 flex items-center gap-2 ${
                     opt.intent === "fallecimiento"
-                      ? "border-destructive/30 hover:border-destructive/60 col-span-2 bg-destructive/5 text-destructive font-medium justify-center text-[13px] sm:text-sm"
+                      ? "border-destructive/30 hover:border-destructive/60 bg-destructive/5 text-destructive font-medium"
                       : "border-border"
                   }`}
                 >
@@ -511,7 +487,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
+        {/* Input area - always visible */}
         {showInput && (
           <div className="p-3 bg-background border-t border-border shrink-0">
             <div className="flex items-center gap-2">
@@ -525,6 +501,17 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
                 disabled={isLoading}
                 autoFocus
               />
+              <button
+                onClick={toggleVoice}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  isListening
+                    ? "bg-destructive text-destructive-foreground animate-pulse"
+                    : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
+                }`}
+                aria-label={isListening ? "Detener grabación" : "Enviar por voz"}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !inputText.trim()}
@@ -545,7 +532,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           </div>
         )}
 
-        {/* Quick actions (tree mode, after selection) */}
+        {/* Quick actions for tree mode after selection */}
         {mode === "tree" && !showMainOptions && !showInput && (
           <div className="p-3 bg-background border-t border-border shrink-0 flex gap-2">
             <a

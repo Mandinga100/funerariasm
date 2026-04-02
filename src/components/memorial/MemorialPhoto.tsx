@@ -16,7 +16,7 @@ const CROWN_INSET: Record<number, string> = {
   1: "-15%",  // ~50% inner opening — moderate expansion
   2: "-14%",  // ~50% inner opening — slightly less
   3: "-16%",  // ~48% inner opening — bit more expansion
-  4: "-11%",  // thinner premium crown while preserving overall footprint
+  4: "-14%",  // premium crown keeps its footprint, but with a thinner floral band
 };
 
 interface Offering {

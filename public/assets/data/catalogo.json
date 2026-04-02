@@ -1,0 +1,87 @@
+[
+  {
+    "id": "margarita",
+    "nombre": "Plan Margarita",
+    "precio": "$1.290.000",
+    "servicios": [
+      "Urna Estándar",
+      "Soporte Administrativo",
+      "Capilla Básica",
+      "Libro Condolencias"
+    ],
+    "img": "/assets/images/planes/plans.webp"
+  },
+  {
+    "id": "azucena",
+    "nombre": "Plan Azucena",
+    "precio": "$1.360.000",
+    "servicios": [
+      "Cofre Estándar Lineal",
+      "Traslado Local Inmediato",
+      "Capilla Pública/Domicilio",
+      "Trámites Civiles"
+    ],
+    "img": "/assets/images/planes/plans.webp"
+  },
+  {
+    "id": "rosal",
+    "nombre": "Plan Rosal Abelia",
+    "precio": "$1.750.000",
+    "servicios": [
+      "Cofre Especial",
+      "Atención 24/7",
+      "Sala Velación 12h",
+      "Arreglo Floral"
+    ],
+    "img": "/assets/images/planes/plans.webp"
+  },
+  {
+    "id": "acacia",
+    "nombre": "Plan Acacia",
+    "precio": "$2.250.000",
+    "servicios": [
+      "Urna Acacia Especial",
+      "Servicio Ceremonial",
+      "Vehículo Acompañante",
+      "Misas Mensuales"
+    ],
+    "img": "/assets/images/planes/plan-acacia.webp"
+  },
+  {
+    "id": "quillay",
+    "nombre": "Plan Quillay",
+    "precio": "$2.390.000",
+    "servicios": [
+      "Madera Barnizada Quillay",
+      "Sala Velación 12h",
+      "Carroza Estándar",
+      "Asesoría Familiar"
+    ],
+    "img": "/assets/images/planes/plan-quillay.webp"
+  },
+  {
+    "id": "queule",
+    "nombre": "Plan Queule / Algarrobo",
+    "precio": "$2.990.000",
+    "servicios": [
+      "Roble Nacional Queule",
+      "Sala Privada 24h",
+      "Arreglos Especiales",
+      "Carroza de Lujo"
+    ],
+    "img": "/assets/images/planes/plans.webp"
+  },
+  {
+    "id": "raul",
+    "nombre": "Plan Raúl Premium",
+    "precio": "$3.590.000",
+    "servicios": [
+      "Maderas Importación Raúl",
+      "Suite Presidencial 24h",
+      "Cortejo VIP Mercedes-Benz",
+      "Memorial de Vida 4K"
+    ],
+    "img": "/assets/images/planes/plan-raul.webp",
+    "destacado": true
+  }
+]

@@ -127,8 +127,9 @@ const BlogSection = () => {
               <p className="text-muted-foreground">No hay artículos en esta categoría aún.</p>
             </div>
           ) : (
-            filteredPosts.map((post) => {
+            filteredPosts.map((post, index) => {
               const image = post.cover_image || getCategoryImage(post.category);
+              const mobileHidden = index >= 3 ? "hidden sm:block" : "";
               return (
                 <Link
                   key={post.id}

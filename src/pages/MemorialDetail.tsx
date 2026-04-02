@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import MemorialPhoto from "@/components/memorial/MemorialPhoto";
 import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
+import TributesModal from "@/components/memorial/TributesModal";
 
 interface Memorial {
   id: string;
@@ -33,18 +34,44 @@ interface Offering {
   crown_tier?: number;
   donor_name?: string;
   donor_message?: string;
+  amount?: number;
+  created_at?: string;
+}
+
+// Session-only offerings key
+const SESSION_KEY = "memorial_offerings_session";
+
+function getSessionOfferings(memorialId: string): Offering[] {
+  try {
+    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
+    return data[memorialId] || [];
+  } catch { return []; }
+}
+
+function addSessionOffering(memorialId: string, offering: Offering) {
+  try {
+    const data = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
+    if (!data[memorialId]) data[memorialId] = [];
+    data[memorialId].push(offering);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch {}
+}
+
+function hasSessionAction(memorialId: string, type: string): boolean {
+  return getSessionOfferings(memorialId).some((o) => o.offering_type === type);
 }
 
 const MemorialDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [memorial, setMemorial] = useState<Memorial | null>(null);
   const [condolences, setCondolences] = useState<Condolence[]>([]);
-  const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [sessionOfferings, setSessionOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [crownModalOpen, setCrownModalOpen] = useState(false);
+  const [tributesModalOpen, setTributesModalOpen] = useState(false);
   const [crownSending, setCrownSending] = useState(false);
 
   useEffect(() => {
@@ -58,38 +85,29 @@ const MemorialDetail = () => {
       if (mem) {
         setMemorial(mem);
         document.title = `${mem.full_name} — Legado Eterno | Funeraria Santa Margarita`;
-
-        // Load condolences and offerings in parallel
-        const [condsRes, offeringsRes] = await Promise.all([
-          supabase
-            .from("condolences")
-            .select("id, author_name, message, created_at")
-            .eq("memorial_id", mem.id)
-            .eq("approved", true)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("memorial_offerings")
-            .select("id, offering_type, crown_tier, donor_name, donor_message")
-            .eq("memorial_id", mem.id),
-        ]);
+        // Load condolences
+        const condsRes = await supabase
+          .from("condolences")
+          .select("id, author_name, message, created_at")
+          .eq("memorial_id", mem.id)
+          .eq("approved", true)
+          .order("created_at", { ascending: false });
         setCondolences((condsRes.data as Condolence[]) || []);
-        setOfferings((offeringsRes.data as Offering[]) || []);
+        // Load session offerings (ephemeral — not from DB for test memorials)
+        setSessionOfferings(getSessionOfferings(mem.id));
       }
       setLoading(false);
     };
     load();
   }, [slug]);
 
-  // Realtime for condolences & offerings
+  // Realtime for condolences only
   useEffect(() => {
     if (!memorial) return;
     const channel = supabase
       .channel(`memorial-${memorial.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "condolences", filter: `memorial_id=eq.${memorial.id}` }, (payload) => {
         setCondolences((prev) => [payload.new as Condolence, ...prev]);
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "memorial_offerings", filter: `memorial_id=eq.${memorial.id}` }, (payload) => {
-        setOfferings((prev) => [...prev, payload.new as Offering]);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -114,46 +132,45 @@ const MemorialDetail = () => {
     }
   };
 
-  const addOffering = useCallback(async (type: "candle" | "flower") => {
+  const addOffering = useCallback((type: "candle" | "flower") => {
     if (!memorial) return;
-    const { error } = await supabase.from("memorial_offerings").insert({
-      memorial_id: memorial.id,
+    if (hasSessionAction(memorial.id, type)) {
+      toast.info(type === "candle" ? "Ya encendió una vela en esta sesión" : "Ya ofreció flores en esta sesión");
+      return;
+    }
+    const offering: Offering = {
+      id: crypto.randomUUID(),
       offering_type: type,
       donor_name: "Anónimo",
-    });
-    if (error) {
-      toast.error("No se pudo registrar su ofrenda.");
-    } else {
-      toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
-    }
+      created_at: new Date().toISOString(),
+    };
+    addSessionOffering(memorial.id, offering);
+    setSessionOfferings((prev) => [...prev, offering]);
+    toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);
 
-  const handleCrownDonate = useCallback(async (data: { donorName: string; message: string; amount: number; tier: number; simulate: boolean }) => {
+  const handleCrownDonate = useCallback((data: { donorName: string; message: string; amount: number; tier: number; simulate: boolean }) => {
     if (!memorial) return;
     setCrownSending(true);
 
     if (!data.simulate) {
-      // For real payment — Phase 3 will handle Stripe integration
       toast.info("Integración de pagos próximamente. Se registrará como simulación.");
     }
 
-    const { error } = await supabase.from("memorial_offerings").insert({
-      memorial_id: memorial.id,
+    const offering: Offering = {
+      id: crypto.randomUUID(),
       offering_type: "flower_crown",
       donor_name: data.donorName,
       donor_message: data.message,
       amount: data.amount,
       crown_tier: data.tier,
-      payment_status: data.simulate ? "simulated" : "simulated", // will be "paid" with Stripe in Phase 3
-    });
-
+      created_at: new Date().toISOString(),
+    };
+    addSessionOffering(memorial.id, offering);
+    setSessionOfferings((prev) => [...prev, offering]);
     setCrownSending(false);
-    if (error) {
-      toast.error("No se pudo registrar su donación.");
-    } else {
-      toast.success("🌺 Corona de flores ofrecida en su memoria");
-      setCrownModalOpen(false);
-    }
+    toast.success("🌺 Corona de flores ofrecida en su memoria");
+    setCrownModalOpen(false);
   }, [memorial]);
 
   const formatDate = (dateStr: string) =>
@@ -170,6 +187,13 @@ const MemorialDetail = () => {
 
   const formatCondolenceDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("es-CL", { day: "numeric", month: "short", year: "numeric" });
+
+  const candleCount = sessionOfferings.filter((o) => o.offering_type === "candle").length;
+  const flowerCount = sessionOfferings.filter((o) => o.offering_type === "flower").length;
+  const crownCount = sessionOfferings.filter((o) => o.offering_type === "flower_crown").length;
+
+  const candleUsed = memorial ? hasSessionAction(memorial.id, "candle") : false;
+  const flowerUsed = memorial ? hasSessionAction(memorial.id, "flower") : false;
 
   if (loading) {
     return (
@@ -201,9 +225,6 @@ const MemorialDetail = () => {
   }
 
   const age = getYears(memorial.birth_date, memorial.death_date);
-  const candleCount = offerings.filter((o) => o.offering_type === "candle").length;
-  const flowerCount = offerings.filter((o) => o.offering_type === "flower").length;
-  const crownCount = offerings.filter((o) => o.offering_type === "flower_crown").length;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -219,7 +240,6 @@ const MemorialDetail = () => {
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* Header */}
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">
           <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
@@ -228,11 +248,10 @@ const MemorialDetail = () => {
           </Link>
 
           <div className="text-center">
-            {/* Photo with offerings */}
             <MemorialPhoto
               photoUrl={memorial.photo_url}
               fullName={memorial.full_name}
-              offerings={offerings}
+              offerings={sessionOfferings}
             />
 
             <h1 className="text-3xl md:text-4xl font-playfair italic text-primary-foreground mb-4">{memorial.full_name}</h1>
@@ -246,23 +265,23 @@ const MemorialDetail = () => {
               )}
             </div>
 
-            {/* Offering buttons */}
             <OfferingButtons
               onCandle={() => addOffering("candle")}
               onFlower={() => addOffering("flower")}
               onCrown={() => setCrownModalOpen(true)}
+              onViewTributes={() => setTributesModalOpen(true)}
               candleCount={candleCount}
               flowerCount={flowerCount}
               crownCount={crownCount}
+              candleDisabled={candleUsed}
+              flowerDisabled={flowerUsed}
             />
           </div>
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-16 bg-primary">
         <div className="container max-w-3xl space-y-12">
-          {/* Tribute */}
           {memorial.tribute_text && (
             <div className="text-center border border-gold/15 rounded-lg p-8 bg-primary-foreground/[0.02]">
               <Heart className="w-6 h-6 text-gold/40 mx-auto mb-4" />
@@ -272,7 +291,6 @@ const MemorialDetail = () => {
             </div>
           )}
 
-          {/* Biography */}
           {memorial.biography && (
             <div>
               <h2 className="font-playfair text-xl text-primary-foreground mb-4">Biografía</h2>
@@ -280,7 +298,6 @@ const MemorialDetail = () => {
             </div>
           )}
 
-          {/* Condolences */}
           <div>
             <div className="flex items-center gap-3 mb-6">
               <MessageCircle className="w-5 h-5 text-gold/40" />
@@ -340,7 +357,6 @@ const MemorialDetail = () => {
             )}
           </div>
 
-          {/* Back */}
           <div className="text-center pt-8">
             <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm px-6 py-3 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300">
               <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
@@ -350,13 +366,19 @@ const MemorialDetail = () => {
         </div>
       </section>
 
-      {/* Crown Donation Modal */}
       <CrownDonationModal
         open={crownModalOpen}
         onClose={() => setCrownModalOpen(false)}
         onDonate={handleCrownDonate}
         memorialName={memorial.full_name}
         sending={crownSending}
+      />
+
+      <TributesModal
+        open={tributesModalOpen}
+        onClose={() => setTributesModalOpen(false)}
+        offerings={sessionOfferings}
+        memorialName={memorial.full_name}
       />
     </Layout>
   );

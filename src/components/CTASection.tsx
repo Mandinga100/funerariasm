@@ -33,7 +33,7 @@ const CTASection = () => (
           <span className="text-sm tracking-wide-brand uppercase">Solicitar ayuda inmediata</span>
         </a>
         <a
-          href={buildWhatsAppUrl("Hola, me gustaría cotizar un servicio funerario. ¿Pueden orientarme?")}
+          href={buildWhatsAppUrlDirect("Hola, me gustaría cotizar un servicio funerario. ¿Pueden orientarme?")}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-3 bg-primary-foreground/10 hover:bg-gold/20 border border-primary-foreground/10 hover:border-gold/30 rounded-lg p-6 transition-brand"

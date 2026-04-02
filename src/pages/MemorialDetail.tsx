@@ -122,7 +122,7 @@ const MemorialDetail = () => {
 
   const addOffering = useCallback((type: "candle" | "flower") => {
     if (!memorial) return;
-    if (hasSessionAction(memorial.id, type)) {
+    if (hasPageAction(memorial.id, type)) {
       toast.info(type === "candle" ? "Ya encendió una vela en esta sesión" : "Ya ofreció flores en esta sesión");
       return;
     }

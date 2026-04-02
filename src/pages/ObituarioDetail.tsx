@@ -113,9 +113,9 @@ const ObituarioDetail = () => {
         <div className="container">
           <Link
             to="/obituarios"
-            className="inline-flex items-center gap-2 text-sm text-gold/80 hover:text-gold mb-8 transition-brand bg-gold/10 backdrop-blur-sm px-4 py-2 rounded-full border border-gold/20"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gold bg-gold/10 hover:bg-gold/20 backdrop-blur-sm px-5 py-2.5 rounded-full border border-gold/40 hover:border-gold/70 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.3)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.5)] transition-all duration-300"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
             Volver a Obituarios
           </Link>
 

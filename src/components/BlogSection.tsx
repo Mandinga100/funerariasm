@@ -134,7 +134,7 @@ const BlogSection = () => {
                 <Link
                   key={post.id}
                   to={post.slug === "#" ? "/blog" : `/blog/${post.slug}`}
-                  className="group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
+                  className={`group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)] ${mobileHidden}`}
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-muted">
                     <img src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow" loading="lazy" />

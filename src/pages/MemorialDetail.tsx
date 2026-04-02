@@ -254,7 +254,7 @@ const MemorialDetail = () => {
               offerings={sessionOfferings}
             />
 
-            <h1 className="text-3xl md:text-4xl font-playfair italic text-primary-foreground mb-4">{memorial.full_name}</h1>
+            <h1 className="text-3xl md:text-4xl font-playfair italic text-primary-foreground mb-4 mt-6">{memorial.full_name}</h1>
             <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-primary-foreground/50">
               {memorial.birth_date && <span>{formatDate(memorial.birth_date)}</span>}
               {memorial.birth_date && <span className="text-gold/60">✦</span>}

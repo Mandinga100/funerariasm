@@ -60,7 +60,7 @@ const Obituarios = () => {
   // Reset page when search changes
   useEffect(() => setCurrentPage(1), [search]);
 
-  const totalPages = Math.min(Math.ceil(filtered.length / ITEMS_PER_PAGE), MAX_PAGES);
+  const totalPages = Math.max(1, Math.min(Math.ceil(filtered.length / ITEMS_PER_PAGE), MAX_PAGES));
   const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {

@@ -255,7 +255,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           </div>
         </div>
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
           className="text-primary-foreground/60 hover:text-primary-foreground transition-brand p-1"
           aria-label="Cerrar chat"
         >

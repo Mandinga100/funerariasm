@@ -9,7 +9,7 @@ const WhatsAppFloat = () => {
   return (
     <>
       {/* Chatbox */}
-      {chatOpen && <ChatboxFunerario />}
+      {chatOpen && <ChatboxFunerario onClose={() => setChatOpen(false)} />}
       <ChatboxToggle isOpen={chatOpen} toggle={() => setChatOpen(!chatOpen)} />
 
       {/* Emergency bar */}

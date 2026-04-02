@@ -409,7 +409,6 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
               }`}
             />
           </button>
-          </button>
         </div>
 
         {/* Messages */}

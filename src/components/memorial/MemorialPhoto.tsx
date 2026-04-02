@@ -77,10 +77,10 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   }, [totalCandles, totalFlowers, bestCrown]);
 
   return (
-    <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-16">
-      {/* Crown overlay (behind photo border) */}
+    <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-20">
+      {/* Crown overlay — ON TOP of the photo for realism */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute inset-[-28%] z-[1] animate-scale-in pointer-events-none">
+        <div className="absolute inset-[-22%] z-[3] animate-scale-in pointer-events-none">
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"

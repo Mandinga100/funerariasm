@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contact_leads: {
+        Row: {
+          comuna: string | null
+          contact_type: string
+          created_at: string
+          email: string | null
+          id: string
+          intent: string | null
+          message: string | null
+          metadata: Json | null
+          name: string | null
+          phone: string | null
+          selected_plan: string | null
+          source: string | null
+          status: string | null
+          urgency: string | null
+          whatsapp_message: string | null
+        }
+        Insert: {
+          comuna?: string | null
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          intent?: string | null
+          message?: string | null
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          selected_plan?: string | null
+          source?: string | null
+          status?: string | null
+          urgency?: string | null
+          whatsapp_message?: string | null
+        }
+        Update: {
+          comuna?: string | null
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          intent?: string | null
+          message?: string | null
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          selected_plan?: string | null
+          source?: string | null
+          status?: string | null
+          urgency?: string | null
+          whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

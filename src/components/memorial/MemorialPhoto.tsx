@@ -59,7 +59,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     }
     // Now position them in a circle outside the crown
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 62 : 56; // % from center — outside the crown overlay
+    const radius = hasCrown ? 72 : 56; // % from center — outside the crown overlay
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -74,7 +74,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-6">
       {/* Crown overlay (behind photo border) */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute inset-[-18%] z-[1] animate-scale-in pointer-events-none">
+        <div className="absolute inset-[-28%] z-[1] animate-scale-in pointer-events-none">
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"

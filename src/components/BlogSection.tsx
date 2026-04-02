@@ -121,7 +121,7 @@ const BlogSection = () => {
 
         <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
 
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {filteredPosts.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">No hay artículos en esta categoría aún.</p>

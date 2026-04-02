@@ -43,7 +43,7 @@ const BlogCategoryFilter = ({ active, onChange }: Props) => {
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-wide-brand uppercase border transition-brand font-medium ${
             active === cat.key
               ? "bg-gold text-accent-foreground border-gold shadow-md"
-              : "bg-card text-muted-foreground border-border/50 hover:border-gold/40 hover:text-foreground"
+              : "bg-card text-muted-foreground border-gold/30 hover:border-gold/60 hover:text-foreground"
           }`}
         >
           <CategoryIcon path={cat.icon} active={active === cat.key} />

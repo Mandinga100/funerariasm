@@ -200,7 +200,7 @@ const Obituarios = () => {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {filtered.length > 0 && (
             <nav aria-label="Paginación de obituarios" className="mt-12 flex justify-center">
               <div className="inline-flex items-center gap-1 bg-card border border-border/50 rounded-full px-2 py-1.5 shadow-sm">
                 {/* Previous */}

@@ -7,7 +7,7 @@ const AboutSection = () => {
   const contentRef = useScrollReveal(0.15, "0px 0px -60px 0px");
 
   return (
-    <section className="py-24 bg-background">
+    <section id="nosotros" className="py-24 bg-background">
       <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Image */}

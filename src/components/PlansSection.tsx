@@ -45,7 +45,7 @@ const PlansSection = () => {
   const gridRef = useStaggerReveal(100);
 
   return (
-    <section className="py-24 bg-primary text-primary-foreground">
+    <section id="planes" className="py-24 bg-primary text-primary-foreground">
       <div className="container">
         <div ref={headerRef} className="text-center mb-16">
           <p className="text-gold text-xs tracking-solemn uppercase mb-4">Planes Funerarios</p>

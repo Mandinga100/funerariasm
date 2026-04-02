@@ -363,10 +363,10 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       {/* Chat window */}
       <div
         ref={chatRef}
-        className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           isClosing
-            ? "opacity-0 scale-[0.15] duration-350"
-            : "opacity-100 scale-100 duration-300 animate-fade-in-up"
+            ? "opacity-0 scale-[0.15]"
+            : "opacity-100 scale-100 animate-fade-in-up"
         }`}
         style={{
           width: "min(calc(100vw - 24px), 380px)",

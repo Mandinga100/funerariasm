@@ -235,7 +235,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  if (!isOpen) return null; // Rendered by ChatboxToggle
+  
 
   return (
     <div className="fixed bottom-20 right-5 z-50 w-[360px] max-w-[calc(100vw-40px)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up"

@@ -94,16 +94,29 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         )}
       </div>
 
-      {/* Layer 3: Crown — always above portrait */}
+      {/* Layer 3: Crown — above portrait, but only on the contour */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute inset-0 z-[4] pointer-events-none flex items-center justify-center animate-scale-in">
+        <div
+          className="absolute z-[4] pointer-events-none rounded-full animate-scale-in"
+          style={{
+            inset: bestCrown.crown_tier === 4 ? "-8%" : "-6%",
+          }}
+        >
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"
-            className="w-[118%] h-[118%] object-contain"
+            className="w-full h-full object-contain"
             style={{
               filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
-              opacity: 0.92,
+              opacity: bestCrown.crown_tier === 4 ? 0.96 : 0.92,
+              WebkitMaskImage:
+                bestCrown.crown_tier === 4
+                  ? "radial-gradient(circle, transparent 0 36%, black 48%, black 100%)"
+                  : "radial-gradient(circle, transparent 0 34%, black 46%, black 100%)",
+              maskImage:
+                bestCrown.crown_tier === 4
+                  ? "radial-gradient(circle, transparent 0 36%, black 48%, black 100%)"
+                  : "radial-gradient(circle, transparent 0 34%, black 46%, black 100%)",
             }}
             loading="lazy"
             width={1024}

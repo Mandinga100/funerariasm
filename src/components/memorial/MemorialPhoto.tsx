@@ -85,6 +85,14 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
 
       {/* Layer 2: Portrait */}
       <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
+        {photoUrl ? (
+          <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-5xl font-playfair text-gold/40">{initials}</span>
+          </div>
+        )}
+      </div>
 
       {/* Layer 3: Crown — on top of portrait, covers golden border */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
@@ -112,14 +120,6 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
           />
         </div>
       )}
-        {photoUrl ? (
-          <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl font-playfair text-gold/40">{initials}</span>
-          </div>
-        )}
-      </div>
 
       {/* Orbit items (candles & flowers alternating outside the circle) */}
       {orbitItems.map((item, i) =>

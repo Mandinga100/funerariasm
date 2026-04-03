@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import BlogCategoryFilter from "@/components/BlogCategoryFilter";
 import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, ArrowRight } from "lucide-react";
@@ -18,15 +19,33 @@ interface BlogPost {
   author_name: string | null;
 }
 
+const SITE_URL = "https://funerariasantamargarita.cl";
+
 const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Blog | Funeraria Santa Margarita";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Artículos, guías y orientación sobre servicios funerarios, previsión y duelo. Funeraria Santa Margarita, Santiago, Chile.");
+    const title = "Blog — Guías y Orientación Funeraria | Funeraria Santa Margarita";
+    const desc = "Artículos, guías y orientación sobre servicios funerarios, previsión y duelo. Funeraria Santa Margarita, Santiago, Chile.";
+    document.title = title;
+
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    setMeta("name", "description", desc);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", desc);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:url", `${SITE_URL}/blog`);
 
     const fetchPosts = async () => {
       const { data } = await supabase
@@ -60,8 +79,8 @@ const Blog = () => {
     "@type": "Blog",
     name: "Blog Funeraria Santa Margarita",
     description: "Artículos sobre servicios funerarios, previsión y orientación familiar.",
-    url: "https://funerariasantamargarita.cl/blog",
-    publisher: { "@type": "Organization", name: "Funeraria Santa Margarita", url: "https://funerariasantamargarita.cl" },
+    url: `${SITE_URL}/blog`,
+    publisher: { "@type": "Organization", name: "Funeraria Santa Margarita", url: SITE_URL },
   };
 
   return (
@@ -69,12 +88,15 @@ const Blog = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
-        <div className="container text-center">
-          <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestro Blog</p>
-          <h1 className="text-section font-playfair italic mb-4">Artículos y Orientación</h1>
-          <p className="text-primary-foreground/60 max-w-xl mx-auto">
-            Información, guía y contención para acompañarle en cada etapa.
-          </p>
+        <div className="container">
+          <Breadcrumbs items={[{ label: "Blog" }]} />
+          <div className="text-center">
+            <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestro Blog</p>
+            <h1 className="text-section font-playfair italic mb-4">Artículos y Orientación</h1>
+            <p className="text-primary-foreground/60 max-w-xl mx-auto">
+              Información, guía y contención para acompañarle en cada etapa.
+            </p>
+          </div>
         </div>
       </section>
 

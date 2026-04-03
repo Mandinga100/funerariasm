@@ -27,29 +27,35 @@ const NavbarPremium = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Track active section via IntersectionObserver
+  // Track active section via scroll position
   useEffect(() => {
     if (location.pathname !== "/") return;
 
     const ids = NAV_LINKS.map((l) => l.sectionId);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible.length > 0) {
-          setActiveSection(visible[0].target.id);
+    const navHeight = 80;
+
+    const updateActive = () => {
+      // If near top, always select "inicio"
+      if (window.scrollY < 100) {
+        setActiveSection("inicio");
+        return;
+      }
+
+      let current = "inicio";
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top <= navHeight + 40) {
+          current = id;
         }
-      },
-      { rootMargin: "-20% 0px -35% 0px", threshold: [0, 0.1, 0.25, 0.5] }
-    );
+      }
+      setActiveSection(current);
+    };
 
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    updateActive();
+    return () => window.removeEventListener("scroll", updateActive);
   }, [location.pathname]);
 
   useEffect(() => setMenuOpen(false), [location]);

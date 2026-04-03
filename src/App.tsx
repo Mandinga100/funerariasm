@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import Contacto from "./pages/Contacto.tsx";
 import Blog from "./pages/Blog.tsx";
@@ -12,6 +13,14 @@ import ObituarioDetail from "./pages/ObituarioDetail.tsx";
 import Memoriales from "./pages/Memoriales.tsx";
 import MemorialDetail from "./pages/MemorialDetail.tsx";
 import Planes from "./pages/Planes.tsx";
+import Login from "./pages/Login.tsx";
+import Seguimiento from "./pages/Seguimiento.tsx";
+import ProtectedRoute from "./components/admin/ProtectedRoute.tsx";
+import AdminLayout from "./components/admin/AdminLayout.tsx";
+import Dashboard from "./pages/admin/Dashboard.tsx";
+import AdminObituarios from "./pages/admin/AdminObituarios.tsx";
+import AdminMemoriales from "./pages/admin/AdminMemoriales.tsx";
+import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,21 +30,31 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/planes" element={<Planes />} />
-          <Route path="/contacto" element={<Contacto />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
-          <Route path="/obituarios" element={<Obituarios />} />
-          <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
-          <Route path="/memoriales" element={<Memoriales />} />
-          <Route path="/memoriales/:slug" element={<MemorialDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/planes" element={<Planes />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/obituarios" element={<Obituarios />} />
+            <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
+            <Route path="/memoriales" element={<Memoriales />} />
+            <Route path="/memoriales/:slug" element={<MemorialDetail />} />
+            <Route path="/seguimiento" element={<Seguimiento />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="obituarios" element={<AdminObituarios />} />
+              <Route path="memoriales" element={<AdminMemoriales />} />
+              <Route path="tracking" element={<AdminTracking />} />
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

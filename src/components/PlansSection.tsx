@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, Phone } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -56,64 +56,94 @@ const PLANS = [
   },
 ];
 
-const PlanCard = ({ plan }: { plan: typeof PLANS[0] }) => (
-  <div className="flex flex-col rounded-2xl overflow-hidden bg-[hsl(210,15%,10%)] border border-[hsl(0,0%,20%)] transition-all duration-300 hover:border-[hsl(var(--gold)/0.4)] hover:shadow-[0_8px_32px_-8px_hsl(var(--gold)/0.15)] h-full">
-    {/* Image */}
-    <div className="relative aspect-[16/10] overflow-hidden">
-      <img
-        src={plan.img}
-        alt={plan.name}
-        loading="lazy"
-        width={800}
-        height={512}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+const PlanCard = ({ plan }: { plan: typeof PLANS[0] }) => {
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
+    e.currentTarget.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
+  };
+
+  return (
+    <div
+      onMouseMove={handleMouseMove}
+      className="group relative flex flex-col rounded-2xl overflow-hidden border border-[hsl(210,20%,12%)] transition-all duration-500 h-full hover:border-gold/40 hover:shadow-[0_8px_40px_-8px_hsl(var(--gold)/0.2)] hover:-translate-y-1"
+      style={{ background: "linear-gradient(180deg, hsl(210,18%,8%) 0%, hsl(215,20%,10%) 100%)" }}
+    >
+      {/* Gold dust glow on hover */}
+      <div
+        className="pointer-events-none absolute inset-0 z-10 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          background: "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsla(40,60%,55%,0.08), transparent 60%)",
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,15%,10%)] via-transparent to-transparent" />
-    </div>
 
-    {/* Content */}
-    <div className="flex flex-col flex-1 p-6 pt-4">
-      <h3 className="font-playfair italic text-xl text-primary-foreground mb-1">
-        {plan.name}
-      </h3>
-      <p className="text-gold text-2xl font-semibold font-inter mb-5">
-        {plan.price}
-      </p>
+      {/* Image */}
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <img
+          src={plan.img}
+          alt={plan.name}
+          loading="lazy"
+          width={800}
+          height={512}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,20%,10%)] via-[hsl(215,20%,10%)/0.3] to-transparent" />
+      </div>
 
-      {/* Feature badges */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {plan.features.map((f) => (
-          <span
-            key={f}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[hsl(180,30%,15%)] border border-[hsl(180,30%,25%)] text-[11px] font-medium uppercase tracking-wider text-[hsl(180,40%,65%)]"
+      {/* Content */}
+      <div className="flex flex-col flex-1 px-6 pb-6 pt-5 text-center">
+        <h3 className="font-playfair italic text-[1.35rem] text-primary-foreground mb-1">
+          {plan.name}
+        </h3>
+        <p className="text-gold text-[1.7rem] font-bold font-inter mb-5 tracking-tight">
+          {plan.price}
+        </p>
+
+        {/* Feature badges */}
+        <div className="flex flex-wrap justify-center gap-2.5 mb-6">
+          {plan.features.map((f) => (
+            <span
+              key={f}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[10px] font-semibold uppercase tracking-[0.08em]"
+              style={{
+                background: "hsla(180,25%,14%,0.7)",
+                borderColor: "hsla(180,25%,28%,0.5)",
+                color: "hsl(170,35%,60%)",
+              }}
+            >
+              <Check className="w-3 h-3 shrink-0" />
+              {f}
+            </span>
+          ))}
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Separator */}
+        <div className="w-full h-px mb-5" style={{ background: "hsla(210,15%,25%,0.5)" }} />
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <Link
+            to={`/planes#${plan.id}`}
+            className="flex-1 text-center py-3 rounded-lg border text-primary-foreground text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-300 hover:bg-primary-foreground/10"
+            style={{ borderColor: "hsla(210,15%,35%,0.6)", background: "hsla(210,15%,15%,0.5)" }}
           >
-            <Check className="w-3 h-3" />
-            {f}
-          </span>
-        ))}
-      </div>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Buttons */}
-      <div className="flex gap-3">
-        <Link
-          to={`/planes#${plan.id}`}
-          className="flex-1 text-center py-2.5 rounded-md border border-[hsl(0,0%,30%)] text-primary-foreground text-xs font-semibold uppercase tracking-wider transition-brand hover:bg-[hsl(0,0%,20%)]"
-        >
-          Ver detalles
-        </Link>
-        <a
-          href="tel:+56964333760"
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-gold text-primary-foreground text-xs font-semibold uppercase tracking-wider transition-brand hover:bg-gold-dark"
-        >
-          Llamar ahora
-        </a>
+            Ver detalles
+          </Link>
+          <a
+            href="tel:+56964333760"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-300 shadow-[0_4px_15px_-3px_hsla(40,80%,50%,0.4)] hover:shadow-[0_6px_20px_-3px_hsla(40,80%,50%,0.5)] hover:brightness-110"
+            style={{ background: "linear-gradient(135deg, hsl(40,80%,50%), hsl(35,85%,45%))", color: "#1a1a1a" }}
+          >
+            Llamar ahora
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const PlansSection = () => {
   const headerRef = useScrollReveal();
@@ -169,7 +199,7 @@ const PlansSection = () => {
           <button
             onClick={() => emblaApi?.scrollPrev()}
             disabled={!canScrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 flex items-center justify-center text-primary-foreground transition-brand hover:bg-primary-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 flex items-center justify-center text-primary-foreground transition-all duration-300 hover:bg-primary-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm"
             aria-label="Anterior"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -177,7 +207,7 @@ const PlansSection = () => {
           <button
             onClick={() => emblaApi?.scrollNext()}
             disabled={!canScrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 flex items-center justify-center text-primary-foreground transition-brand hover:bg-primary-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 flex items-center justify-center text-primary-foreground transition-all duration-300 hover:bg-primary-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm"
             aria-label="Siguiente"
           >
             <ChevronRight className="w-6 h-6" />

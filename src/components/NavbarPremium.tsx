@@ -34,13 +34,14 @@ const NavbarPremium = () => {
     const ids = NAV_LINKS.map((l) => l.sectionId);
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
         }
       },
-      { rootMargin: "-40% 0px -55% 0px" }
+      { rootMargin: "-20% 0px -35% 0px", threshold: [0, 0.1, 0.25, 0.5] }
     );
 
     ids.forEach((id) => {
@@ -55,13 +56,19 @@ const NavbarPremium = () => {
 
   const scrollToSection = useCallback(
     (sectionId: string) => {
+      const doScroll = () => {
+        const el = document.getElementById(sectionId);
+        if (!el) return;
+        const navHeight = 72;
+        const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+        window.scrollTo({ top, behavior: "smooth" });
+      };
+
       if (location.pathname !== "/") {
         navigate("/");
-        setTimeout(() => {
-          document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        setTimeout(doScroll, 150);
       } else {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+        doScroll();
       }
       setMenuOpen(false);
     },

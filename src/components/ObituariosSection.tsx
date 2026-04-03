@@ -25,13 +25,8 @@ const CarouselRow = ({
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
-  const speedRef = useRef(0.35); // px per frame
+  const speed = 0.35;
   const posRef = useRef(0);
-  const isDragging = useRef(false);
-  const dragStart = useRef(0);
-  const dragScrollStart = useRef(0);
-  const lastDragX = useRef(0);
-  const velocityRef = useRef(0);
 
   // Duplicate items enough to fill the screen
   const displayItems = useMemo(() => {

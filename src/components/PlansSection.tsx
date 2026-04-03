@@ -83,16 +83,19 @@ const PlansSection = () => {
                   </li>
                 ))}
               </ul>
-              <Link
-                to={`/planes#${plan.id}`}
-                className={`group/btn block text-center py-3 rounded-full text-sm tracking-wide-brand uppercase transition-brand ${
+              <a
+                href={buildWhatsAppUrl({ intent: "cotizacion", selectedPlan: plan.name })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group/btn flex items-center justify-center gap-2 py-3 rounded-full text-sm tracking-wide-brand uppercase transition-brand ${
                   plan.highlighted
                     ? "bg-gold text-primary-foreground hover:bg-gold-dark hover:shadow-[0_6px_20px_-4px_hsl(var(--gold)/0.4)]"
                     : "border border-gold/40 text-gold hover:bg-gold hover:text-primary-foreground hover:shadow-[0_6px_20px_-4px_hsl(var(--gold)/0.3)]"
                 }`}
               >
+                <MessageCircle className="w-4 h-4" />
                 Cotizar este plan
-              </Link>
+              </a>
             </div>
           ))}
         </div>

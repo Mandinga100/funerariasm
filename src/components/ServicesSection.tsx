@@ -1,5 +1,6 @@
 import { Heart, Shield, Clock, Award, Users, Truck, Phone, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
+import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 
 const SERVICES = [
   {

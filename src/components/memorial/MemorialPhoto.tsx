@@ -80,8 +80,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
 
   return (
     <div className="relative isolate w-56 h-56 md:w-64 md:h-64 mx-auto mb-20" style={{ overflow: "visible" }}>
-      {/* Layer 1: Golden border (background) */}
-      <div className="absolute inset-0 z-[1] rounded-full border-4 border-gold/25 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]" />
+      {/* LOCKED — Golden border on photo contour. DO NOT EDIT OR REMOVE. */}
+      <div className="absolute inset-0 z-[1] rounded-full border-[3px] border-gold/60 shadow-[0_0_24px_-6px_hsl(var(--gold)/0.35)]" />
 
       {/* Layer 2: Portrait */}
       <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
@@ -94,15 +94,15 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         )}
       </div>
 
-      {/* Layer 3: Crown — above portrait, aligned to the outer contour */}
+      {/* LOCKED — Crown wreath above portrait. DO NOT CHANGE z-index order. */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
         <div
           className="absolute z-[3] pointer-events-none animate-scale-in"
           style={{
             top: "50%",
             left: "50%",
-            width: "118%",
-            height: "118%",
+            width: "240%",
+            height: "240%",
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -111,7 +111,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             alt="Corona de flores"
             className="w-full h-full object-contain"
             style={{
-              filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+              filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
               opacity: 0.94,
             }}
             loading="lazy"

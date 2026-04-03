@@ -95,7 +95,7 @@ const MemorialDetail = () => {
     load();
   }, [slug]);
 
-  // Realtime for condolences & offerings
+  // Realtime for condolences only (offerings are session-only)
   useEffect(() => {
     if (!memorial) return;
     const channel = supabase
@@ -104,12 +104,6 @@ const MemorialDetail = () => {
         setCondolences((prev) => {
           if (prev.some((c) => c.id === (payload.new as Condolence).id)) return prev;
           return [payload.new as Condolence, ...prev];
-        });
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "memorial_offerings", filter: `memorial_id=eq.${memorial.id}` }, (payload) => {
-        setOfferings((prev) => {
-          if (prev.some((o) => o.id === (payload.new as Offering).id)) return prev;
-          return [payload.new as Offering, ...prev];
         });
       })
       .subscribe();

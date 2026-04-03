@@ -11,6 +11,7 @@ import Obituarios from "./pages/Obituarios.tsx";
 import ObituarioDetail from "./pages/ObituarioDetail.tsx";
 import Memoriales from "./pages/Memoriales.tsx";
 import MemorialDetail from "./pages/MemorialDetail.tsx";
+import Planes from "./pages/Planes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/planes" element={<Planes />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPostPage />} />

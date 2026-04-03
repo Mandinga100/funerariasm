@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Check, Star } from "lucide-react";
+import { Check, Star, MessageCircle } from "lucide-react";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 
 const PLANS = [

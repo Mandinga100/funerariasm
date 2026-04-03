@@ -79,22 +79,16 @@ const MemorialDetail = () => {
         setMemorial(mem);
         document.title = `${mem.full_name} — Legado Eterno | Funeraria Santa Margarita`;
 
-        // Load condolences + offerings in parallel
-        const [condsRes, offRes] = await Promise.all([
-          supabase
-            .from("condolences")
-            .select("id, author_name, message, created_at")
-            .eq("memorial_id", mem.id)
-            .eq("approved", true)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("memorial_offerings")
-            .select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at")
-            .eq("memorial_id", mem.id)
-            .order("created_at", { ascending: false }),
-        ]);
+        // Load condolences only — offerings are session-only (demo mode)
+        const condsRes = await supabase
+          .from("condolences")
+          .select("id, author_name, message, created_at")
+          .eq("memorial_id", mem.id)
+          .eq("approved", true)
+          .order("created_at", { ascending: false });
         setCondolences((condsRes.data as Condolence[]) || []);
-        setOfferings((offRes.data as Offering[]) || []);
+        // Offerings start empty — they accumulate only during the current session
+        setOfferings([]);
       }
       setLoading(false);
     };

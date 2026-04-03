@@ -11,19 +11,19 @@ const CROWN_IMAGES: Record<number, string> = {
   4: crownTier4,
 };
 
-// Per-tier inset calibrated to each crown's inner opening ratio
+// Per-tier inset calibrated — smaller values keep crown as a border frame, not covering the face
 const CROWN_INSET: Record<number, string> = {
-  1: "-14%",
-  2: "-13%",
-  3: "-15%",
-  4: "-13%",
+  1: "-20%",
+  2: "-19%",
+  3: "-21%",
+  4: "-18%",
 };
 
 const CROWN_SCALE: Record<number, number> = {
-  1: 0.98,
-  2: 0.97,
-  3: 0.985,
-  4: 0.94,
+  1: 0.82,
+  2: 0.80,
+  3: 0.83,
+  4: 0.78,
 };
 
 interface Offering {

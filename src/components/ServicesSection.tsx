@@ -81,6 +81,31 @@ const ServicesSection = () => {
             </div>
           ))}
         </div>
+
+        {/* CTA */}
+        <div className="text-center mt-14">
+          <p className="text-muted-foreground text-sm mb-6">
+            ¿Necesita alguno de estos servicios? Estamos disponibles 24/7.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="tel:+56964333760"
+              className="group flex items-center gap-2 bg-gold hover:bg-gold-dark text-accent-foreground px-7 py-3.5 rounded-full text-sm tracking-wide-brand uppercase font-medium transition-brand hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.4)]"
+            >
+              <Phone className="w-4 h-4 transition-transform duration-300 group-hover:-rotate-12" />
+              Solicitar servicio ahora
+            </a>
+            <a
+              href={buildWhatsAppUrlDirect("Hola, necesito información sobre sus servicios funerarios. ¿Pueden orientarme?")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 border border-foreground/20 hover:border-gold text-foreground hover:text-gold px-7 py-3.5 rounded-full text-sm tracking-wide-brand uppercase transition-brand"
+            >
+              <MessageCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+              Consultar por WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );

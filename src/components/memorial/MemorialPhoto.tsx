@@ -80,8 +80,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
 
   return (
     <div className="relative isolate w-56 h-56 md:w-64 md:h-64 mx-auto mb-20" style={{ overflow: "visible" }}>
-      {/* Layer 1: Golden border (background) */}
-      <div className="absolute inset-0 z-[1] rounded-full border-4 border-gold/25 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]" />
+      {/* LOCKED — Golden border on photo contour. DO NOT EDIT OR REMOVE. */}
+      <div className="absolute inset-0 z-[1] rounded-full border-[3px] border-gold/60 shadow-[0_0_24px_-6px_hsl(var(--gold)/0.35)]" />
 
       {/* Layer 2: Portrait */}
       <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">

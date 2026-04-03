@@ -25,13 +25,8 @@ const CarouselRow = ({
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
-  const speedRef = useRef(0.35); // px per frame
+  const speed = 0.35;
   const posRef = useRef(0);
-  const isDragging = useRef(false);
-  const dragStart = useRef(0);
-  const dragScrollStart = useRef(0);
-  const lastDragX = useRef(0);
-  const velocityRef = useRef(0);
 
   // Duplicate items enough to fill the screen
   const displayItems = useMemo(() => {
@@ -46,29 +41,15 @@ const CarouselRow = ({
     const track = trackRef.current;
     if (!track || items.length === 0) return;
 
-    if (!isDragging.current) {
-      const dir = direction === "left" ? -1 : 1;
-      posRef.current += dir * speedRef.current;
+    const dir = direction === "left" ? -1 : 1;
+    posRef.current += dir * speed;
 
-      // Apply velocity decay from drag release
-      if (Math.abs(velocityRef.current) > 0.1) {
-        posRef.current += velocityRef.current;
-        velocityRef.current *= 0.95;
-      } else {
-        velocityRef.current = 0;
-      }
-    }
-
-    // Calculate single-set width (half of track since we duplicate)
     const singleWidth = track.scrollWidth / (displayItems.length / items.length);
 
-    // Wrap position
     if (direction === "left") {
       if (posRef.current <= -singleWidth) posRef.current += singleWidth;
-      if (posRef.current > 0) posRef.current -= singleWidth;
     } else {
-      if (posRef.current >= singleWidth) posRef.current -= singleWidth;
-      if (posRef.current < -singleWidth) posRef.current += singleWidth;
+      if (posRef.current >= 0) posRef.current -= singleWidth;
     }
 
     track.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
@@ -80,37 +61,13 @@ const CarouselRow = ({
     return () => cancelAnimationFrame(animRef.current);
   }, [animate]);
 
-  /* ── Drag handlers ── */
-  const onPointerDown = (e: React.PointerEvent) => {
-    isDragging.current = true;
-    dragStart.current = e.clientX;
-    dragScrollStart.current = posRef.current;
-    lastDragX.current = e.clientX;
-    velocityRef.current = 0;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.current) return;
-    const dx = e.clientX - dragStart.current;
-    posRef.current = dragScrollStart.current + dx;
-    velocityRef.current = e.clientX - lastDragX.current;
-    lastDragX.current = e.clientX;
-  };
-
-  const onPointerUp = () => {
-    isDragging.current = false;
-  };
-
-  /* ── Wheel scroll ── */
-  const onWheel = (e: React.WheelEvent) => {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      e.preventDefault();
-      posRef.current += -e.deltaX;
-    } else {
-      posRef.current += -e.deltaY * 0.5;
-    }
-  };
+  // Initialize position for right-direction rows to avoid jump
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || items.length === 0 || direction !== "right") return;
+    const singleWidth = track.scrollWidth / (displayItems.length / items.length);
+    posRef.current = -singleWidth;
+  }, [direction, items.length, displayItems.length]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr + "T12:00:00").toLocaleDateString("es-CL", { day: "numeric", month: "short" });
@@ -127,15 +84,7 @@ const CarouselRow = ({
   if (items.length === 0) return null;
 
   return (
-    <div
-      className="overflow-hidden cursor-grab active:cursor-grabbing select-none"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-      onWheel={onWheel}
-      style={{ touchAction: "pan-y" }}
-    >
+    <div className="overflow-hidden select-none">
       <div ref={trackRef} className="flex gap-4 will-change-transform" style={{ width: "max-content" }}>
         {displayItems.map((obit, idx) => {
           const age = getYears(obit.birth_date, obit.death_date);
@@ -144,12 +93,6 @@ const CarouselRow = ({
               key={`${obit.id}-${idx}`}
               to={`/obituarios/${obit.slug}`}
               draggable={false}
-              onClick={(e) => {
-                // Prevent navigation if user was dragging
-                if (Math.abs(velocityRef.current) > 2) {
-                  e.preventDefault();
-                }
-              }}
               className="group flex-shrink-0 w-[280px] sm:w-[300px] bg-background rounded-lg border border-border/50 hover:border-gold/30 p-5 text-center transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
             >
               <div className="w-16 h-16 rounded-full bg-muted border-2 border-gold/20 mx-auto mb-3 flex items-center justify-center overflow-hidden">

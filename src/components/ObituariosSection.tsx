@@ -61,37 +61,13 @@ const CarouselRow = ({
     return () => cancelAnimationFrame(animRef.current);
   }, [animate]);
 
-  /* ── Drag handlers ── */
-  const onPointerDown = (e: React.PointerEvent) => {
-    isDragging.current = true;
-    dragStart.current = e.clientX;
-    dragScrollStart.current = posRef.current;
-    lastDragX.current = e.clientX;
-    velocityRef.current = 0;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.current) return;
-    const dx = e.clientX - dragStart.current;
-    posRef.current = dragScrollStart.current + dx;
-    velocityRef.current = e.clientX - lastDragX.current;
-    lastDragX.current = e.clientX;
-  };
-
-  const onPointerUp = () => {
-    isDragging.current = false;
-  };
-
-  /* ── Wheel scroll ── */
-  const onWheel = (e: React.WheelEvent) => {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      e.preventDefault();
-      posRef.current += -e.deltaX;
-    } else {
-      posRef.current += -e.deltaY * 0.5;
-    }
-  };
+  // Initialize position for right-direction rows to avoid jump
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || items.length === 0 || direction !== "right") return;
+    const singleWidth = track.scrollWidth / (displayItems.length / items.length);
+    posRef.current = -singleWidth;
+  }, [direction, items.length, displayItems.length]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr + "T12:00:00").toLocaleDateString("es-CL", { day: "numeric", month: "short" });
@@ -117,12 +93,6 @@ const CarouselRow = ({
               key={`${obit.id}-${idx}`}
               to={`/obituarios/${obit.slug}`}
               draggable={false}
-              onClick={(e) => {
-                // Prevent navigation if user was dragging
-                if (Math.abs(velocityRef.current) > 2) {
-                  e.preventDefault();
-                }
-              }}
               className="group flex-shrink-0 w-[280px] sm:w-[300px] bg-background rounded-lg border border-border/50 hover:border-gold/30 p-5 text-center transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
             >
               <div className="w-16 h-16 rounded-full bg-muted border-2 border-gold/20 mx-auto mb-3 flex items-center justify-center overflow-hidden">

@@ -30,7 +30,7 @@ const BlogPostPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo(0, 0);
   }, [slug]);
 
   useEffect(() => {

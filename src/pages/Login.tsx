@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Lock } from "lucide-react";
+import { Lock, UserPlus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,7 +18,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn(email, password);
@@ -26,6 +28,29 @@ export default function Login() {
     } else {
       navigate("/admin");
     }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 6) {
+      toast({ title: "Error", description: "La contraseña debe tener al menos 6 caracteres", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      toast({ title: "Error al registrar", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    // Assign admin role
+    if (data.user) {
+      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" });
+    }
+
+    setLoading(false);
+    toast({ title: "Cuenta creada", description: "Ahora inicia sesión con tus credenciales" });
   };
 
   return (
@@ -39,19 +64,49 @@ export default function Login() {
           <CardDescription>Panel de administración — Funeraria Santa Margarita</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@funeraria.cl" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Ingresando..." : "Ingresar"}
-            </Button>
-          </form>
+          <Tabs defaultValue="login">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login">Ingresar</TabsTrigger>
+              <TabsTrigger value="register">
+                <UserPlus className="w-4 h-4 mr-1" />Registro
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Correo electrónico</Label>
+                  <Input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@funeraria.cl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Contraseña</Label>
+                  <Input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Ingresando..." : "Ingresar"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="register">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 mb-2">
+                  <p className="text-xs text-amber-800">⚠️ Registro temporal — solo para crear la primera cuenta admin. Eliminar después de configurar.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-email">Correo electrónico</Label>
+                  <Input id="reg-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@funeraria.cl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Contraseña (mín. 6 caracteres)</Label>
+                  <Input id="reg-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Registrando..." : "Crear cuenta admin"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

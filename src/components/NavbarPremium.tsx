@@ -34,13 +34,14 @@ const NavbarPremium = () => {
     const ids = NAV_LINKS.map((l) => l.sectionId);
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
         }
       },
-      { rootMargin: "-40% 0px -55% 0px" }
+      { rootMargin: "-20% 0px -35% 0px", threshold: [0, 0.1, 0.25, 0.5] }
     );
 
     ids.forEach((id) => {

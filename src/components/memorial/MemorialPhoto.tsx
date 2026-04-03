@@ -35,8 +35,6 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
 
   const initials = fullName.split(" ").map((n) => n[0]).slice(0, 2).join("");
 
-  const crownInset = bestCrown?.crown_tier ? CROWN_INSET[bestCrown.crown_tier] || "-14%" : "-14%";
-  const crownScale = bestCrown?.crown_tier ? CROWN_SCALE[bestCrown.crown_tier] || 1 : 1;
 
   // Total items to place around circle (alternating candles and flowers)
   const totalCandles = Math.min(candles.length, 16);

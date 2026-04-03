@@ -80,13 +80,13 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
 
   return (
     <div className="relative isolate w-56 h-56 md:w-64 md:h-64 mx-auto mb-20" style={{ overflow: "visible" }}>
-      {/* Layer 1: Golden border (background) */}
+      {/* Layer 1: Golden border — visible when no crown */}
       <div className="absolute inset-0 z-[1] rounded-full border-4 border-gold/25 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]" />
 
-      {/* Layer 2: Portrait */}
+      {/* Layer 2: Portrait photo */}
       <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
         {photoUrl ? (
-          <img src={photoUrl} alt={fullName} className="relative z-[2] w-full h-full object-cover" />
+          <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-5xl font-playfair text-gold/40">{initials}</span>
@@ -94,12 +94,16 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         )}
       </div>
 
-      {/* Layer 3: Crown — above portrait, but only on the contour */}
+      {/* Layer 3: Crown wreath — on top of everything, the PNG is a ring with transparent center */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
         <div
-          className="absolute z-[4] pointer-events-none rounded-full animate-scale-in"
+          className="absolute z-[5] pointer-events-none animate-scale-in"
           style={{
-            inset: bestCrown.crown_tier === 4 ? "-8%" : "-6%",
+            top: "50%",
+            left: "50%",
+            width: "130%",
+            height: "130%",
+            transform: "translate(-50%, -50%)",
           }}
         >
           <img
@@ -108,15 +112,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             className="w-full h-full object-contain"
             style={{
               filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
-              opacity: bestCrown.crown_tier === 4 ? 0.96 : 0.92,
-              WebkitMaskImage:
-                bestCrown.crown_tier === 4
-                  ? "radial-gradient(circle, transparent 0 36%, black 48%, black 100%)"
-                  : "radial-gradient(circle, transparent 0 34%, black 46%, black 100%)",
-              maskImage:
-                bestCrown.crown_tier === 4
-                  ? "radial-gradient(circle, transparent 0 36%, black 48%, black 100%)"
-                  : "radial-gradient(circle, transparent 0 34%, black 46%, black 100%)",
+              opacity: 0.94,
             }}
             loading="lazy"
             width={1024}

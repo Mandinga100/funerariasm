@@ -51,6 +51,8 @@ const App = () => (
               <Route path="obituarios" element={<AdminObituarios />} />
               <Route path="memoriales" element={<AdminMemoriales />} />
               <Route path="tracking" element={<AdminTracking />} />
+              <Route path="blog" element={<AdminBlog />} />
+              <Route path="leads" element={<AdminLeads />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

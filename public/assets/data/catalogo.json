@@ -4,84 +4,70 @@
     "nombre": "Plan Margarita",
     "precio": "$1.290.000",
     "servicios": [
-      "Urna Estándar",
-      "Soporte Administrativo",
-      "Capilla Básica",
-      "Libro Condolencias"
+      "Inscripción Registro Civil",
+      "Vehículo Mortuorio"
     ],
-    "img": "/assets/images/planes/plans.webp"
+    "img": "/assets/images/planes/plan-margarita.jpg"
   },
   {
     "id": "azucena",
     "nombre": "Plan Azucena",
-    "precio": "$1.360.000",
+    "precio": "$1.390.000",
     "servicios": [
-      "Cofre Estándar Lineal",
-      "Traslado Local Inmediato",
-      "Capilla Pública/Domicilio",
-      "Trámites Civiles"
+      "Arreglo Floral",
+      "50 Tarjetas"
     ],
-    "img": "/assets/images/planes/plans.webp"
-  },
-  {
-    "id": "rosal",
-    "nombre": "Plan Rosal Abelia",
-    "precio": "$1.750.000",
-    "servicios": [
-      "Cofre Especial",
-      "Atención 24/7",
-      "Sala Velación 12h",
-      "Arreglo Floral"
-    ],
-    "img": "/assets/images/planes/plans.webp"
+    "img": "/assets/images/planes/plan-azucena.jpg"
   },
   {
     "id": "acacia",
     "nombre": "Plan Acacia",
-    "precio": "$2.250.000",
+    "precio": "$1.990.000",
     "servicios": [
-      "Urna Acacia Especial",
-      "Servicio Ceremonial",
-      "Vehículo Acompañante",
-      "Misas Mensuales"
+      "Urna Modelo Acacia",
+      "Arreglo Floral"
     ],
-    "img": "/assets/images/planes/plan-acacia.webp"
+    "img": "/assets/images/planes/plan-acacia.jpg"
   },
   {
-    "id": "quillay",
-    "nombre": "Plan Quillay",
-    "precio": "$2.390.000",
+    "id": "orquidea",
+    "nombre": "Plan Orquídea",
+    "precio": "$1.990.000",
     "servicios": [
-      "Madera Barnizada Quillay",
-      "Sala Velación 12h",
-      "Carroza Estándar",
-      "Asesoría Familiar"
+      "Urna Modelo Orquídea",
+      "Arreglo Floral"
     ],
-    "img": "/assets/images/planes/plan-quillay.webp"
+    "img": "/assets/images/planes/plan-orquidea.jpg"
   },
   {
-    "id": "queule",
-    "nombre": "Plan Queule / Algarrobo",
-    "precio": "$2.990.000",
+    "id": "jazmin",
+    "nombre": "Plan Jazmín",
+    "precio": "$2.790.000",
     "servicios": [
-      "Roble Nacional Queule",
-      "Sala Privada 24h",
-      "Arreglos Especiales",
-      "Carroza de Lujo"
+      "Urna Modelo Jazmín",
+      "Servicio Premium"
     ],
-    "img": "/assets/images/planes/plans.webp"
+    "img": "/assets/images/planes/plan-jazmin.jpg"
   },
   {
-    "id": "raul",
-    "nombre": "Plan Raúl Premium",
-    "precio": "$3.590.000",
+    "id": "castano",
+    "nombre": "Plan Castaño",
+    "precio": "$3.990.000",
     "servicios": [
-      "Maderas Importación Raúl",
-      "Suite Presidencial 24h",
-      "Cortejo VIP Mercedes-Benz",
-      "Memorial de Vida 4K"
+      "2 Arreglos Florales",
+      "Cafetería 50 Personas"
     ],
-    "img": "/assets/images/planes/plan-raul.webp",
+    "img": "/assets/images/planes/plan-castano.jpg"
+  },
+  {
+    "id": "rauli",
+    "nombre": "Plan Raulí",
+    "precio": "$3.990.000",
+    "servicios": [
+      "Certificación Médica",
+      "Aviso de Prensa"
+    ],
+    "img": "/assets/images/planes/plan-rauli.jpg",
     "destacado": true
   }
 ]

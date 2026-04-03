@@ -38,16 +38,16 @@ interface Offering {
   created_at?: string;
 }
 
-// Pure in-memory tracking — resets on reload or navigation
-let memoryActions: Record<string, Set<string>> = {};
+// Session-level dedup — prevents duplicate offerings per page visit
+let sessionActions: Record<string, Set<string>> = {};
 
-function hasPageAction(memorialId: string, type: string): boolean {
-  return memoryActions[memorialId]?.has(type) ?? false;
+function hasSessionAction(memorialId: string, type: string): boolean {
+  return sessionActions[memorialId]?.has(type) ?? false;
 }
 
-function markPageAction(memorialId: string, type: string) {
-  if (!memoryActions[memorialId]) memoryActions[memorialId] = new Set();
-  memoryActions[memorialId].add(type);
+function markSessionAction(memorialId: string, type: string) {
+  if (!sessionActions[memorialId]) sessionActions[memorialId] = new Set();
+  sessionActions[memorialId].add(type);
 }
 
 const MemorialDetail = () => {

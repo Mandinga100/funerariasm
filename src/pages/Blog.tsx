@@ -60,17 +60,33 @@ const Blog = () => {
   }, []);
 
   const filteredPosts = useMemo(() => {
-    if (!activeFilter) return posts;
-    if (activeFilter === "novedades") {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
-      return posts.filter((p) => p.published_at && new Date(p.published_at) >= sevenDaysAgo);
-    }
     const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-    return posts.filter((p) => {
-      const cat = p.category ? normalize(p.category) : "";
-      const tags = (p.tags || []).map((t) => normalize(t));
-      return cat === activeFilter || tags.includes(activeFilter);
+    const categoryOrder = ["novedades", "guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (activeFilter) {
+      if (activeFilter === "novedades") {
+        return posts.filter((p) => p.published_at && new Date(p.published_at) >= thirtyDaysAgo);
+      }
+      return posts.filter((p) => {
+        const cat = p.category ? normalize(p.category) : "";
+        const tags = (p.tags || []).map((t) => normalize(t));
+        return cat === activeFilter || tags.includes(activeFilter);
+      });
+    }
+
+    // Default: novedades first, then by category priority order
+    return [...posts].sort((a, b) => {
+      const catA = a.category ? normalize(a.category) : "";
+      const catB = b.category ? normalize(b.category) : "";
+      const aIsNew = a.published_at && new Date(a.published_at) >= thirtyDaysAgo;
+      const bIsNew = b.published_at && new Date(b.published_at) >= thirtyDaysAgo;
+      if (aIsNew && !bIsNew) return -1;
+      if (!aIsNew && bIsNew) return 1;
+      const orderA = categoryOrder.indexOf(catA);
+      const orderB = categoryOrder.indexOf(catB);
+      return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
     });
   }, [posts, activeFilter]);
 

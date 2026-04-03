@@ -44,13 +44,8 @@ export default function Login() {
       return;
     }
 
-    // Assign admin role
-    if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" });
-    }
-
     setLoading(false);
-    toast({ title: "Cuenta creada", description: "Ahora inicia sesión con tus credenciales" });
+    toast({ title: "Cuenta creada", description: "Si eres el primer usuario, tendrás rol admin automáticamente. Inicia sesión." });
   };
 
   return (

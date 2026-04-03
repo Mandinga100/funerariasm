@@ -41,29 +41,15 @@ const CarouselRow = ({
     const track = trackRef.current;
     if (!track || items.length === 0) return;
 
-    if (!isDragging.current) {
-      const dir = direction === "left" ? -1 : 1;
-      posRef.current += dir * speedRef.current;
+    const dir = direction === "left" ? -1 : 1;
+    posRef.current += dir * speed;
 
-      // Apply velocity decay from drag release
-      if (Math.abs(velocityRef.current) > 0.1) {
-        posRef.current += velocityRef.current;
-        velocityRef.current *= 0.95;
-      } else {
-        velocityRef.current = 0;
-      }
-    }
-
-    // Calculate single-set width (half of track since we duplicate)
     const singleWidth = track.scrollWidth / (displayItems.length / items.length);
 
-    // Wrap position
     if (direction === "left") {
       if (posRef.current <= -singleWidth) posRef.current += singleWidth;
-      if (posRef.current > 0) posRef.current -= singleWidth;
     } else {
-      if (posRef.current >= singleWidth) posRef.current -= singleWidth;
-      if (posRef.current < -singleWidth) posRef.current += singleWidth;
+      if (posRef.current >= 0) posRef.current -= singleWidth;
     }
 
     track.style.transform = `translate3d(${posRef.current}px, 0, 0)`;

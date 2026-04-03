@@ -21,6 +21,8 @@ import Dashboard from "./pages/admin/Dashboard.tsx";
 import AdminObituarios from "./pages/admin/AdminObituarios.tsx";
 import AdminMemoriales from "./pages/admin/AdminMemoriales.tsx";
 import AdminTracking from "./pages/admin/AdminTracking.tsx";
+import AdminBlog from "./pages/admin/AdminBlog.tsx";
+import AdminLeads from "./pages/admin/AdminLeads.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,8 @@ const App = () => (
               <Route path="obituarios" element={<AdminObituarios />} />
               <Route path="memoriales" element={<AdminMemoriales />} />
               <Route path="tracking" element={<AdminTracking />} />
+              <Route path="blog" element={<AdminBlog />} />
+              <Route path="leads" element={<AdminLeads />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

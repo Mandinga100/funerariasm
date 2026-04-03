@@ -108,15 +108,7 @@ const CarouselRow = ({
   if (items.length === 0) return null;
 
   return (
-    <div
-      className="overflow-hidden cursor-grab active:cursor-grabbing select-none"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-      onWheel={onWheel}
-      style={{ touchAction: "pan-y" }}
-    >
+    <div className="overflow-hidden select-none">
       <div ref={trackRef} className="flex gap-4 will-change-transform" style={{ width: "max-content" }}>
         {displayItems.map((obit, idx) => {
           const age = getYears(obit.birth_date, obit.death_date);

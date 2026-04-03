@@ -83,10 +83,13 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
       {/* Layer 1: Golden border (background) */}
       <div className="absolute inset-0 z-[1] rounded-full border-4 border-gold/25 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]" />
 
-      {/* Layer 2: Crown — covers the golden border, behind the portrait */}
+      {/* Layer 2: Portrait */}
+      <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
+
+      {/* Layer 3: Crown — on top of portrait, covers golden border */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
         <div
-          className="absolute z-[2] animate-scale-in pointer-events-none"
+          className="absolute z-[3] animate-scale-in pointer-events-none"
           style={{
             top: "50%",
             left: "50%",
@@ -109,9 +112,6 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
           />
         </div>
       )}
-
-      {/* Layer 3: Portrait — always protagonist, on top */}
-      <div className="relative z-[3] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
         {photoUrl ? (
           <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
         ) : (

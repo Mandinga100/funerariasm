@@ -56,13 +56,19 @@ const NavbarPremium = () => {
 
   const scrollToSection = useCallback(
     (sectionId: string) => {
+      const doScroll = () => {
+        const el = document.getElementById(sectionId);
+        if (!el) return;
+        const navHeight = 72;
+        const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+        window.scrollTo({ top, behavior: "smooth" });
+      };
+
       if (location.pathname !== "/") {
         navigate("/");
-        setTimeout(() => {
-          document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        setTimeout(doScroll, 150);
       } else {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+        doScroll();
       }
       setMenuOpen(false);
     },

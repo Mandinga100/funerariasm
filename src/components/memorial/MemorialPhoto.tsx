@@ -16,7 +16,7 @@ const CROWN_INSET: Record<number, string> = {
   1: "-14%",
   2: "-15%",
   3: "-16%",
-  4: "-28%",
+  4: "-38%",
 };
 
 const CROWN_SCALE: Record<number, number> = {

@@ -94,15 +94,15 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         )}
       </div>
 
-      {/* Layer 3: Crown — above portrait, aligned to the outer contour */}
+      {/* LOCKED — Crown wreath above portrait. DO NOT CHANGE z-index order. */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
         <div
           className="absolute z-[3] pointer-events-none animate-scale-in"
           style={{
             top: "50%",
             left: "50%",
-            width: "118%",
-            height: "118%",
+            width: "290%",
+            height: "290%",
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -111,7 +111,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             alt="Corona de flores"
             className="w-full h-full object-contain"
             style={{
-              filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+              filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
               opacity: 0.94,
             }}
             loading="lazy"

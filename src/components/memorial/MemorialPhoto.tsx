@@ -95,15 +95,30 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   }, [totalCandles, totalFlowers, bestCrown]);
 
   return (
-    <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-20">
-      {/* Crown overlay — ON TOP of the photo for realism */}
+    <div className="relative w-56 h-56 md:w-64 md:h-64 mx-auto mb-20" style={{ overflow: "visible" }}>
+      {/* Layer 1: Golden border (background) */}
+      <div className="absolute inset-0 z-[1] rounded-full border-4 border-gold/25 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]" />
+
+      {/* Layer 2: Crown — covers the golden border, behind the portrait */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
-        <div className="absolute z-[3] animate-scale-in pointer-events-none" style={{ inset: crownInset }}>
+        <div
+          className="absolute z-[2] animate-scale-in pointer-events-none"
+          style={{
+            top: "50%",
+            left: "50%",
+            width: "130%",
+            height: "130%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"
             className="w-full h-full object-contain"
-            style={{ filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))", imageRendering: "auto", transform: `scale(${crownScale})` }}
+            style={{
+              filter: "contrast(1.08) saturate(1.15) drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+              opacity: 0.92,
+            }}
             loading="lazy"
             width={1024}
             height={1024}
@@ -111,8 +126,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         </div>
       )}
 
-      {/* Photo circle */}
-      <div className="relative z-[2] w-full h-full rounded-full border-4 border-gold/25 overflow-hidden bg-primary-foreground/5 shadow-[0_0_30px_-8px_hsl(var(--gold)/0.2)]">
+      {/* Layer 3: Portrait — always protagonist, on top */}
+      <div className="relative z-[3] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
         {photoUrl ? (
           <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
         ) : (

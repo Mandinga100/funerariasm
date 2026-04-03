@@ -86,7 +86,9 @@ const Memoriales = () => {
       {/* Hero */}
       <section className="pt-28 pb-20 bg-primary text-primary-foreground">
         <div className="container text-center">
-          <p className="text-gold/60 text-xs tracking-[0.35em] uppercase mb-8">Muro de la Memoria</p>
+          <span className="inline-block border border-[hsl(0,0%,30%)] rounded-full px-6 py-2 text-[11px] tracking-[0.25em] uppercase text-primary-foreground/60 mb-8">
+            Muro de la Memoria
+          </span>
           <h1 className="font-playfair italic text-primary-foreground/90 mb-2" style={{ fontSize: "clamp(3rem, 8vw, 6rem)", lineHeight: 1 }}>
             Legados
           </h1>

@@ -126,9 +126,9 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transform: "translate(-50%, -50%)",
-              animation: `fade-in 0.5s ease-out ${item.delay}s both`,
+              animationDelay: `${item.delay}s`,
             }}
+            className="absolute z-[4] pointer-events-none animate-candle-light"
           >
             <svg width="22" height="38" viewBox="0 0 22 38" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]">
               <defs>

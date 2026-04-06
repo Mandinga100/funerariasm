@@ -91,7 +91,7 @@ const MemorialDetail = () => {
             .from("memorial_offerings")
             .select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at")
             .eq("memorial_id", mem.id)
-            .eq("payment_status", "completed")
+            .in("payment_status", ["completed", "simulated"])
             .order("created_at", { ascending: false }),
         ]);
         setCondolences((condsRes.data as Condolence[]) || []);

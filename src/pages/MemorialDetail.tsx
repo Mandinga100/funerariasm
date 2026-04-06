@@ -270,7 +270,7 @@ const MemorialDetail = () => {
             Volver a Legados Eternos
           </Link>
 
-          <div className="text-center">
+          <div className="text-center mt-10">
             <MemorialPhoto
               photoUrl={memorial.photo_url}
               fullName={memorial.full_name}

@@ -105,7 +105,7 @@ const Memoriales = () => {
       </section>
 
       {/* Search + Cards */}
-      <section className="py-16 bg-primary -mt-10">
+      <section className="py-16 bg-primary" style={{ marginTop: "-45px" }}>
         <div className="container max-w-5xl">
           {/* Search bar */}
           <div className="max-w-xl mx-auto mb-16 relative">

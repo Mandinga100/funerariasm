@@ -38,16 +38,25 @@ interface Offering {
   created_at?: string;
 }
 
-// Session-level dedup — prevents duplicate candle/flower per page visit
-let sessionActions: Record<string, Set<string>> = {};
+// Demo daily limits — 10 candles & 10 flowers per day, visual only (not persisted)
+const DEMO_DAILY_LIMIT = 10;
 
-function hasSessionAction(memorialId: string, type: string): boolean {
-  return sessionActions[memorialId]?.has(type) ?? false;
+function getDemoKey(memorialId: string, type: string): string {
+  const today = new Date().toISOString().slice(0, 10);
+  return `demo_${type}_${memorialId}_${today}`;
 }
 
-function markSessionAction(memorialId: string, type: string) {
-  if (!sessionActions[memorialId]) sessionActions[memorialId] = new Set();
-  sessionActions[memorialId].add(type);
+function getDemoCount(memorialId: string, type: string): number {
+  try {
+    return parseInt(localStorage.getItem(getDemoKey(memorialId, type)) || "0", 10);
+  } catch { return 0; }
+}
+
+function incrementDemoCount(memorialId: string, type: string): number {
+  const key = getDemoKey(memorialId, type);
+  const count = getDemoCount(memorialId, type) + 1;
+  try { localStorage.setItem(key, String(count)); } catch {}
+  return count;
 }
 
 const MemorialDetail = () => {

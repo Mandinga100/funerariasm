@@ -133,7 +133,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
               animation: `fade-in 0.5s ease-out ${item.delay}s both`,
             }}
           >
-            <svg width="14" height="24" viewBox="0 0 22 38" className="drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]">
+            <svg width="22" height="38" viewBox="0 0 22 38" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]">
               <defs>
                 <radialGradient id={`glow-${i}`} cx="50%" cy="30%" r="60%">
                   <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />

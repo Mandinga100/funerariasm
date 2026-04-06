@@ -175,7 +175,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
               animation: `fade-in 0.6s ease-out ${item.delay}s both`,
             }}
           >
-            <svg width="14" height="24" viewBox="0 0 32 56" className="drop-shadow-sm">
+            <svg width="20" height="36" viewBox="0 0 32 56" className="drop-shadow-md">
               <path d="M16 28 C16 28, 15.5 36, 15 42 C14.8 44, 15.2 48, 16 52" stroke="#2d5a27" strokeWidth="1.8" fill="none" strokeLinecap="round" />
               <path d="M15.5 36 C13 34, 9 35, 8 37 C9 36, 12 35.5, 15 37" fill="#3a6b33" opacity="0.85" />
               <path d="M15.5 42 C18 40, 22 41, 23 43 C22 42, 19 41.5, 16 43" fill="#3a6b33" opacity="0.85" />

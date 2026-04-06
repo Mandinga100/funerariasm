@@ -147,26 +147,21 @@ const MemorialDetail = () => {
 
   const addOffering = useCallback(async (type: "candle" | "flower") => {
     if (!memorial) return;
-    if (hasSessionAction(memorial.id, type)) {
-      toast.info(type === "candle" ? "Ya encendió una vela en esta sesión" : "Ya ofreció flores en esta sesión");
+    const count = getDemoCount(memorial.id, type);
+    if (count >= DEMO_DAILY_LIMIT) {
+      toast.info(type === "candle" ? "Límite diario de velas alcanzado (10)" : "Límite diario de flores alcanzado (10)");
       return;
     }
-    markSessionAction(memorial.id, type);
+    incrementDemoCount(memorial.id, type);
 
-    // Insert into DB
-    const { data, error } = await supabase.from("memorial_offerings").insert({
-      memorial_id: memorial.id,
+    // Visual-only demo offering — NOT persisted to DB
+    const demoOffering: Offering = {
+      id: `demo-${type}-${Date.now()}`,
       offering_type: type,
       donor_name: "Anónimo",
-      payment_status: "completed",
-    }).select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at").single();
-
-    if (error) {
-      toast.error("No se pudo registrar la ofrenda.");
-      return;
-    }
-    // Add locally (realtime will also fire but we dedup)
-    setOfferings((prev) => [data as Offering, ...prev]);
+      created_at: new Date().toISOString(),
+    };
+    setOfferings((prev) => [demoOffering, ...prev]);
     toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);
 

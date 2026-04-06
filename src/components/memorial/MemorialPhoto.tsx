@@ -94,13 +94,12 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
       {/* LOCKED — Crown wreath above portrait. DO NOT CHANGE z-index order. */}
       {bestCrown && bestCrown.crown_tier && CROWN_IMAGES[bestCrown.crown_tier] && (
         <div
-          className="absolute z-[3] pointer-events-none animate-scale-in"
+          className="absolute z-[3] pointer-events-none animate-crown-place"
           style={{
             top: "50%",
             left: "50%",
             width: "155%",
             height: "155%",
-            transform: "translate(-50%, -50%)",
           }}
         >
           <img
@@ -108,8 +107,6 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             alt="Corona de flores"
             className="w-full h-full object-contain"
             style={{
-              filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
-              opacity: 0.92,
               maskImage: "radial-gradient(circle, transparent 30%, black 40%)",
               WebkitMaskImage: "radial-gradient(circle, transparent 30%, black 40%)",
             }}

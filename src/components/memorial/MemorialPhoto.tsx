@@ -107,8 +107,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             alt="Corona de flores"
             className="w-full h-full object-contain"
             style={{
-              maskImage: "radial-gradient(circle, transparent 30%, black 40%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 30%, black 40%)",
+              maskImage: "radial-gradient(circle, transparent 35%, black 45%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 35%, black 45%)",
             }}
             loading="lazy"
             width={1024}

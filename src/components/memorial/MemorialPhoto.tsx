@@ -110,8 +110,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             style={{
               filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
               opacity: 0.92,
-              maskImage: "radial-gradient(circle, transparent 38%, black 48%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 48%)",
+              maskImage: "radial-gradient(circle, transparent 30%, black 40%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 30%, black 40%)",
             }}
             loading="lazy"
             width={1024}

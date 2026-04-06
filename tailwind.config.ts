@@ -102,6 +102,16 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "candle-light": {
+          "0%": { opacity: "0", transform: "translate(-50%, -40%) scale(0.3)", filter: "drop-shadow(0 0 0px rgba(251,191,36,0))" },
+          "60%": { opacity: "1", transform: "translate(-50%, -52%) scale(1.1)", filter: "drop-shadow(0 0 12px rgba(251,191,36,0.7))" },
+          "100%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)", filter: "drop-shadow(0 0 6px rgba(245,158,11,0.6))" },
+        },
+        "flower-bloom": {
+          "0%": { opacity: "0", transform: "translate(-50%, -40%) scale(0.2) rotate(-15deg)" },
+          "50%": { opacity: "0.8", transform: "translate(-50%, -52%) scale(1.15) rotate(5deg)" },
+          "100%": { opacity: "1", transform: "translate(-50%, -50%) scale(1) rotate(0deg)" },
+        },
         "crown-place": {
           "0%": { opacity: "0", transform: "translate(-50%, -55%) scale(0.7)", filter: "drop-shadow(0 0 0px rgba(197,160,89,0))" },
           "50%": { opacity: "0.6", transform: "translate(-50%, -48%) scale(1.04)", filter: "drop-shadow(0 0 20px rgba(197,160,89,0.5))" },
@@ -116,6 +126,8 @@ export default {
         "fade-in": "fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
         "crown-place": "crown-place 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "candle-light": "candle-light 0.8s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "flower-bloom": "flower-bloom 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both",
       },
     },
   },

@@ -122,12 +122,11 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         item.type === "candle" ? (
           <div
             key={`candle-${i}`}
-            className="absolute z-[4] pointer-events-none"
+            className="absolute z-[4] pointer-events-none animate-candle-light"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transform: "translate(-50%, -50%)",
-              animation: `fade-in 0.5s ease-out ${item.delay}s both`,
+              animationDelay: `${item.delay}s`,
             }}
           >
             <svg width="22" height="38" viewBox="0 0 22 38" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]">
@@ -164,12 +163,11 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         ) : (
           <div
             key={`flower-${i}`}
-            className="absolute z-[4] pointer-events-none"
+            className="absolute z-[4] pointer-events-none animate-flower-bloom"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transform: "translate(-50%, -50%)",
-              animation: `fade-in 0.6s ease-out ${item.delay}s both`,
+              animationDelay: `${item.delay}s`,
             }}
           >
             <svg width="20" height="36" viewBox="0 0 32 56" className="drop-shadow-md">

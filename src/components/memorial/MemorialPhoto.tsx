@@ -163,12 +163,11 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         ) : (
           <div
             key={`flower-${i}`}
-            className="absolute z-[4] pointer-events-none"
+            className="absolute z-[4] pointer-events-none animate-flower-bloom"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transform: "translate(-50%, -50%)",
-              animation: `fade-in 0.6s ease-out ${item.delay}s both`,
+              animationDelay: `${item.delay}s`,
             }}
           >
             <svg width="20" height="36" viewBox="0 0 32 56" className="drop-shadow-md">

@@ -115,6 +115,7 @@ export default {
         "fade-in-up": "fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "fade-in": "fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "crown-place": "crown-place 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       },
     },
   },

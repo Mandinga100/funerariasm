@@ -65,7 +65,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     }
     // Push orbit further out when crown is present
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 82 : 56;
+    const radius = hasCrown ? 77 : 56;
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;

@@ -122,13 +122,12 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         item.type === "candle" ? (
           <div
             key={`candle-${i}`}
-            className="absolute z-[4] pointer-events-none"
+            className="absolute z-[4] pointer-events-none animate-candle-light"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
               animationDelay: `${item.delay}s`,
             }}
-            className="absolute z-[4] pointer-events-none animate-candle-light"
           >
             <svg width="22" height="38" viewBox="0 0 22 38" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]">
               <defs>

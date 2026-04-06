@@ -65,7 +65,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
     }
     // Push orbit further out when crown is present
     const hasCrown = bestCrown !== null;
-    const radius = hasCrown ? 68 : 56;
+    const radius = hasCrown ? 82 : 56;
     const count = items.length;
     for (let i = 0; i < count; i++) {
       const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -110,8 +110,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             style={{
               filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
               opacity: 0.92,
-              maskImage: "radial-gradient(circle, transparent 38%, black 52%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 52%)",
+              maskImage: "radial-gradient(circle, transparent 38%, black 48%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 48%)",
             }}
             loading="lazy"
             width={1024}

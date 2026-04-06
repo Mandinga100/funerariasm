@@ -213,8 +213,8 @@ const MemorialDetail = () => {
   const flowerCount = offerings.filter((o) => o.offering_type === "flower").length;
   const crownCount = offerings.filter((o) => o.offering_type === "flower_crown").length;
 
-  const candleUsed = memorial ? hasSessionAction(memorial.id, "candle") : false;
-  const flowerUsed = memorial ? hasSessionAction(memorial.id, "flower") : false;
+  const candleUsed = memorial ? getDemoCount(memorial.id, "candle") >= DEMO_DAILY_LIMIT : false;
+  const flowerUsed = memorial ? getDemoCount(memorial.id, "flower") >= DEMO_DAILY_LIMIT : false;
 
   if (loading) {
     return (

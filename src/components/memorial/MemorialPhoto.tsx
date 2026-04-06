@@ -38,6 +38,9 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   const bestCrown = useMemo(() => {
     const crowns = offerings.filter((o) => o.offering_type === "flower_crown");
     if (crowns.length === 0) return null;
+    // Demo crowns take priority (most recent simulation preview)
+    const demoCrown = crowns.find((c) => c.id.startsWith("demo-"));
+    if (demoCrown) return demoCrown;
     return crowns.reduce((best, c) => ((c.crown_tier || 0) > (best.crown_tier || 0) ? c : best), crowns[0]);
   }, [offerings]);
 

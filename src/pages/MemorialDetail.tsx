@@ -169,10 +169,28 @@ const MemorialDetail = () => {
 
   const handleCrownDonate = useCallback(async (data: { donorName: string; message: string; amount: number; tier: number; simulate: boolean }) => {
     if (!memorial) return;
+
+    if (data.simulate) {
+      // Visual-only demo: replace any existing crown with the selected tier
+      setOfferings((prev) => {
+        const withoutCrowns = prev.filter((o) => o.offering_type !== "flower_crown" || !o.id.startsWith("demo-"));
+        const demoCrown: Offering = {
+          id: `demo-crown-${Date.now()}`,
+          offering_type: "flower_crown",
+          crown_tier: data.tier,
+          donor_name: data.donorName,
+          donor_message: data.message,
+          amount: data.amount,
+          created_at: new Date().toISOString(),
+        };
+        return [demoCrown, ...withoutCrowns];
+      });
+      toast.success(`🌺 Vista previa: Corona Tier ${data.tier}`);
+      setCrownModalOpen(false);
+      return;
+    }
+
     setCrownSending(true);
-
-    const paymentStatus = data.simulate ? "simulated" : "simulated"; // future: "pending" for real payments
-
     const { data: inserted, error } = await supabase.from("memorial_offerings").insert({
       memorial_id: memorial.id,
       offering_type: "flower_crown",
@@ -180,7 +198,7 @@ const MemorialDetail = () => {
       donor_message: data.message,
       amount: data.amount,
       crown_tier: data.tier,
-      payment_status: paymentStatus,
+      payment_status: "simulated",
     }).select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at").single();
 
     setCrownSending(false);
@@ -190,7 +208,6 @@ const MemorialDetail = () => {
       return;
     }
 
-    incrementDemoCount(memorial.id, "flower_crown");
     setOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);

@@ -98,8 +98,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
           style={{
             top: "50%",
             left: "50%",
-            width: "128%",
-            height: "128%",
+            width: "118%",
+            height: "118%",
             transform: "translate(-50%, -50%)",
           }}
         >

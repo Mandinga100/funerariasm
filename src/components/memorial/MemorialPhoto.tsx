@@ -98,8 +98,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
           style={{
             top: "50%",
             left: "50%",
-            width: "118%",
-            height: "118%",
+            width: "155%",
+            height: "155%",
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -110,6 +110,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             style={{
               filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
               opacity: 0.92,
+              maskImage: "radial-gradient(circle, transparent 38%, black 52%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 52%)",
             }}
             loading="lazy"
             width={1024}
@@ -131,7 +133,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
               animation: `fade-in 0.5s ease-out ${item.delay}s both`,
             }}
           >
-            <svg width="14" height="24" viewBox="0 0 22 38" className="drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]">
+            <svg width="22" height="38" viewBox="0 0 22 38" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]">
               <defs>
                 <radialGradient id={`glow-${i}`} cx="50%" cy="30%" r="60%">
                   <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
@@ -173,7 +175,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
               animation: `fade-in 0.6s ease-out ${item.delay}s both`,
             }}
           >
-            <svg width="14" height="24" viewBox="0 0 32 56" className="drop-shadow-sm">
+            <svg width="20" height="36" viewBox="0 0 32 56" className="drop-shadow-md">
               <path d="M16 28 C16 28, 15.5 36, 15 42 C14.8 44, 15.2 48, 16 52" stroke="#2d5a27" strokeWidth="1.8" fill="none" strokeLinecap="round" />
               <path d="M15.5 36 C13 34, 9 35, 8 37 C9 36, 12 35.5, 15 37" fill="#3a6b33" opacity="0.85" />
               <path d="M15.5 42 C18 40, 22 41, 23 43 C22 42, 19 41.5, 16 43" fill="#3a6b33" opacity="0.85" />

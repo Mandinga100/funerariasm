@@ -190,17 +190,6 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
         )
       )}
 
-      {/* Count badges — only when exceeding max visible */}
-      {candles.length > 12 && (
-        <div className="absolute -bottom-1 -right-1 z-[5] bg-amber-500/90 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md">
-          🕯 {candles.length}
-        </div>
-      )}
-      {flowers.length > 12 && (
-        <div className="absolute -bottom-1 -left-1 z-[5] bg-rose-400/90 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md">
-          🌸 {flowers.length}
-        </div>
-      )}
     </div>
   );
 };

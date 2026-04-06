@@ -114,9 +114,9 @@ export default {
         },
         "crown-place": {
           "0%": { opacity: "0", transform: "translate(-50%, -55%) scale(0.7)", filter: "drop-shadow(0 0 0px rgba(197,160,89,0))" },
-          "50%": { opacity: "0.35", transform: "translate(-50%, -48%) scale(1.04)", filter: "drop-shadow(0 0 20px rgba(197,160,89,0.5))" },
-          "75%": { opacity: "0.35", transform: "translate(-50%, -50%) scale(0.98)", filter: "drop-shadow(0 0 12px rgba(197,160,89,0.3))" },
-          "100%": { opacity: "0.35", transform: "translate(-50%, -50%) scale(1)", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))" },
+          "50%": { opacity: "0.5", transform: "translate(-50%, -48%) scale(1.04)", filter: "drop-shadow(0 0 20px rgba(197,160,89,0.5))" },
+          "75%": { opacity: "0.5", transform: "translate(-50%, -50%) scale(0.98)", filter: "drop-shadow(0 0 12px rgba(197,160,89,0.3))" },
+          "100%": { opacity: "0.5", transform: "translate(-50%, -50%) scale(1)", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))" },
         },
       },
       animation: {

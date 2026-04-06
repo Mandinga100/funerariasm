@@ -111,6 +111,7 @@ export default {
           "0%": { opacity: "0", transform: "translate(-50%, -40%) scale(0.2) rotate(-15deg)" },
           "50%": { opacity: "0.8", transform: "translate(-50%, -52%) scale(1.15) rotate(5deg)" },
           "100%": { opacity: "1", transform: "translate(-50%, -50%) scale(1) rotate(0deg)" },
+        },
         "crown-place": {
           "0%": { opacity: "0", transform: "translate(-50%, -55%) scale(0.7)", filter: "drop-shadow(0 0 0px rgba(197,160,89,0))" },
           "50%": { opacity: "0.6", transform: "translate(-50%, -48%) scale(1.04)", filter: "drop-shadow(0 0 20px rgba(197,160,89,0.5))" },

@@ -100,10 +100,12 @@ const MemorialDetail = () => {
             .from("memorial_offerings")
             .select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at")
             .eq("memorial_id", mem.id)
+            .eq("offering_type", "flower_crown")
             .in("payment_status", ["completed", "simulated"])
             .order("created_at", { ascending: false }),
         ]);
         setCondolences((condsRes.data as Condolence[]) || []);
+        // Only crowns persist — candles & flowers are demo/visual only
         setOfferings((offeringsRes.data as Offering[]) || []);
       }
       setLoading(false);

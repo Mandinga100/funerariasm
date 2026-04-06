@@ -188,7 +188,7 @@ const MemorialDetail = () => {
       return;
     }
 
-    markSessionAction(memorial.id, "flower_crown");
+    incrementDemoCount(memorial.id, "flower_crown");
     setOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);

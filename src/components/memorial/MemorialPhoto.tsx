@@ -76,7 +76,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
   }, [totalCandles, totalFlowers, bestCrown]);
 
   return (
-    <div className="relative isolate w-56 h-56 md:w-64 md:h-64 mx-auto mb-20" style={{ overflow: "visible" }}>
+    <div className="relative isolate w-56 h-56 md:w-64 md:h-64 mx-auto mb-28" style={{ overflow: "visible" }}>
       {/* LOCKED — Golden border on photo contour. DO NOT EDIT OR REMOVE. */}
       <div className="absolute inset-0 z-[1] rounded-full border-[3px] border-gold/60 shadow-[0_0_24px_-6px_hsl(var(--gold)/0.35)]" />
 

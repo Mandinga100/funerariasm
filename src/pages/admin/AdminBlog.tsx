@@ -32,8 +32,9 @@ export default function AdminBlog() {
   useEffect(() => { load(); }, []);
 
   const togglePublished = async (id: string, published: boolean) => {
-    const update: Record<string, unknown> = { published };
-    if (published) update.published_at = new Date().toISOString();
+    const update = published
+      ? { published, published_at: new Date().toISOString() }
+      : { published, published_at: null as string | null };
     const { error } = await supabase.from("blog_posts").update(update).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

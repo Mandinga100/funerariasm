@@ -236,7 +236,12 @@ const BlogPostPage = () => {
             ]}
           />
 
-          <div className="flex items-center gap-3 mb-4 text-xs text-primary-foreground/50">
+          <h1 className="text-section font-playfair italic leading-tight">{post.title}</h1>
+          {post.excerpt && (
+            <p className="text-primary-foreground/60 mt-4 text-lg">{post.excerpt}</p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-5 text-xs text-primary-foreground/50">
             {post.category && (
               <span className="flex items-center gap-1">
                 <Tag className="w-3 h-3 text-gold" />
@@ -256,11 +261,6 @@ const BlogPostPage = () => {
             <span className="text-primary-foreground/30">·</span>
             <span>{readingTime} min de lectura</span>
           </div>
-
-          <h1 className="text-section font-playfair italic leading-tight">{post.title}</h1>
-          {post.excerpt && (
-            <p className="text-primary-foreground/60 mt-4 text-lg">{post.excerpt}</p>
-          )}
         </div>
       </section>
 

@@ -67,6 +67,25 @@ const PLANS = [
   },
 ];
 
+const PLANS_FAQ: FaqItem[] = [
+  {
+    question: "¿Cuánto cuesta un funeral en Chile?",
+    answer: "En Funeraria Santa Margarita, nuestros planes van desde $1.290.000 (Plan Margarita) hasta $3.990.000 (Plan Raulí). Cada plan incluye diferentes niveles de servicio, urna, sala de velación y acompañamiento.",
+    relatedLink: { label: "Comparar todos los planes", href: "/planes" },
+  },
+  {
+    question: "¿Qué es la cuota mortuoria y cómo me ayuda a pagar?",
+    answer: "La cuota mortuoria es un beneficio de las AFP, IPS y cajas de compensación que cubre parte de los gastos funerarios (aprox. 15 UF). Nosotros le asesoramos en todo el trámite para que recupere ese monto.",
+    expandedAnswer: "Presente la factura del servicio, certificado de defunción y cédula del solicitante ante la AFP o IPS. El proceso toma entre 10 y 15 días hábiles.",
+    relatedLink: { label: "Más sobre cuota mortuoria", href: "/preguntas-frecuentes" },
+  },
+  {
+    question: "¿Existen facilidades de pago?",
+    answer: "Sí, ofrecemos opciones de financiamiento y facilidades de pago. Consulte con nuestros asesores las alternativas disponibles según el plan seleccionado.",
+    relatedLink: { label: "Hablar con un asesor", href: "/contacto" },
+  },
+];
+
 const Planes = () => {
   const location = useLocation();
   const headerRef = useScrollReveal();

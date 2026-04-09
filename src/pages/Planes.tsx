@@ -5,6 +5,8 @@ import ContactForm from "@/components/ContactForm";
 import { Check, Star, Phone, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
+import FaqAccordion from "@/components/faq/FaqAccordion";
+import type { FaqItem } from "@/lib/faq-data";
 
 const PLANS = [
   {

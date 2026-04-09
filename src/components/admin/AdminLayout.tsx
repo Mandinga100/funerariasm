@@ -11,6 +11,7 @@ const navItems = [
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking Familiar", icon: Users, end: false },
   { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false },
+  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false },
 ];
 
 export default function AdminLayout() {

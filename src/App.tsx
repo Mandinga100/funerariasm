@@ -23,6 +23,7 @@ import AdminMemoriales from "./pages/admin/AdminMemoriales.tsx";
 import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
+import AdminPagos from "./pages/admin/AdminPagos.tsx";
 import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
 import Pagos from "./pages/Pagos.tsx";
 import NotFound from "./pages/NotFound.tsx";

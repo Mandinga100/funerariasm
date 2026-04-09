@@ -184,28 +184,63 @@ const BlogPostPage = () => {
 
   // Render content with heading IDs for TOC anchoring
   const renderContent = (md: string) => {
+    const lines = md.split("\n");
+    const elements: React.ReactNode[] = [];
     let headingIdx = 0;
-    return md.split("\n").map((line, i) => {
+    let listBuffer: React.ReactNode[] = [];
+
+    const flushList = () => {
+      if (listBuffer.length > 0) {
+        elements.push(
+          <ul key={`ul-${elements.length}`} className="my-4 ml-6 space-y-2 list-none">
+            {listBuffer}
+          </ul>
+        );
+        listBuffer = [];
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
       if (line.startsWith("### ")) {
+        flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
-        return <h3 key={i} id={id} className="font-playfair text-xl text-foreground mt-8 mb-3 scroll-mt-24">{line.slice(4)}</h3>;
-      }
-      if (line.startsWith("## ")) {
+        elements.push(<h3 key={i} id={id} className="font-playfair text-xl text-foreground mt-8 mb-3 scroll-mt-24">{line.slice(4)}</h3>);
+      } else if (line.startsWith("## ")) {
+        flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
-        return <h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">{line.slice(3)}</h2>;
-      }
-      if (line.startsWith("- ") || line.startsWith("* ")) {
-        return (
-          <li key={i} className="text-muted-foreground leading-relaxed ml-6 list-disc">
-            {renderInline(line.slice(2))}
+        elements.push(<h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">{line.slice(3)}</h2>);
+      } else if (line.startsWith("- ") || line.startsWith("* ")) {
+        const content = line.slice(2);
+        listBuffer.push(
+          <li key={i} className="text-muted-foreground leading-relaxed flex items-start gap-2.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold/60 mt-2 shrink-0" />
+            <span>{renderInline(content)}</span>
           </li>
         );
+      } else if (/^\d+\.\s/.test(line)) {
+        const content = line.replace(/^\d+\.\s/, "");
+        const num = line.match(/^(\d+)\./)?.[1] || "1";
+        listBuffer.push(
+          <li key={i} className="text-muted-foreground leading-relaxed flex items-start gap-3">
+            <span className="w-6 h-6 rounded-full border border-gold/30 bg-gold/5 flex items-center justify-center text-[11px] font-semibold text-gold shrink-0 mt-0.5">{num}</span>
+            <span>{renderInline(content)}</span>
+          </li>
+        );
+      } else {
+        flushList();
+        if (line.trim() === "") {
+          elements.push(<br key={i} />);
+        } else {
+          elements.push(<p key={i} className="text-muted-foreground leading-relaxed mb-4">{renderInline(line)}</p>);
+        }
       }
-      if (line.trim() === "") return <br key={i} />;
-      return <p key={i} className="text-muted-foreground leading-relaxed mb-4">{renderInline(line)}</p>;
-    });
+    }
+    flushList();
+    return elements;
   };
 
   const renderInline = (text: string) => {
@@ -241,7 +276,9 @@ const BlogPostPage = () => {
             <p className="text-primary-foreground/60 mt-4 text-lg">{post.excerpt}</p>
           )}
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-5 text-xs text-primary-foreground/50">
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mt-6 mb-4" />
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/50">
             {post.category && (
               <span className="flex items-center gap-1">
                 <Tag className="w-3 h-3 text-gold" />

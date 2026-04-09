@@ -24,6 +24,7 @@ import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
 import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
+import Pagos from "./pages/Pagos.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/memoriales/:slug" element={<MemorialDetail />} />
             <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
+            <Route path="/pagos" element={<Pagos />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />

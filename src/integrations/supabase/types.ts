@@ -381,6 +381,122 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          case_reference: string | null
+          created_at: string
+          currency: string
+          donor_display_name: string | null
+          donor_message: string | null
+          email: string
+          form_loaded_at: string | null
+          form_submitted_at: string | null
+          fraud_flags: string[] | null
+          full_name: string
+          honeypot_triggered: boolean | null
+          id: string
+          ip_address: string | null
+          is_anonymous: boolean | null
+          memorial_id: string | null
+          metadata: Json | null
+          notes: string | null
+          payment_subtype: string | null
+          payment_type: string
+          phone: string
+          plan_id: string | null
+          plan_name: string | null
+          proof_filename: string | null
+          proof_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rut: string
+          service_description: string | null
+          status: string
+          transaction_ref: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          amount: number
+          case_reference?: string | null
+          created_at?: string
+          currency?: string
+          donor_display_name?: string | null
+          donor_message?: string | null
+          email: string
+          form_loaded_at?: string | null
+          form_submitted_at?: string | null
+          fraud_flags?: string[] | null
+          full_name: string
+          honeypot_triggered?: boolean | null
+          id?: string
+          ip_address?: string | null
+          is_anonymous?: boolean | null
+          memorial_id?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_subtype?: string | null
+          payment_type: string
+          phone: string
+          plan_id?: string | null
+          plan_name?: string | null
+          proof_filename?: string | null
+          proof_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rut: string
+          service_description?: string | null
+          status?: string
+          transaction_ref?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          amount?: number
+          case_reference?: string | null
+          created_at?: string
+          currency?: string
+          donor_display_name?: string | null
+          donor_message?: string | null
+          email?: string
+          form_loaded_at?: string | null
+          form_submitted_at?: string | null
+          fraud_flags?: string[] | null
+          full_name?: string
+          honeypot_triggered?: boolean | null
+          id?: string
+          ip_address?: string | null
+          is_anonymous?: boolean | null
+          memorial_id?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_subtype?: string | null
+          payment_type?: string
+          phone?: string
+          plan_id?: string | null
+          plan_name?: string | null
+          proof_filename?: string | null
+          proof_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rut?: string
+          service_description?: string | null
+          status?: string
+          transaction_ref?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

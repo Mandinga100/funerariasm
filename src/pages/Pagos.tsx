@@ -166,7 +166,7 @@ const Pagos = () => {
                     <Phone className="w-4 h-4" /> Llamar ahora
                   </a>
                   <a
-                    href={buildWhatsAppUrl("Necesito ayuda con el pago de un servicio funerario")}
+                    href={buildWhatsAppUrl({ intent: "general", details: "Necesito ayuda con el pago de un servicio funerario" })}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 text-sm text-green-600 hover:underline"

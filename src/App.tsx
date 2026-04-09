@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/memoriales/:slug" element={<MemorialDetail />} />
             <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
+            <Route path="/pagos" element={<Pagos />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />

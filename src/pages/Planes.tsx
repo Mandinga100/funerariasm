@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ContactForm from "@/components/ContactForm";
 import { Check, Star, Phone, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
+import FaqAccordion from "@/components/faq/FaqAccordion";
+import type { FaqItem } from "@/lib/faq-data";
 
 const PLANS = [
   {
@@ -62,6 +64,25 @@ const PLANS = [
     description: "Nuestra máxima expresión de servicio. Certificación médica y difusión en prensa.",
     features: ["Certificación Médica", "Aviso de Prensa", "Suite Presidencial 24h", "Cortejo VIP", "Memorial de Vida 4K"],
     highlighted: true,
+  },
+];
+
+const PLANS_FAQ: FaqItem[] = [
+  {
+    question: "¿Cuánto cuesta un funeral en Chile?",
+    answer: "En Funeraria Santa Margarita, nuestros planes van desde $1.290.000 (Plan Margarita) hasta $3.990.000 (Plan Raulí). Cada plan incluye diferentes niveles de servicio, urna, sala de velación y acompañamiento.",
+    relatedLink: { label: "Comparar todos los planes", href: "/planes" },
+  },
+  {
+    question: "¿Qué es la cuota mortuoria y cómo me ayuda a pagar?",
+    answer: "La cuota mortuoria es un beneficio de las AFP, IPS y cajas de compensación que cubre parte de los gastos funerarios (aprox. 15 UF). Nosotros le asesoramos en todo el trámite para que recupere ese monto.",
+    expandedAnswer: "Presente la factura del servicio, certificado de defunción y cédula del solicitante ante la AFP o IPS. El proceso toma entre 10 y 15 días hábiles.",
+    relatedLink: { label: "Más sobre cuota mortuoria", href: "/preguntas-frecuentes" },
+  },
+  {
+    question: "¿Existen facilidades de pago?",
+    answer: "Sí, ofrecemos opciones de financiamiento y facilidades de pago. Consulte con nuestros asesores las alternativas disponibles según el plan seleccionado.",
+    relatedLink: { label: "Hablar con un asesor", href: "/contacto" },
   },
 ];
 
@@ -186,6 +207,32 @@ const Planes = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Inline FAQ */}
+      <section className="py-20 bg-card border-t border-border/30">
+        <div className="container max-w-3xl">
+          <div className="text-center mb-12">
+            <span className="inline-block border border-border/40 rounded-full px-5 py-1.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-5">
+              Preguntas Frecuentes
+            </span>
+            <h2 className="text-2xl md:text-3xl font-playfair italic text-foreground mb-3">
+              Dudas sobre precios y financiamiento
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              Resolvemos las consultas más comunes para que tome una decisión informada y tranquila.
+            </p>
+          </div>
+          <FaqAccordion items={PLANS_FAQ} prefix="planes-faq" />
+          <div className="text-center mt-8">
+            <Link
+              to="/preguntas-frecuentes"
+              className="text-gold text-xs tracking-[0.15em] uppercase font-medium hover:text-gold-light transition-colors"
+            >
+              Ver todas las preguntas frecuentes →
+            </Link>
           </div>
         </div>
       </section>

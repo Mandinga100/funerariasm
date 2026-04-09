@@ -211,6 +211,32 @@ const Planes = () => {
         </div>
       </section>
 
+      {/* Inline FAQ */}
+      <section className="py-20 bg-card border-t border-border/30">
+        <div className="container max-w-3xl">
+          <div className="text-center mb-12">
+            <span className="inline-block border border-border/40 rounded-full px-5 py-1.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-5">
+              Preguntas Frecuentes
+            </span>
+            <h2 className="text-2xl md:text-3xl font-playfair italic text-foreground mb-3">
+              Dudas sobre precios y financiamiento
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              Resolvemos las consultas más comunes para que tome una decisión informada y tranquila.
+            </p>
+          </div>
+          <FaqAccordion items={PLANS_FAQ} prefix="planes-faq" />
+          <div className="text-center mt-8">
+            <Link
+              to="/preguntas-frecuentes"
+              className="text-gold text-xs tracking-[0.15em] uppercase font-medium hover:text-gold-light transition-colors"
+            >
+              Ver todas las preguntas frecuentes →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Contact CTA */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container max-w-2xl text-center">

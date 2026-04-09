@@ -25,6 +25,7 @@ import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
 import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ScrollToTop from "./components/ScrollToTop.tsx";
 
 const queryClient = new QueryClient();
 

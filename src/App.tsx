@@ -24,6 +24,7 @@ import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
 import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
+import Pagos from "./pages/Pagos.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
 

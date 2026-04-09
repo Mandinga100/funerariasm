@@ -30,9 +30,24 @@ const Obituarios = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    document.title = "Obituarios | Funeraria Santa Margarita";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Obituarios y homenajes póstumos. Honramos la memoria de quienes partieron con dignidad y respeto. Funeraria Santa Margarita, Santiago, Chile.");
+    const title = "Obituarios | Funeraria Santa Margarita";
+    const desc = "Obituarios y homenajes póstumos. Honramos la memoria de quienes partieron con dignidad y respeto. Funeraria Santa Margarita, Santiago, Chile.";
+    document.title = title;
+
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("name", "description", desc);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", desc);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:url", "https://funerariasantamargarita.cl/obituarios");
+
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
+    canonical.setAttribute("href", "https://funerariasantamargarita.cl/obituarios");
 
     const fetchObituaries = async () => {
       const { data } = await supabase

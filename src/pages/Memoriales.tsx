@@ -25,9 +25,24 @@ const Memoriales = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    document.title = "Legados Eternos | Funeraria Santa Margarita";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Legados eternos para honrar la memoria de quienes partieron. Comparta condolencias y tributos. Funeraria Santa Margarita, Chile.");
+    const title = "Legados Eternos | Funeraria Santa Margarita";
+    const desc = "Legados eternos para honrar la memoria de quienes partieron. Comparta condolencias y tributos. Funeraria Santa Margarita, Chile.";
+    document.title = title;
+
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("name", "description", desc);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", desc);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:url", "https://funerariasantamargarita.cl/memoriales");
+
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
+    canonical.setAttribute("href", "https://funerariasantamargarita.cl/memoriales");
 
     const fetchData = async () => {
       const { data } = await supabase

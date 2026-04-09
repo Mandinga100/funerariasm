@@ -23,6 +23,7 @@ import AdminMemoriales from "./pages/admin/AdminMemoriales.tsx";
 import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
+import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
             <Route path="/memoriales" element={<Memoriales />} />
             <Route path="/memoriales/:slug" element={<MemorialDetail />} />
+            <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

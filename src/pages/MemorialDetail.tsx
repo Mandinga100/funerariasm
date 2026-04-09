@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import MemorialPhoto from "@/components/memorial/MemorialPhoto";
@@ -86,7 +87,26 @@ const MemorialDetail = () => {
       const mem = data?.[0] as Memorial | undefined;
       if (mem) {
         setMemorial(mem);
-        document.title = `${mem.full_name} — Legado Eterno | Funeraria Santa Margarita`;
+        const title = `${mem.full_name} — Legado Eterno`;
+        const desc = mem.biography?.slice(0, 155) || `Memorial en honor a ${mem.full_name}. Funeraria Santa Margarita, Chile.`;
+        const url = `https://funerariasantamargarita.cl/memoriales/${mem.slug}`;
+        document.title = `${title} | Funeraria Santa Margarita`;
+
+        const setMeta = (attr: string, key: string, content: string) => {
+          let el = document.querySelector(`meta[${attr}="${key}"]`);
+          if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+          el.setAttribute("content", content);
+        };
+        setMeta("name", "description", desc);
+        setMeta("property", "og:title", title);
+        setMeta("property", "og:description", desc);
+        setMeta("property", "og:type", "profile");
+        setMeta("property", "og:url", url);
+        if (mem.photo_url) setMeta("property", "og:image", mem.photo_url);
+
+        let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+        if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
+        canonical.setAttribute("href", url);
 
         // Load condolences and offerings from DB
         const [condsRes, offeringsRes] = await Promise.all([
@@ -282,6 +302,7 @@ const MemorialDetail = () => {
 
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">
+          <Breadcrumbs items={[{ label: "Legados Eternos", href: "/memoriales" }, { label: memorial.full_name }]} />
           <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
             <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
             Volver a Legados Eternos

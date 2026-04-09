@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Calendar, MapPin, ArrowLeft, Heart } from "lucide-react";
 
 interface Obituary {
@@ -39,7 +40,26 @@ const ObituarioDetail = () => {
         .maybeSingle();
       if (data) {
         setObit(data as Obituary);
-        document.title = `${data.full_name} | Obituario - Funeraria Santa Margarita`;
+        const title = data.meta_title || `${data.full_name} — Obituario`;
+        const desc = data.meta_description || data.family_message || `Obituario de ${data.full_name}. Funeraria Santa Margarita, Santiago, Chile.`;
+        const url = `https://funerariasantamargarita.cl/obituarios/${data.slug}`;
+        document.title = `${title} | Funeraria Santa Margarita`;
+
+        const setMeta = (attr: string, key: string, content: string) => {
+          let el = document.querySelector(`meta[${attr}="${key}"]`);
+          if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+          el.setAttribute("content", content);
+        };
+        setMeta("name", "description", desc);
+        setMeta("property", "og:title", title);
+        setMeta("property", "og:description", desc);
+        setMeta("property", "og:type", "article");
+        setMeta("property", "og:url", url);
+        if (data.photo_url) setMeta("property", "og:image", data.photo_url);
+
+        let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+        if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
+        canonical.setAttribute("href", url);
       }
       setLoading(false);
     };
@@ -111,6 +131,7 @@ const ObituarioDetail = () => {
       {/* Header */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground relative">
         <div className="container">
+          <Breadcrumbs items={[{ label: "Obituarios", href: "/obituarios" }, { label: obit.full_name }]} />
           <Link
             to="/obituarios"
             className="inline-flex items-center gap-2 text-sm font-medium text-gold bg-gold/10 hover:bg-gold/20 backdrop-blur-sm px-5 py-2.5 rounded-full border border-gold/40 hover:border-gold/70 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.3)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.5)] transition-all duration-300"

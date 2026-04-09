@@ -27,6 +27,7 @@ const FooterPremium = () => (
               ["Obituarios", "/obituarios"],
               ["Memoriales", "/memoriales"],
               ["Blog", "/blog"],
+              ["Preguntas Frecuentes", "/preguntas-frecuentes"],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link to={href} className="text-sm text-primary-foreground/60 hover:text-gold transition-brand">

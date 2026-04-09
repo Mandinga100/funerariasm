@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking Familiar", icon: Users, end: false },
   { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false },
+  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false },
 ];
 
 export default function AdminLayout() {

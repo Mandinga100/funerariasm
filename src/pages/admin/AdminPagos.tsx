@@ -79,6 +79,27 @@ export default function AdminPagos() {
 
   useEffect(() => { load(); }, []);
 
+  // Realtime subscription for new transactions
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-payments-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "payment_transactions" },
+        (payload) => {
+          const newTx = payload.new as Transaction;
+          setTransactions(prev => [newTx, ...prev]);
+          toast({
+            title: "Nueva transacción",
+            description: `${newTx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(newTx.amount)}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const filtered = transactions.filter(tx => {
     if (filterStatus !== "all" && tx.status !== filterStatus) return false;
     if (filterType !== "all" && tx.payment_type !== filterType) return false;

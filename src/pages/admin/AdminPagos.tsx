@@ -64,6 +64,7 @@ export default function AdminPagos() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const load = async () => {

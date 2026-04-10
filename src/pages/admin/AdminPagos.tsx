@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +58,8 @@ export default function AdminPagos() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
   const { toast } = useToast();
 
   const load = async () => {
@@ -70,6 +73,12 @@ export default function AdminPagos() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const filtered = transactions.filter(tx => {
+    if (filterStatus !== "all" && tx.status !== filterStatus) return false;
+    if (filterType !== "all" && tx.payment_type !== filterType) return false;
+    return true;
+  });
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);
@@ -100,7 +109,42 @@ export default function AdminPagos() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
-        <Badge variant="outline">{stats.total} transacciones</Badge>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="w-48">
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              {Object.entries(statusConfig).map(([key, cfg]) => (
+                <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-56">
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los tipos</SelectItem>
+              {Object.entries(typeLabels).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {(filterStatus !== "all" || filterType !== "all") && (
+          <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); }}>
+            <X className="w-4 h-4 mr-1" /> Limpiar filtros
+          </Button>
+        )}
+        <Badge variant="outline" className="ml-auto self-center">{filtered.length} de {transactions.length}</Badge>
       </div>
 
       {/* Stats */}
@@ -123,8 +167,8 @@ export default function AdminPagos() {
 
       {loading ? (
         <p className="text-muted-foreground">Cargando...</p>
-      ) : transactions.length === 0 ? (
-        <p className="text-muted-foreground">No hay transacciones registradas.</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground">No hay transacciones que coincidan con los filtros.</p>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -140,7 +184,7 @@ export default function AdminPagos() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map(tx => {
+              {filtered.map(tx => {
                 const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
                 const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
                 return (

@@ -57,6 +57,8 @@ export default function AdminPagos() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
   const { toast } = useToast();
 
   const load = async () => {
@@ -70,6 +72,12 @@ export default function AdminPagos() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const filtered = transactions.filter(tx => {
+    if (filterStatus !== "all" && tx.status !== filterStatus) return false;
+    if (filterType !== "all" && tx.payment_type !== filterType) return false;
+    return true;
+  });
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);

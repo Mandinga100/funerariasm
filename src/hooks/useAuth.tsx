@@ -35,28 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!isMounted) return;
-
-        setLoading(true);
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await checkAdmin(session.user.id);
-        } else {
-          setIsAdmin(false);
-        }
-
-        if (!isMounted) return;
-        setLoading(false);
-      }
-    );
-
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
+    const syncSession = async (session: Session | null) => {
       if (!isMounted) return;
 
       setSession(session);
@@ -70,6 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!isMounted) return;
       setLoading(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!isMounted) return;
+
+        setLoading(true);
+
+        void syncSession(session);
+      }
+    );
+
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      await syncSession(session);
     };
 
     initializeAuth();

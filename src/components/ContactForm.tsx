@@ -234,5 +234,5 @@ const ContactForm = ({
   );
 };
 
-const ContactFormWithRef = forwardRef<HTMLDivElement, ContactFormProps>(ContactFormComponent);
+const ContactFormWithRef = forwardRef<HTMLDivElement, ContactFormProps>(ContactForm);
 export default ContactFormWithRef;

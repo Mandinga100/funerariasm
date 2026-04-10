@@ -87,12 +87,21 @@ export default function AdminPagos() {
         "postgres_changes",
         { event: "*", schema: "public", table: "payment_transactions" },
         (payload) => {
-          const newTx = payload.new as Transaction;
-          setTransactions(prev => [newTx, ...prev]);
-          toast({
-            title: "Nueva transacción",
-            description: `${newTx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(newTx.amount)}`,
-          });
+          const tx = payload.new as Transaction;
+          if (payload.eventType === "INSERT") {
+            setTransactions(prev => [tx, ...prev]);
+            toast({
+              title: "Nueva transacción",
+              description: `${tx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(tx.amount)}`,
+            });
+          } else if (payload.eventType === "UPDATE") {
+            setTransactions(prev => prev.map(t => t.id === tx.id ? tx : t));
+            const label = statusConfig[tx.status]?.label ?? tx.status;
+            toast({
+              title: "Estado actualizado",
+              description: `${tx.transaction_ref} → ${label}`,
+            });
+          }
         }
       )
       .subscribe();

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,13 +16,7 @@ interface Obituary {
 }
 
 /* ── Infinite auto-scroll row ── */
-const CarouselRow = ({
-  items,
-  direction,
-}: {
-  items: Obituary[];
-  direction: "left" | "right";
-}) => {
+const CarouselRow = forwardRef<HTMLDivElement, { items: Obituary[]; direction: "left" | "right" }>(({ items, direction }, ref) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
   const speed = 0.35;
@@ -130,7 +124,9 @@ const CarouselRow = ({
       </div>
     </div>
   );
-};
+});
+
+CarouselRow.displayName = "CarouselRow";
 
 /* ── Main Section ── */
 const ObituariosSection = () => {

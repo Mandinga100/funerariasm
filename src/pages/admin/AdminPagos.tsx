@@ -92,6 +92,7 @@ export default function AdminPagos() {
           const tx = payload.new as Transaction;
           if (payload.eventType === "INSERT") {
             setTransactions(prev => [tx, ...prev]);
+            playNotification();
             toast({
               title: "Nueva transacción",
               description: `${tx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(tx.amount)}`,

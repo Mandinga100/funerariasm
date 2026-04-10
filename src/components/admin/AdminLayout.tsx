@@ -13,7 +13,7 @@ const navItems = [
   { to: "/admin/memoriales", label: "Memoriales", icon: Heart, end: false },
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking Familiar", icon: Users, end: false },
-  { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false },
+  { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false, badgeKey: "leads" as const },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
 ];
 
@@ -21,6 +21,7 @@ export default function AdminLayout() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [pendingPayments, setPendingPayments] = useState(0);
+  const [newLeads, setNewLeads] = useState(0);
 
   useEffect(() => {
     const fetchPending = async () => {
@@ -30,21 +31,43 @@ export default function AdminLayout() {
         .in("status", ["initiated", "pending_verification"]);
       setPendingPayments(count ?? 0);
     };
-    fetchPending();
 
-    const channel = supabase
+    const fetchLeads = async () => {
+      const { count } = await supabase
+        .from("contact_leads")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      setNewLeads(count ?? 0);
+    };
+
+    fetchPending();
+    fetchLeads();
+
+    const paymentsChannel = supabase
       .channel("sidebar-payments")
-      .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => {
-        fetchPending();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => fetchPending())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    const leadsChannel = supabase
+      .channel("sidebar-leads")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => fetchLeads())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(leadsChannel);
+    };
   }, []);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
+  };
+
+  const getBadgeCount = (key?: string) => {
+    if (key === "pagos") return pendingPayments;
+    if (key === "leads") return newLeads;
+    return 0;
   };
 
   return (
@@ -55,27 +78,30 @@ export default function AdminLayout() {
           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
         </div>
         <nav className="flex-1 p-2 space-y-1">
-          {navItems.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"
-                )
-              }
-            >
-              <item.icon className="w-4 h-4" />
-              <span className="flex-1">{item.label}</span>
-              {"badgeKey" in item && item.badgeKey === "pagos" && pendingPayments > 0 && (
-                <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] flex items-center justify-center text-[10px] px-1.5">
-                  {pendingPayments}
-                </Badge>
-              )}
-            </NavLink>
-          ))}
+          {navItems.map(item => {
+            const count = getBadgeCount("badgeKey" in item ? item.badgeKey : undefined);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"
+                  )
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="flex-1">{item.label}</span>
+                {count > 0 && (
+                  <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] flex items-center justify-center text-[10px] px-1.5">
+                    {count}
+                  </Badge>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
         <div className="p-2 border-t">
           <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>

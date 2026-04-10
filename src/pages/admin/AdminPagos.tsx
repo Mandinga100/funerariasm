@@ -66,6 +66,10 @@ export default function AdminPagos() {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem("admin_notification_sound");
+    return stored !== "false";
+  });
   const { toast } = useToast();
   const { playNotification } = useNotificationSound();
 

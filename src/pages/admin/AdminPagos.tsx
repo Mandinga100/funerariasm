@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";

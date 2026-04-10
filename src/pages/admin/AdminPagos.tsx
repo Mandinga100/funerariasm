@@ -85,7 +85,7 @@ export default function AdminPagos() {
       .channel("admin-payments-realtime")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "payment_transactions" },
+        { event: "*", schema: "public", table: "payment_transactions" },
         (payload) => {
           const newTx = payload.new as Transaction;
           setTransactions(prev => [newTx, ...prev]);

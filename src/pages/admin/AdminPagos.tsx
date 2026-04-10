@@ -199,7 +199,6 @@ export default function AdminPagos() {
             <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
           </Button>
         </div>
-        </Button>
       </div>
 
       {/* Filters */}

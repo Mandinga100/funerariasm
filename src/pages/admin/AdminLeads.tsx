@@ -141,18 +141,19 @@ export default function AdminLeads() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Pipeline de Leads</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} contactos</p>
+          <h1 className="text-lg sm:text-2xl font-bold">Pipeline de Leads</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{filtered.length} contactos</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className={cn("h-8", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
-            <Sparkles className="w-4 h-4 mr-1" />
-            {classifyingAll ? "Clasificando..." : "Clasificar con IA"}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" className={cn("h-8 text-xs", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
+            <Sparkles className="w-3.5 h-3.5 mr-1" />
+            <span className="hidden sm:inline">{classifyingAll ? "Clasificando..." : "Clasificar con IA"}</span>
+            <span className="sm:hidden">{classifyingAll ? "..." : "IA"}</span>
           </Button>
           <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[110px] sm:w-[140px] h-8 text-xs">
               <SelectValue placeholder="Urgencia" />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +177,7 @@ export default function AdminLeads() {
       {/* Kanban View */}
       {viewMode === "kanban" ? (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 220px)" }}>
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 -mx-2 px-2 snap-x snap-mandatory sm:snap-none" style={{ minHeight: "calc(100vh - 240px)" }}>
             {PIPELINE_STAGES.map(stage => (
               <Droppable key={stage.id} droppableId={stage.id}>
                 {(provided, snapshot) => (
@@ -184,14 +185,14 @@ export default function AdminLeads() {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "flex-shrink-0 w-[260px] rounded-lg border-2 p-2 transition-colors",
+                      "flex-shrink-0 w-[200px] sm:w-[230px] lg:w-[260px] rounded-lg border-2 p-1.5 sm:p-2 transition-colors snap-start",
                       stage.color,
                       snapshot.isDraggingOver && "ring-2 ring-primary"
                     )}
                   >
-                    <div className="flex items-center justify-between mb-2 px-1">
-                      <span className="text-sm font-semibold">{stage.label}</span>
-                      <Badge variant="secondary" className="text-[10px] h-5">{leadsByStage[stage.id]?.length ?? 0}</Badge>
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2 px-1">
+                      <span className="text-xs sm:text-sm font-semibold truncate">{stage.label}</span>
+                      <Badge variant="secondary" className="text-[9px] sm:text-[10px] h-4 sm:h-5 ml-1">{leadsByStage[stage.id]?.length ?? 0}</Badge>
                     </div>
                     <div className="space-y-2 min-h-[100px]">
                       {(leadsByStage[stage.id] ?? []).map((lead, index) => (
@@ -202,7 +203,7 @@ export default function AdminLeads() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               className={cn(
-                                "bg-background rounded-md border p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
+                                "bg-background rounded-md border p-2 sm:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
                                 snapshot.isDragging && "shadow-lg ring-2 ring-primary rotate-2"
                               )}
                               onClick={() => setSelectedLead(lead)}

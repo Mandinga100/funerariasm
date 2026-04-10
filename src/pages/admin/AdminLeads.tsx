@@ -102,7 +102,7 @@ export default function AdminLeads() {
     // Optimistic update
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: newStage } : l));
     
-    const updates: Record<string, any> = { pipeline_stage: newStage };
+    const updates: { pipeline_stage: string; last_contacted_at?: string; status?: string } = { pipeline_stage: newStage };
     if (newStage === "contactado" || newStage === "cotizado" || newStage === "contratado") {
       updates.last_contacted_at = new Date().toISOString();
     }

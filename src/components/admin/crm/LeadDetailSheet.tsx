@@ -91,9 +91,9 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     toast({ title: "Nota agregada" });
   };
 
-  const updateField = async (field: string, value: any) => {
+  const updateField = async (field: "pipeline_stage" | "estimated_value" | "next_follow_up" | "status", value: string | number | null) => {
     if (!lead) return;
-    const { error } = await supabase.from("contact_leads").update({ [field]: value }).eq("id", lead.id);
+    const { error } = await supabase.from("contact_leads").update({ [field]: value } as any).eq("id", lead.id);
     if (!error) {
       onUpdate();
       toast({ title: "Actualizado" });

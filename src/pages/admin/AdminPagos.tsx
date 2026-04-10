@@ -180,8 +180,25 @@ export default function AdminPagos() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
-        <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-          <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSoundEnabled(prev => {
+                const next = !prev;
+                localStorage.setItem("admin_notification_sound", String(next));
+                return next;
+              });
+            }}
+            title={soundEnabled ? "Silenciar notificaciones" : "Activar sonido"}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
+            <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+          </Button>
+        </div>
         </Button>
       </div>
 

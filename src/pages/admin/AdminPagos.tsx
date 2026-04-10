@@ -67,6 +67,7 @@ export default function AdminPagos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+  const { playNotification } = useNotificationSound();
 
   const load = async () => {
     const { data } = await supabase

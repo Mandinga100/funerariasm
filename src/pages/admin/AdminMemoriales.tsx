@@ -1,18 +1,36 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Plus, Pencil, Trash2, Eye } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Memorial = Tables<"memorials">;
 
+const EMPTY: Partial<Memorial> = {
+  full_name: "", slug: "", death_date: "", birth_date: "", city: "Santiago",
+  biography: "", tribute_text: "", photo_url: "",
+  meta_title: "", meta_description: "", published: false,
+};
+
+function slugify(t: string) {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export default function AdminMemoriales() {
   const [items, setItems] = useState<Memorial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Partial<Memorial>>(EMPTY);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -26,28 +44,78 @@ export default function AdminMemoriales() {
 
   const togglePublished = async (id: string, current: boolean) => {
     const { error } = await supabase.from("memorials").update({
-      published: !current,
-      published_at: !current ? new Date().toISOString() : null
+      published: !current, published_at: !current ? new Date().toISOString() : null,
     }).eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: !current ? "Publicado" : "Despublicado" });
-      load();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: !current ? "Publicado" : "Despublicado" }); load(); }
   };
+
+  const openCreate = () => { setEditing({ ...EMPTY }); setDialogOpen(true); };
+  const openEdit = (item: Memorial) => { setEditing({ ...item }); setDialogOpen(true); };
+
+  const handleSave = async () => {
+    if (!editing.full_name || !editing.death_date) {
+      toast({ title: "Campos requeridos", description: "Nombre y fecha de fallecimiento son obligatorios.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const slug = editing.slug || slugify(editing.full_name);
+    const payload = {
+      full_name: editing.full_name!, slug, death_date: editing.death_date!,
+      birth_date: editing.birth_date || null, city: editing.city || "Santiago",
+      biography: editing.biography || null, tribute_text: editing.tribute_text || null,
+      photo_url: editing.photo_url || null,
+      meta_title: editing.meta_title || null, meta_description: editing.meta_description || null,
+      published: editing.published ?? false,
+      published_at: editing.published ? (editing.published_at || new Date().toISOString()) : null,
+    };
+
+    let error;
+    if (editing.id) {
+      ({ error } = await supabase.from("memorials").update(payload).eq("id", editing.id));
+    } else {
+      ({ error } = await supabase.from("memorials").insert(payload));
+    }
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: editing.id ? "Legado actualizado" : "Legado creado" }); setDialogOpen(false); load(); }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`¿Eliminar el legado de ${name}? Esta acción no se puede deshacer.`)) return;
+    const { error } = await supabase.from("memorials").delete().eq("id", id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Legado eliminado" }); load(); }
+  };
+
+  const field = (key: keyof Memorial, label: string, opts?: { type?: string; full?: boolean; textarea?: boolean }) => (
+    <div className={opts?.full ? "col-span-2" : ""}>
+      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      {opts?.textarea ? (
+        <Textarea className="mt-1" rows={4} value={(editing[key] as string) ?? ""} onChange={e => setEditing(p => ({ ...p, [key]: e.target.value }))} />
+      ) : (
+        <Input className="mt-1" type={opts?.type ?? "text"} value={(editing[key] as string) ?? ""} onChange={e => setEditing(p => ({ ...p, [key]: e.target.value }))} />
+      )}
+    </div>
+  );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Memoriales</h1>
-        <Badge variant="outline">{items.length} total</Badge>
+        <div>
+          <h1 className="text-2xl font-bold">Gestión de Legados</h1>
+          <p className="text-sm text-muted-foreground">{items.length} legados registrados</p>
+        </div>
+        <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Nuevo Legado</Button>
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando...</p>
+        <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
       ) : items.length === 0 ? (
-        <p className="text-muted-foreground">No hay memoriales registrados.</p>
+        <div className="text-center py-16 border border-dashed rounded-lg">
+          <p className="text-muted-foreground mb-4">No hay legados registrados.</p>
+          <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Crear primer legado</Button>
+        </div>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -56,8 +124,8 @@ export default function AdminMemoriales() {
                 <TableHead>Nombre</TableHead>
                 <TableHead>Ciudad</TableHead>
                 <TableHead>Fallecimiento</TableHead>
-                <TableHead>Publicado</TableHead>
-                <TableHead>Acciones</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="w-[60px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,17 +135,23 @@ export default function AdminMemoriales() {
                   <TableCell>{item.city ?? "—"}</TableCell>
                   <TableCell>{item.death_date}</TableCell>
                   <TableCell>
-                    <Switch
-                      checked={item.published}
-                      onCheckedChange={() => togglePublished(item.id, item.published)}
-                    />
+                    <Switch checked={item.published} onCheckedChange={() => togglePublished(item.id, item.published)} />
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <a href={`/memoriales/${item.slug}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(item)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <a href={`/memoriales/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item.id, item.full_name)}>
+                          <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -85,6 +159,30 @@ export default function AdminMemoriales() {
           </Table>
         </div>
       )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing.id ? "Editar Legado" : "Nuevo Legado"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {field("full_name", "Nombre completo *")}
+            {field("slug", "Slug (URL)")}
+            {field("birth_date", "Fecha de nacimiento", { type: "date" })}
+            {field("death_date", "Fecha de fallecimiento *", { type: "date" })}
+            {field("city", "Ciudad")}
+            {field("photo_url", "URL de foto")}
+            {field("tribute_text", "Texto tributo", { full: true, textarea: true })}
+            {field("biography", "Biografía", { full: true, textarea: true })}
+            {field("meta_title", "Meta título (SEO)")}
+            {field("meta_description", "Meta descripción (SEO)")}
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : editing.id ? "Actualizar" : "Crear"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

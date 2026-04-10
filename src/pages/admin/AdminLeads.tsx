@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface Lead {
   id: string;
@@ -22,9 +24,16 @@ const urgencyColor: Record<string, string> = {
   previsión: "bg-green-100 text-green-800",
 };
 
+const statusConfig: Record<string, { label: string; color: string }> = {
+  new: { label: "Nuevo", color: "bg-blue-100 text-blue-800" },
+  contacted: { label: "Contactado", color: "bg-amber-100 text-amber-800" },
+  closed: { label: "Cerrado", color: "bg-green-100 text-green-800" },
+};
+
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     supabase
@@ -37,6 +46,22 @@ export default function AdminLeads() {
         setLoading(false);
       });
   }, []);
+
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("contact_leads")
+      .update({ status: newStatus })
+      .eq("id", leadId);
+
+    if (error) {
+      toast({ title: "Error", description: "No se pudo actualizar el estado", variant: "destructive" });
+      return;
+    }
+
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+    const cfg = statusConfig[newStatus];
+    toast({ title: "Estado actualizado", description: cfg?.label ?? newStatus });
+  };
 
   return (
     <div>
@@ -58,34 +83,50 @@ export default function AdminLeads() {
                 <TableHead>Contacto</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Urgencia</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead>Fuente</TableHead>
                 <TableHead>Fecha</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leads.map(lead => (
-                <TableRow key={lead.id}>
-                  <TableCell className="font-medium">{lead.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm">
-                    <div>{lead.email ?? ""}</div>
-                    <div className="text-muted-foreground">{lead.phone ?? ""}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{lead.contact_type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {lead.urgency && (
-                      <Badge className={urgencyColor[lead.urgency] ?? "bg-muted text-muted-foreground"} variant="secondary">
-                        {lead.urgency}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{lead.source ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(lead.created_at).toLocaleDateString("es-CL")}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {leads.map(lead => {
+                const st = statusConfig[lead.status ?? "new"] ?? statusConfig.new;
+                return (
+                  <TableRow key={lead.id}>
+                    <TableCell className="font-medium">{lead.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm">
+                      <div>{lead.email ?? ""}</div>
+                      <div className="text-muted-foreground">{lead.phone ?? ""}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{lead.contact_type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {lead.urgency && (
+                        <Badge className={urgencyColor[lead.urgency] ?? "bg-muted text-muted-foreground"} variant="secondary">
+                          {lead.urgency}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Select value={lead.status ?? "new"} onValueChange={(v) => handleStatusChange(lead.id, v)}>
+                        <SelectTrigger className="w-[130px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">🔵 Nuevo</SelectItem>
+                          <SelectItem value="contacted">🟡 Contactado</SelectItem>
+                          <SelectItem value="closed">🟢 Cerrado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{lead.source ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(lead.created_at).toLocaleDateString("es-CL")}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

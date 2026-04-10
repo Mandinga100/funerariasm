@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export default function AdminPagos() {
   const [updating, setUpdating] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const load = async () => {
@@ -77,6 +79,10 @@ export default function AdminPagos() {
   const filtered = transactions.filter(tx => {
     if (filterStatus !== "all" && tx.status !== filterStatus) return false;
     if (filterType !== "all" && tx.payment_type !== filterType) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!tx.full_name.toLowerCase().includes(q) && !tx.transaction_ref.toLowerCase().includes(q) && !tx.rut.toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
@@ -112,8 +118,16 @@ export default function AdminPagos() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="w-48">
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
+        <div className="relative w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nombre, ref o RUT..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por estado" />
@@ -139,9 +153,9 @@ export default function AdminPagos() {
             </SelectContent>
           </Select>
         </div>
-        {(filterStatus !== "all" || filterType !== "all") && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); }}>
-            <X className="w-4 h-4 mr-1" /> Limpiar filtros
+        {(filterStatus !== "all" || filterType !== "all" || searchQuery) && (
+          <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); setSearchQuery(""); }}>
+            <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}
         <Badge variant="outline" className="ml-auto self-center">{filtered.length} de {transactions.length}</Badge>

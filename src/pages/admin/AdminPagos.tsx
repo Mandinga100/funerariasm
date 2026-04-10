@@ -89,6 +89,12 @@ export default function AdminPagos() {
     return true;
   });
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setCurrentPage(1); }, [filterStatus, filterType, searchQuery]);
+
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);
     const { error } = await supabase

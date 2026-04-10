@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -111,10 +111,32 @@ export default function AdminPagos() {
     suspicious: transactions.filter(t => t.status === "suspicious" || (t.fraud_flags && t.fraud_flags.length > 0)).length,
   };
 
+  const exportCSV = () => {
+    const headers = ["Referencia","Nombre","RUT","Email","Teléfono","Tipo","Subtipo","Monto","Moneda","Estado","Plan","Caso","Fecha"];
+    const rows = filtered.map(tx => [
+      tx.transaction_ref, tx.full_name, tx.rut, tx.email, tx.phone,
+      typeLabels[tx.payment_type] ?? tx.payment_type, tx.payment_subtype ?? "",
+      tx.amount, tx.currency, statusConfig[tx.status]?.label ?? tx.status,
+      tx.plan_name ?? "", tx.case_reference ?? "",
+      new Date(tx.created_at).toLocaleDateString("es-CL"),
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transacciones_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
+        <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
+          <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+        </Button>
       </div>
 
       {/* Filters */}

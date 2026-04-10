@@ -128,6 +128,7 @@ export default function AdminPagos() {
             className="pl-9"
           />
         </div>
+        <div className="w-48">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por estado" />

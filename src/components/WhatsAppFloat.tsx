@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
 
-const WhatsAppFloat = () => {
+const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   const [chatOpen, setChatOpen] = useState(false);
 
   return (
@@ -50,6 +50,7 @@ const WhatsAppFloat = () => {
       </div>
     </>
   );
-};
+});
 
+WhatsAppFloat.displayName = "WhatsAppFloat";
 export default WhatsAppFloat;

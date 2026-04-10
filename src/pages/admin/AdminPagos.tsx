@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
@@ -66,6 +67,7 @@ export default function AdminPagos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+  const { playNotification } = useNotificationSound();
 
   const load = async () => {
     const { data } = await supabase
@@ -90,6 +92,7 @@ export default function AdminPagos() {
           const tx = payload.new as Transaction;
           if (payload.eventType === "INSERT") {
             setTransactions(prev => [tx, ...prev]);
+            playNotification();
             toast({
               title: "Nueva transacción",
               description: `${tx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(tx.amount)}`,

@@ -3,6 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -11,12 +14,33 @@ const navItems = [
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking Familiar", icon: Users, end: false },
   { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false },
-  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false },
+  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
 ];
 
 export default function AdminLayout() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [pendingPayments, setPendingPayments] = useState(0);
+
+  useEffect(() => {
+    const fetchPending = async () => {
+      const { count } = await supabase
+        .from("payment_transactions")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["initiated", "pending_verification"]);
+      setPendingPayments(count ?? 0);
+    };
+    fetchPending();
+
+    const channel = supabase
+      .channel("sidebar-payments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => {
+        fetchPending();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,7 +49,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-muted/20">
-      {/* Sidebar */}
       <aside className="w-64 border-r bg-background flex flex-col">
         <div className="p-4 border-b">
           <h2 className="font-semibold text-lg">Panel Admin</h2>
@@ -45,7 +68,12 @@ export default function AdminLayout() {
               }
             >
               <item.icon className="w-4 h-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {"badgeKey" in item && item.badgeKey === "pagos" && pendingPayments > 0 && (
+                <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] flex items-center justify-center text-[10px] px-1.5">
+                  {pendingPayments}
+                </Badge>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -57,7 +85,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 p-6 overflow-auto">
         <Outlet />
       </main>

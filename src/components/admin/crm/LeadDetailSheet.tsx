@@ -130,7 +130,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
   return (
     <Sheet open={!!lead} onOpenChange={() => onClose()}>
-      <SheetContent className="w-[480px] sm:max-w-[480px] overflow-y-auto">
+      <SheetContent className="w-full sm:w-[480px] sm:max-w-[480px] overflow-y-auto p-4 sm:p-6">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             {lead.name ?? "Sin nombre"}

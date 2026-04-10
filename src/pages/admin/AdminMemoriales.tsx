@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Memorial = Tables<"memorials">;
@@ -31,6 +31,7 @@ export default function AdminMemoriales() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Memorial>>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -52,6 +53,46 @@ export default function AdminMemoriales() {
 
   const openCreate = () => { setEditing({ ...EMPTY }); setDialogOpen(true); };
   const openEdit = (item: Memorial) => { setEditing({ ...item }); setDialogOpen(true); };
+
+  const handleGenerateAI = async () => {
+    if (!editing.full_name || !editing.death_date) {
+      toast({ title: "Complete nombre y fecha de fallecimiento primero", variant: "destructive" });
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-content", {
+        body: {
+          type: "memorial_tribute",
+          context: {
+            full_name: editing.full_name,
+            birth_date: editing.birth_date,
+            death_date: editing.death_date,
+            city: editing.city,
+            biography: editing.biography,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.data) {
+        const ai = data.data;
+        setEditing(p => ({
+          ...p,
+          tribute_text: ai.tribute_text || p.tribute_text,
+          biography: ai.biography || p.biography,
+          meta_title: ai.meta_title || p.meta_title,
+          meta_description: ai.meta_description || p.meta_description,
+        }));
+        toast({ title: "✨ Contenido generado con IA", description: "Revisa y edita antes de guardar." });
+      } else if (data?.error) {
+        throw new Error(data.error);
+      }
+    } catch (e: any) {
+      toast({ title: "Error al generar", description: e.message || "Intente nuevamente", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!editing.full_name || !editing.death_date) {
@@ -172,7 +213,27 @@ export default function AdminMemoriales() {
             {field("death_date", "Fecha de fallecimiento *", { type: "date" })}
             {field("city", "Ciudad")}
             {field("photo_url", "URL de foto")}
-            {field("tribute_text", "Texto tributo", { full: true, textarea: true })}
+            <div className="col-span-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Texto tributo</Label>
+                <Button
+                  type="button" variant="ghost" size="sm"
+                  onClick={handleGenerateAI}
+                  disabled={generating}
+                  className="text-xs h-7"
+                >
+                  {generating ? (
+                    <><div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1" />Generando...</>
+                  ) : (
+                    <><Sparkles className="w-3 h-3 mr-1" />Generar con IA</>
+                  )}
+                </Button>
+              </div>
+              <Textarea className="mt-1" rows={4} value={(editing.tribute_text as string) ?? ""} onChange={e => setEditing(p => ({ ...p, tribute_text: e.target.value }))} />
+              <p className="text-xs text-muted-foreground mt-1">
+                La IA generará tributo, biografía y metadatos SEO basados en los datos ingresados.
+              </p>
+            </div>
             {field("biography", "Biografía", { full: true, textarea: true })}
             {field("meta_title", "Meta título (SEO)")}
             {field("meta_description", "Meta descripción (SEO)")}

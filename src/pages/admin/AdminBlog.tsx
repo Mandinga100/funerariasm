@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -34,6 +34,9 @@ export default function AdminBlog() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<BlogPost>>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -56,6 +59,43 @@ export default function AdminBlog() {
 
   const openCreate = () => { setEditing({ ...EMPTY }); setDialogOpen(true); };
   const openEdit = (p: BlogPost) => { setEditing({ ...p }); setDialogOpen(true); };
+
+  const handleGenerateAI = async () => {
+    if (!aiTopic.trim()) {
+      toast({ title: "Ingrese un tema", variant: "destructive" });
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-content", {
+        body: { type: "blog", context: { topic: aiTopic, category: editing.category || "general" } },
+      });
+      if (error) throw error;
+      if (data?.data) {
+        const ai = data.data;
+        setEditing(p => ({
+          ...p,
+          title: ai.title || p.title,
+          slug: ai.slug || p.slug,
+          content: ai.content || p.content,
+          excerpt: ai.excerpt || p.excerpt,
+          meta_title: ai.meta_title || p.meta_title,
+          meta_description: ai.meta_description || p.meta_description,
+          tags: ai.tags || p.tags,
+          category: ai.category || p.category,
+        }));
+        toast({ title: "✨ Contenido generado con IA", description: "Revisa y edita antes de publicar." });
+        setAiDialogOpen(false);
+        if (!dialogOpen) setDialogOpen(true);
+      } else if (data?.error) {
+        throw new Error(data.error);
+      }
+    } catch (e: any) {
+      toast({ title: "Error al generar", description: e.message || "Intente nuevamente", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!editing.title || !editing.content) {
@@ -113,7 +153,12 @@ export default function AdminBlog() {
           <h1 className="text-2xl font-bold">Blog</h1>
           <p className="text-sm text-muted-foreground">{posts.length} artículos</p>
         </div>
-        <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Nuevo Artículo</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
+            <Sparkles className="w-4 h-4 mr-2" />Generar con IA
+          </Button>
+          <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Nuevo Artículo</Button>
+        </div>
       </div>
 
       {loading ? (
@@ -171,6 +216,52 @@ export default function AdminBlog() {
         </div>
       )}
 
+      {/* AI Generation Dialog */}
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              Generar artículo con IA
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <Label>Tema del artículo</Label>
+              <Textarea
+                className="mt-1"
+                rows={3}
+                placeholder="Ej: Cómo planificar un funeral con anticipación en Chile"
+                value={aiTopic}
+                onChange={e => setAiTopic(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Categoría</Label>
+              <Select value={editing.category ?? ""} onValueChange={v => setEditing(p => ({ ...p, category: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccionar categoría" /></SelectTrigger>
+                <SelectContent>
+                  {BLOG_CATEGORIES.map(c => (
+                    <SelectItem key={c.key} value={c.label}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleGenerateAI} disabled={generating} className="w-full">
+              {generating ? (
+                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />Generando...</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-2" />Generar contenido</>
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              El contenido generado se cargará en el formulario para que puedas revisarlo y editarlo antes de publicar.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -193,7 +284,19 @@ export default function AdminBlog() {
             {field("author_name", "Autor")}
             {field("cover_image", "URL imagen de portada", { full: true })}
             {field("excerpt", "Extracto", { full: true, textarea: true })}
-            {field("content", "Contenido (HTML/Markdown) *", { full: true, textarea: true })}
+            <div className="col-span-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Contenido (HTML/Markdown) *</Label>
+                <Button
+                  type="button" variant="ghost" size="sm"
+                  onClick={() => { setAiDialogOpen(true); setAiTopic(""); }}
+                  className="text-xs h-7"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />Generar con IA
+                </Button>
+              </div>
+              <Textarea className="mt-1" rows={6} value={(editing.content as string) ?? ""} onChange={e => setEditing(p => ({ ...p, content: e.target.value }))} />
+            </div>
             {field("meta_title", "Meta título (SEO)")}
             {field("meta_description", "Meta descripción (SEO)")}
             <div className="col-span-2">

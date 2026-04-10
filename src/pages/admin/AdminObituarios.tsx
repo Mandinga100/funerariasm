@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ExternalLink, MoreVertical, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Obituary = Tables<"obituaries">;
@@ -33,6 +32,7 @@ export default function AdminObituarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Obituary>>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -54,6 +54,46 @@ export default function AdminObituarios() {
 
   const openCreate = () => { setEditing({ ...EMPTY }); setDialogOpen(true); };
   const openEdit = (item: Obituary) => { setEditing({ ...item }); setDialogOpen(true); };
+
+  const handleGenerateAI = async () => {
+    if (!editing.full_name || !editing.death_date) {
+      toast({ title: "Complete nombre y fecha de fallecimiento primero", variant: "destructive" });
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-content", {
+        body: {
+          type: "obituary_biography",
+          context: {
+            full_name: editing.full_name,
+            birth_date: editing.birth_date,
+            death_date: editing.death_date,
+            city: editing.city,
+            family_names: editing.family_names,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.data) {
+        const ai = data.data;
+        setEditing(p => ({
+          ...p,
+          biography: ai.biography || p.biography,
+          family_message: ai.family_message || p.family_message,
+          meta_title: ai.meta_title || p.meta_title,
+          meta_description: ai.meta_description || p.meta_description,
+        }));
+        toast({ title: "✨ Contenido generado con IA", description: "Revisa y edita antes de guardar." });
+      } else if (data?.error) {
+        throw new Error(data.error);
+      }
+    } catch (e: any) {
+      toast({ title: "Error al generar", description: e.message || "Intente nuevamente", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!editing.full_name || !editing.death_date) {
@@ -182,7 +222,27 @@ export default function AdminObituarios() {
             {field("ceremony_schedule", "Horario de la ceremonia")}
             {field("family_names", "Nombres de la familia", { full: true })}
             {field("family_message", "Mensaje de la familia", { full: true, textarea: true })}
-            {field("biography", "Biografía", { full: true, textarea: true })}
+            <div className="col-span-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Biografía</Label>
+                <Button
+                  type="button" variant="ghost" size="sm"
+                  onClick={handleGenerateAI}
+                  disabled={generating}
+                  className="text-xs h-7"
+                >
+                  {generating ? (
+                    <><div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1" />Generando...</>
+                  ) : (
+                    <><Sparkles className="w-3 h-3 mr-1" />Generar con IA</>
+                  )}
+                </Button>
+              </div>
+              <Textarea className="mt-1" rows={4} value={(editing.biography as string) ?? ""} onChange={e => setEditing(p => ({ ...p, biography: e.target.value }))} />
+              <p className="text-xs text-muted-foreground mt-1">
+                La IA generará biografía, mensaje familiar y metadatos SEO basados en los datos ingresados.
+              </p>
+            </div>
             {field("meta_title", "Meta título (SEO)")}
             {field("meta_description", "Meta descripción (SEO)")}
           </div>

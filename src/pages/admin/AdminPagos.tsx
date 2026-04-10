@@ -109,7 +109,6 @@ export default function AdminPagos() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
-        <Badge variant="outline">{stats.total} transacciones</Badge>
       </div>
 
       {/* Filters */}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
@@ -66,6 +66,10 @@ export default function AdminPagos() {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem("admin_notification_sound");
+    return stored !== "false";
+  });
   const { toast } = useToast();
   const { playNotification } = useNotificationSound();
 
@@ -92,7 +96,7 @@ export default function AdminPagos() {
           const tx = payload.new as Transaction;
           if (payload.eventType === "INSERT") {
             setTransactions(prev => [tx, ...prev]);
-            playNotification();
+            if (soundEnabled) playNotification();
             toast({
               title: "Nueva transacción",
               description: `${tx.full_name} — ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(tx.amount)}`,
@@ -176,9 +180,25 @@ export default function AdminPagos() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
-        <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-          <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSoundEnabled(prev => {
+                const next = !prev;
+                localStorage.setItem("admin_notification_sound", String(next));
+                return next;
+              });
+            }}
+            title={soundEnabled ? "Silenciar notificaciones" : "Activar sonido"}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
+            <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import NotificationCenter from "@/components/admin/crm/NotificationCenter";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -73,9 +74,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex bg-muted/20">
       <aside className="w-64 border-r bg-background flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold text-lg">Panel Admin</h2>
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+        <div className="p-4 border-b flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-lg">CRM Funeraria</h2>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+          <NotificationCenter />
         </div>
         <nav className="flex-1 p-2 space-y-1">
           {navItems.map(item => {

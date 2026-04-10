@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          read: boolean
+          read_at: string | null
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string | null
@@ -105,16 +144,23 @@ export type Database = {
       }
       contact_leads: {
         Row: {
+          ai_classification: Json | null
+          ai_summary: string | null
+          assigned_to: string | null
           comuna: string | null
           contact_type: string
           created_at: string
           email: string | null
+          estimated_value: number | null
           id: string
           intent: string | null
+          last_contacted_at: string | null
           message: string | null
           metadata: Json | null
           name: string | null
+          next_follow_up: string | null
           phone: string | null
+          pipeline_stage: string
           selected_plan: string | null
           source: string | null
           status: string | null
@@ -122,16 +168,23 @@ export type Database = {
           whatsapp_message: string | null
         }
         Insert: {
+          ai_classification?: Json | null
+          ai_summary?: string | null
+          assigned_to?: string | null
           comuna?: string | null
           contact_type?: string
           created_at?: string
           email?: string | null
+          estimated_value?: number | null
           id?: string
           intent?: string | null
+          last_contacted_at?: string | null
           message?: string | null
           metadata?: Json | null
           name?: string | null
+          next_follow_up?: string | null
           phone?: string | null
+          pipeline_stage?: string
           selected_plan?: string | null
           source?: string | null
           status?: string | null
@@ -139,16 +192,23 @@ export type Database = {
           whatsapp_message?: string | null
         }
         Update: {
+          ai_classification?: Json | null
+          ai_summary?: string | null
+          assigned_to?: string | null
           comuna?: string | null
           contact_type?: string
           created_at?: string
           email?: string | null
+          estimated_value?: number | null
           id?: string
           intent?: string | null
+          last_contacted_at?: string | null
           message?: string | null
           metadata?: Json | null
           name?: string | null
+          next_follow_up?: string | null
           phone?: string | null
+          pipeline_stage?: string
           selected_plan?: string | null
           source?: string | null
           status?: string | null
@@ -210,6 +270,79 @@ export type Database = {
             columns: ["obituary_id"]
             isOneToOne: false
             referencedRelation: "obituaries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string
+          id: string
+          lead_id: string
+          metadata: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description: string
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contact_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+          note_type: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          note_type?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          note_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contact_leads"
             referencedColumns: ["id"]
           },
         ]

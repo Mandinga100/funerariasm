@@ -1,9 +1,10 @@
+import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 const WHATSAPP = "https://wa.me/56964333760";
 
-const FooterPremium = () => (
+const FooterPremium = forwardRef<HTMLElement>((_props, ref) => (
   <footer className="bg-primary text-primary-foreground">
     {/* Main */}
     <div className="container py-16">
@@ -104,6 +105,7 @@ const FooterPremium = () => (
       </div>
     </div>
   </footer>
-);
+));
 
+FooterPremium.displayName = "FooterPremium";
 export default FooterPremium;

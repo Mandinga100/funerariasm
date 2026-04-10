@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Send, Phone, MessageCircle, CheckCircle, Loader2 } from "lucide-react";
 import { submitContact } from "@/lib/contacts";
 import { buildWhatsAppUrl, type ContactIntent } from "@/lib/whatsapp";
@@ -42,7 +42,7 @@ const ContactForm = ({
   selectedPlan,
   source = "web",
   onSuccess,
-}: ContactFormProps) => {
+}: ContactFormProps, ref: React.Ref<HTMLDivElement>) => {
   const config = FORM_CONFIG[type];
   const [form, setForm] = useState({
     name: "",
@@ -234,4 +234,5 @@ const ContactForm = ({
   );
 };
 
-export default ContactForm;
+const ContactFormWithRef = forwardRef<HTMLDivElement, ContactFormProps>(ContactForm);
+export default ContactFormWithRef;

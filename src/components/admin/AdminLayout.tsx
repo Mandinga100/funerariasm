@@ -1,7 +1,8 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,7 @@ const navItems = [
   { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false },
   { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false },
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
-  { to: "/admin/tracking", label: "Tracking Familiar", icon: Users, end: false },
+  { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
   { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false, badgeKey: "leads" as const },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
 ];
@@ -21,8 +22,15 @@ const navItems = [
 export default function AdminLayout() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchPending = async () => {
@@ -71,53 +79,82 @@ export default function AdminLayout() {
     return 0;
   };
 
+  const SidebarNav = () => (
+    <>
+      <nav className="flex-1 p-2 space-y-1">
+        {navItems.map(item => {
+          const count = getBadgeCount("badgeKey" in item ? item.badgeKey : undefined);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
+                  isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"
+                )
+              }
+            >
+              <item.icon className="w-4 h-4" />
+              <span className="flex-1">{item.label}</span>
+              {count > 0 && (
+                <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] flex items-center justify-center text-[10px] px-1.5">
+                  {count}
+                </Badge>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+      <div className="p-2 border-t">
+        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4" />
+          Cerrar sesión
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen flex bg-muted/20">
-      <aside className="w-64 border-r bg-background flex flex-col">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-64 border-r bg-background flex-col">
         <div className="p-4 border-b flex items-center justify-between">
-          <div>
+          <div className="min-w-0">
             <h2 className="font-semibold text-lg">CRM Funeraria</h2>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
           <NotificationCenter />
         </div>
-        <nav className="flex-1 p-2 space-y-1">
-          {navItems.map(item => {
-            const count = getBadgeCount("badgeKey" in item ? item.badgeKey : undefined);
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"
-                  )
-                }
-              >
-                <item.icon className="w-4 h-4" />
-                <span className="flex-1">{item.label}</span>
-                {count > 0 && (
-                  <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] flex items-center justify-center text-[10px] px-1.5">
-                    {count}
-                  </Badge>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-        <div className="p-2 border-t">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4" />
-            Cerrar sesión
-          </Button>
-        </div>
+        <SidebarNav />
       </aside>
 
-      <main className="flex-1 p-6 overflow-auto">
-        <Outlet />
-      </main>
+      {/* Mobile top bar + sheet */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="md:hidden flex items-center justify-between border-b bg-background px-3 py-2.5 sticky top-0 z-40">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[260px] p-0 flex flex-col">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold text-base">CRM Funeraria</h2>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              </div>
+              <SidebarNav />
+            </SheetContent>
+          </Sheet>
+          <h1 className="font-semibold text-sm truncate">CRM Funeraria</h1>
+          <NotificationCenter />
+        </header>
+
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

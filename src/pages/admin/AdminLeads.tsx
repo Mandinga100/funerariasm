@@ -50,20 +50,38 @@ const urgencyColor: Record<string, string> = {
 };
 
 export default function AdminLeads() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
-  const [filterUrgency, setFilterUrgency] = useState("all");
+  const [filterUrgency, setFilterUrgency] = useState(searchParams.get("urgency") ?? "all");
+  const [filterStage, setFilterStage] = useState(searchParams.get("stage") ?? "all");
+  const [filterOverdue, setFilterOverdue] = useState(searchParams.get("filter") === "overdue");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
+  // Open a specific lead from URL param ?open=<id>
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId && leads.length > 0) {
+      const found = leads.find(l => l.id === openId);
+      if (found) {
+        setSelectedLead(found);
+        // Clean up the param after opening
+        const next = new URLSearchParams(searchParams);
+        next.delete("open");
+        setSearchParams(next, { replace: true });
+      }
+    }
+  }, [leads, searchParams]);
+
   useEffect(() => {
     loadLeads();
     const channel = supabase
-      .channel("crm-leads")
+      .channel(`crm-leads-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => loadLeads())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -80,11 +98,20 @@ export default function AdminLeads() {
   };
 
   const filtered = useMemo(() => {
+    const now = new Date();
     return leads.filter(l => {
       if (filterUrgency !== "all" && l.urgency !== filterUrgency) return false;
+      if (filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
+      if (filterOverdue) {
+        if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
+        const hours = differenceInHours(now, new Date(l.created_at));
+        if (l.urgency === "inmediata" && hours < 2) return false;
+        if (l.urgency === "normal" && hours < 24) return false;
+        if (l.urgency !== "inmediata" && l.urgency !== "normal" && hours < 72) return false;
+      }
       return true;
     });
-  }, [leads, filterUrgency]);
+  }, [leads, filterUrgency, filterStage, filterOverdue]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};

@@ -27,9 +27,15 @@ export default function NotificationCenter() {
     if (!user) return;
     loadNotifications();
 
-    const channel = supabase.channel("admin-notifications-" + user.id);
-    channel.on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_notifications", filter: `user_id=eq.${user.id}` }, () => loadNotifications());
-    channel.subscribe();
+    const channelName = `admin-notif-${user.id}-${Date.now()}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "admin_notifications", filter: `user_id=eq.${user.id}` },
+        () => loadNotifications()
+      )
+      .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);

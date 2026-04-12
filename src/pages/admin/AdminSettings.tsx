@@ -386,6 +386,28 @@ export default function AdminSettings() {
     const a = document.createElement("a"); a.href = url; a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
     toast({ title: `${filename} exportado` });
+    logAudit({ action: "export", module: "informes", description: `Exportó ${filename}` });
+  };
+
+  const exportAuditCSV = async () => {
+    const { data } = await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(5000);
+    if (!data?.length) { toast({ title: "Sin registros de auditoría" }); return; }
+    const headers = ["Fecha", "Email", "Rol", "Acción", "Módulo", "Descripción", "Entidad"];
+    const rows = data.map((r: any) => [
+      new Date(r.created_at).toLocaleString("es-CL"),
+      r.user_email ?? "",
+      r.user_role ?? "",
+      r.action,
+      r.module,
+      `"${(r.description ?? "").replace(/"/g, '""')}"`,
+      r.entity_type ?? "",
+    ].join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `auditoria_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Log de auditoría exportado" });
   };
 
   /* ── Determine available roles for selects ── */

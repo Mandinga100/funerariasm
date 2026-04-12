@@ -2,12 +2,13 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, X } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import NotificationCenter from "@/components/admin/crm/NotificationCenter";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -23,11 +24,11 @@ export default function AdminLayout() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
@@ -63,8 +64,8 @@ export default function AdminLayout() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(paymentsChannel);
-      supabase.removeChannel(leadsChannel);
+      void supabase.removeChannel(paymentsChannel);
+      void supabase.removeChannel(leadsChannel);
     };
   }, []);
 
@@ -118,19 +119,17 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-muted/20">
-      {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 border-r bg-background flex-col">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="min-w-0">
             <h2 className="font-semibold text-lg">CRM Funeraria</h2>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <NotificationCenter />
+          {!isMobile && <NotificationCenter />}
         </div>
         <SidebarNav />
       </aside>
 
-      {/* Mobile top bar + sheet */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="md:hidden flex items-center justify-between border-b bg-background px-3 py-2.5 sticky top-0 z-40">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -148,7 +147,7 @@ export default function AdminLayout() {
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-sm truncate">CRM Funeraria</h1>
-          <NotificationCenter />
+          {isMobile && <NotificationCenter />}
         </header>
 
         <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
@@ -158,3 +157,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

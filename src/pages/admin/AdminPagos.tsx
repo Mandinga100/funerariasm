@@ -178,72 +178,56 @@ export default function AdminPagos() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Transacciones</h1>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSoundEnabled(prev => {
-                const next = !prev;
-                localStorage.setItem("admin_notification_sound", String(next));
-                return next;
-              });
-            }}
-            title={soundEnabled ? "Silenciar notificaciones" : "Activar sonido"}
-          >
+          <Button variant="ghost" size="sm" onClick={() => {
+            setSoundEnabled(prev => { const next = !prev; localStorage.setItem("admin_notification_sound", String(next)); return next; });
+          }} title={soundEnabled ? "Silenciar" : "Activar sonido"}>
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
           </Button>
           <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-            <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+            <FileDown className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Exportar</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6 items-center">
-        <div className="relative w-64">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre, ref o RUT..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
         </div>
-        <div className="w-48">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              {Object.entries(statusConfig).map(([key, cfg]) => (
-                <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-56">
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los tipos</SelectItem>
-              {Object.entries(typeLabels).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2">
+          <div className="flex-1 sm:w-40">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {Object.entries(statusConfig).map(([key, cfg]) => (
+                  <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1 sm:w-44">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {Object.entries(typeLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         {(filterStatus !== "all" || filterType !== "all" || searchQuery) && (
           <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); setSearchQuery(""); }}>
             <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}
-        <Badge variant="outline" className="ml-auto self-center">{filtered.length} de {transactions.length}</Badge>
+        <Badge variant="outline" className="self-center shrink-0">{filtered.length}/{transactions.length}</Badge>
       </div>
 
       {/* Stats */}

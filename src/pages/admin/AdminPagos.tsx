@@ -314,7 +314,7 @@ export default function AdminPagos() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Badge className={sc.className} variant="secondary" className={cn("text-[10px]", sc.className)}>{sc.label}</Badge>
+                    <Badge variant="secondary" className={cn("text-[10px]", sc.className)}>{sc.label}</Badge>
                     <Badge variant="secondary" className="text-[10px]">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
                   </div>
                   <span className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("es-CL")}</span>

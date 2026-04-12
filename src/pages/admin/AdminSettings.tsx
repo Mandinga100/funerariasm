@@ -703,6 +703,119 @@ export default function AdminSettings() {
           </Card>
         </TabsContent>
 
+        {/* ═══════════════ AUDIT LOG TAB ═══════════════ */}
+        <TabsContent value="audit" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <ScrollText className="w-5 h-5 text-[#C5A059]" />
+                Log de Auditoría
+              </CardTitle>
+              <CardDescription>Registro completo de todas las acciones realizadas por los administradores del CRM</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por acción, email o descripción..."
+                    value={auditSearch}
+                    onChange={e => { setAuditSearch(e.target.value); setAuditPage(0); }}
+                    className="pl-9 text-sm"
+                  />
+                </div>
+                <Select value={auditModuleFilter} onValueChange={v => { setAuditModuleFilter(v); setAuditPage(0); }}>
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <Filter className="w-3.5 h-3.5 mr-1" /><SelectValue placeholder="Módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los módulos</SelectItem>
+                    <SelectItem value="equipo">Equipo</SelectItem>
+                    <SelectItem value="leads">Leads</SelectItem>
+                    <SelectItem value="pagos">Pagos</SelectItem>
+                    <SelectItem value="obituarios">Obituarios</SelectItem>
+                    <SelectItem value="memoriales">Memoriales</SelectItem>
+                    <SelectItem value="tracking">Tracking</SelectItem>
+                    <SelectItem value="blog">Blog</SelectItem>
+                    <SelectItem value="seguridad">Seguridad</SelectItem>
+                    <SelectItem value="configuracion">Configuración</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" className="shrink-0" onClick={() => exportAuditCSV()}>
+                  <Download className="w-4 h-4 mr-1" />CSV
+                </Button>
+              </div>
+
+              {/* Log entries */}
+              {auditLoading ? (
+                <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>
+              ) : auditLogs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ScrollText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No hay registros de auditoría</p>
+                  <p className="text-xs mt-1">Las acciones de los administradores aparecerán aquí</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {auditLogs.map(log => {
+                    const actionColors: Record<string, string> = {
+                      add_member: "bg-green-100 text-green-800",
+                      remove_member: "bg-red-100 text-red-800",
+                      update_role: "bg-blue-100 text-blue-800",
+                      change_password: "bg-amber-100 text-amber-800",
+                      update_lead: "bg-purple-100 text-purple-800",
+                      delete: "bg-red-100 text-red-800",
+                      create: "bg-green-100 text-green-800",
+                      update: "bg-blue-100 text-blue-800",
+                      export: "bg-gray-100 text-gray-800",
+                      login: "bg-emerald-100 text-emerald-800",
+                    };
+                    const badgeClass = actionColors[log.action] ?? "bg-muted text-muted-foreground";
+                    const date = new Date(log.created_at);
+                    return (
+                      <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 p-2.5 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] text-muted-foreground font-mono whitespace-nowrap">
+                            {date.toLocaleDateString("es-CL")} {date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                          </span>
+                          <Badge className={`${badgeClass} text-[10px] px-1.5 py-0`} variant="secondary">
+                            {log.action.replace(/_/g, " ")}
+                          </Badge>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs truncate">{log.description}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {log.user_email ?? "Sistema"} · {log.user_role ?? ""} · {log.module}
+                            {log.entity_type && ` · ${log.entity_type}`}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {auditTotal > AUDIT_PER_PAGE && (
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-muted-foreground">
+                    {auditPage * AUDIT_PER_PAGE + 1}-{Math.min((auditPage + 1) * AUDIT_PER_PAGE, auditTotal)} de {auditTotal}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm" disabled={auditPage === 0} onClick={() => setAuditPage(p => p - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={(auditPage + 1) * AUDIT_PER_PAGE >= auditTotal} onClick={() => setAuditPage(p => p + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ═══════════════ INTEGRATIONS TAB (CEO ONLY) ═══════════════ */}
         {isCeo && (
           <TabsContent value="integrations" className="space-y-4">

@@ -423,31 +423,14 @@ export default function AdminPagos() {
 
               {/* Actions */}
               {!["confirmed", "rejected"].includes(selected.status) && (
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "confirmed")}
-                  >
+                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
+                  <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={updating} onClick={() => updateStatus(selected.id, "confirmed")}>
                     <Check className="w-4 h-4 mr-1" /> Confirmar
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="flex-1"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "rejected")}
-                  >
+                  <Button size="sm" variant="destructive" className="flex-1" disabled={updating} onClick={() => updateStatus(selected.id, "rejected")}>
                     <X className="w-4 h-4 mr-1" /> Rechazar
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-orange-300 text-orange-700"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "suspicious")}
-                  >
+                  <Button size="sm" variant="outline" className="flex-1 border-orange-300 text-orange-700" disabled={updating} onClick={() => updateStatus(selected.id, "suspicious")}>
                     <AlertTriangle className="w-4 h-4 mr-1" /> Sospechoso
                   </Button>
                 </div>

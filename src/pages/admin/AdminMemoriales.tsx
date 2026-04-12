@@ -242,7 +242,7 @@ export default function AdminMemoriales() {
             {field("death_date", "Fecha de fallecimiento *", { type: "date" })}
             {field("city", "Ciudad")}
             {field("photo_url", "URL de foto")}
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium text-muted-foreground">Texto tributo</Label>
                 <Button

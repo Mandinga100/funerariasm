@@ -253,7 +253,7 @@ export default function AdminObituarios() {
             {field("ceremony_schedule", "Horario de la ceremonia")}
             {field("family_names", "Nombres de la familia", { full: true })}
             {field("family_message", "Mensaje de la familia", { full: true, textarea: true })}
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium text-muted-foreground">Biografía</Label>
                 <Button

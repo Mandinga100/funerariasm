@@ -318,7 +318,7 @@ export default function AdminBlog() {
             {field("author_name", "Autor")}
             {field("cover_image", "URL imagen de portada", { full: true })}
             {field("excerpt", "Extracto", { full: true, textarea: true })}
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium text-muted-foreground">Contenido (HTML/Markdown) *</Label>
                 <Button
@@ -333,7 +333,7 @@ export default function AdminBlog() {
             </div>
             {field("meta_title", "Meta título (SEO)")}
             {field("meta_description", "Meta descripción (SEO)")}
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label className="text-xs font-medium text-muted-foreground">Tags (separados por coma)</Label>
               <Input className="mt-1" value={(editing.tags ?? []).join(", ")}
                 onChange={e => setEditing(p => ({ ...p, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) }))} />

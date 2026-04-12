@@ -28,11 +28,31 @@ interface Lead {
   estimated_value: number | null;
   next_follow_up: string | null;
   ai_summary: string | null;
+  ai_classification: any | null;
   last_contacted_at: string | null;
   created_at: string;
   message: string | null;
   comuna: string | null;
   selected_plan: string | null;
+}
+
+function getPriorityScore(lead: Lead): number | null {
+  return lead.ai_classification?.priority_score ?? null;
+}
+
+function PriorityBadge({ score }: { score: number | null }) {
+  if (score === null) return null;
+  const color =
+    score >= 80 ? "bg-red-500 text-white" :
+    score >= 60 ? "bg-orange-500 text-white" :
+    score >= 40 ? "bg-amber-400 text-amber-950" :
+    score >= 20 ? "bg-blue-400 text-white" :
+    "bg-gray-300 text-gray-700";
+  return (
+    <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
+      {score}
+    </span>
+  );
 }
 
 const PIPELINE_STAGES = [
@@ -96,7 +116,7 @@ export default function AdminLeads() {
   const loadLeads = async () => {
     const { data } = await supabase
       .from("contact_leads")
-      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, last_contacted_at, created_at, message, comuna, selected_plan")
+      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan")
       .order("created_at", { ascending: false })
       .limit(500);
     setLeads((data as Lead[]) ?? []);
@@ -396,7 +416,10 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
       onClick={() => onSelect(lead)}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="font-medium text-sm leading-tight flex-1">{lead.name ?? "Sin nombre"}</p>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <PriorityBadge score={getPriorityScore(lead)} />
+          <p className="font-medium text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
+        </div>
         {lead.urgency && (
           <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
             {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
@@ -445,14 +468,18 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
 /* ─── Desktop lead card (kanban) ─── */
 function LeadCard({ lead }: { lead: Lead }) {
   const hours = differenceInHours(new Date(), new Date(lead.created_at));
-  const isOverdue = lead.urgency === "inmediata" ? hours >= 2 : lead.urgency === "normal" ? hours >= 24 : hours >= 72;
+  const isOverdue = lead.urgency === "inmediata" || lead.urgency === "immediate" ? hours >= 2 : lead.urgency === "normal" ? hours >= 24 : hours >= 72;
+  const score = getPriorityScore(lead);
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-1">
-        <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
+        <div className="flex items-center gap-1 min-w-0">
+          <PriorityBadge score={score} />
+          <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
+        </div>
         {lead.urgency && (
-          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
+          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap flex-shrink-0", urgencyColor[lead.urgency] ?? "")}>
             {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}

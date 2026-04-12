@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle } from "lucide-react";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { format, subDays, differenceInHours } from "date-fns";
@@ -22,6 +23,7 @@ interface Stats {
 
 interface LeadByStage {
   stage: string;
+  stageId: string;
   count: number;
 }
 
@@ -41,10 +43,11 @@ const PIPELINE_LABELS: Record<string, string> = {
 const URGENCY_COLORS: Record<string, string> = {
   inmediata: "#ef4444",
   normal: "#3b82f6",
-  previsión: "#22c55e",
+  "previsión": "#22c55e",
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     obituaries: 0, memorials: 0, totalLeads: 0, newLeads: 0,
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
@@ -69,13 +72,11 @@ export default function Dashboard() {
       const allLeads = leads.data ?? [];
       const allPayments = payments.data ?? [];
 
-      // Stats
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;
       const contactedLeads = allLeads.filter(l => l.pipeline_stage === "contactado").length;
       const pendingPayments = allPayments.filter(p => ["initiated", "pending_verification"].includes(p.status)).length;
       const totalRevenue = allPayments.filter(p => p.status === "verified").reduce((s, p) => s + (p.amount || 0), 0);
 
-      // Overdue leads (new + no contact in 2h for urgent, 24h for normal)
       const now = new Date();
       const overdueLeads = allLeads.filter(l => {
         if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
@@ -98,14 +99,13 @@ export default function Dashboard() {
         overdueLeads,
       });
 
-      // Pipeline chart
       const stages = ["nuevo", "contactado", "cotizado", "contratado", "cerrado"];
       setPipelineData(stages.map(stage => ({
         stage: PIPELINE_LABELS[stage] || stage,
+        stageId: stage,
         count: allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === stage).length,
       })));
 
-      // Leads timeline (last 14 days)
       const timeline: LeadByDay[] = [];
       for (let i = 13; i >= 0; i--) {
         const day = subDays(now, i);
@@ -116,7 +116,6 @@ export default function Dashboard() {
       }
       setLeadsTimeline(timeline);
 
-      // Urgency distribution
       const urgencyCounts: Record<string, number> = {};
       allLeads.forEach(l => {
         const u = l.urgency ?? "normal";
@@ -126,7 +125,6 @@ export default function Dashboard() {
         name, value, color: URGENCY_COLORS[name] || "#94a3b8",
       })));
 
-      // Recent leads
       setRecentLeads(allLeads.slice(0, 5));
       setLoading(false);
     };
@@ -138,14 +136,14 @@ export default function Dashboard() {
   }
 
   const kpis = [
-    { label: "Leads Nuevos", value: stats.newLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Leads Vencidos", value: stats.overdueLeads, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Ingresos Verificados", value: `$${(stats.totalRevenue).toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Memoriales", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50" },
-    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50" },
-    { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Leads Nuevos", value: stats.newLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/admin/leads?stage=nuevo" },
+    { label: "Leads Vencidos", value: stats.overdueLeads, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/admin/leads?filter=overdue" },
+    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
+    { label: "Ingresos Verificados", value: `$${(stats.totalRevenue).toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos?status=confirmed" },
+    { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50", link: "/admin/obituarios" },
+    { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/memoriales" },
+    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/leads" },
+    { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/memoriales" },
   ];
 
   return (
@@ -153,25 +151,34 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Panel CRM</h1>
         {stats.overdueLeads > 0 && (
-          <Badge variant="destructive" className="animate-pulse">
+          <Badge
+            variant="destructive"
+            className="animate-pulse cursor-pointer"
+            onClick={() => navigate("/admin/leads?filter=overdue")}
+          >
             ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
           </Badge>
         )}
       </div>
 
-      {/* KPIs */}
+      {/* KPIs - clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map(k => (
-          <Card key={k.label} className="hover:shadow-md transition-shadow">
+          <Card
+            key={k.label}
+            className="hover:shadow-md transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => navigate(k.link)}
+          >
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg", k.bg)}>
+                <div className={cn("p-2 rounded-lg transition-colors", k.bg, "group-hover:ring-2 group-hover:ring-offset-1 group-hover:ring-current/20")}>
                   <k.icon className={cn("w-5 h-5", k.color)} />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-2xl font-bold">{k.value}</p>
                   <p className="text-xs text-muted-foreground">{k.label}</p>
                 </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </CardContent>
           </Card>
@@ -180,14 +187,24 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pipeline Funnel */}
+        {/* Pipeline Funnel - clickable bars */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Pipeline de Leads</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={pipelineData} layout="vertical" margin={{ left: 20 }}>
+              <BarChart
+                data={pipelineData}
+                layout="vertical"
+                margin={{ left: 20 }}
+                onClick={(data) => {
+                  if (data?.activePayload?.[0]?.payload?.stageId) {
+                    navigate(`/admin/leads?stage=${data.activePayload[0].payload.stageId}`);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
                 <YAxis dataKey="stage" type="category" width={80} tick={{ fontSize: 12 }} />
@@ -216,7 +233,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Urgency Distribution */}
+        {/* Urgency Distribution - clickable */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Distribución por Urgencia</CardTitle>
@@ -224,7 +241,23 @@ export default function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={urgencyData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} label={({ name, value }) => `${name}: ${value}`}>
+                <Pie
+                  data={urgencyData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  onClick={(data) => {
+                    if (data?.name) {
+                      navigate(`/admin/leads?urgency=${data.name}`);
+                    }
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   {urgencyData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
@@ -236,10 +269,16 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recent Leads */}
+      {/* Recent Leads - clickable */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Leads Recientes</CardTitle>
+          <button
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+            onClick={() => navigate("/admin/leads")}
+          >
+            Ver todos <ArrowRight className="w-3 h-3" />
+          </button>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -247,9 +286,16 @@ export default function Dashboard() {
               const hours = differenceInHours(new Date(), new Date(lead.created_at));
               const isOverdue = lead.urgency === "inmediata" ? hours >= 2 : hours >= 24;
               return (
-                <div key={lead.id} className={cn("flex items-center justify-between p-3 rounded-lg border", isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" && "border-red-300 bg-red-50")}>
+                <div
+                  key={lead.id}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/30 active:scale-[0.99]",
+                    isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" && "border-red-300 bg-red-50 hover:bg-red-100/60"
+                  )}
+                  onClick={() => navigate(`/admin/leads?open=${lead.id}`)}
+                >
                   <div className="flex items-center gap-3">
-                    <div className={cn("w-2 h-2 rounded-full", lead.urgency === "inmediata" ? "bg-red-500" : lead.urgency === "previsión" ? "bg-green-500" : "bg-blue-500")} />
+                    <div className={cn("w-2 h-2 rounded-full flex-shrink-0", lead.urgency === "inmediata" ? "bg-red-500" : lead.urgency === "previsión" ? "bg-green-500" : "bg-blue-500")} />
                     <div>
                       <p className="font-medium text-sm">{lead.name ?? "Sin nombre"}</p>
                       <p className="text-xs text-muted-foreground">{lead.phone ?? lead.email ?? "—"}</p>
@@ -258,6 +304,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px]">{PIPELINE_LABELS[lead.pipeline_stage ?? "nuevo"] ?? "Nuevo"}</Badge>
                     <span className="text-xs text-muted-foreground">hace {hours}h</span>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
                   </div>
                 </div>
               );

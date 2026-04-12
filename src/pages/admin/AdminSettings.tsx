@@ -338,7 +338,7 @@ export default function AdminSettings() {
 
   /* ── Export data ── */
   const exportData = async (table: string, filename: string) => {
-    const { data } = await supabase.from(table).select("*").order("created_at", { ascending: false }).limit(1000);
+    const { data } = await supabase.from(table as any).select("*").order("created_at", { ascending: false }).limit(1000);
     if (!data?.length) { toast({ title: "Sin datos para exportar" }); return; }
     const headers = Object.keys(data[0]);
     const rows = data.map(r => headers.map(h => `"${String((r as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));

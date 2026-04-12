@@ -296,22 +296,21 @@ export default function Dashboard() {
                 <div
                   key={lead.id}
                   className={cn(
-                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/30 active:scale-[0.99]",
+                    "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/30 active:scale-[0.99]",
                     isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" && "border-red-300 bg-red-50 hover:bg-red-100/60"
                   )}
                   onClick={() => navigate(`/admin/leads?open=${lead.id}`)}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className={cn("w-2 h-2 rounded-full flex-shrink-0", lead.urgency === "inmediata" ? "bg-red-500" : lead.urgency === "previsión" ? "bg-green-500" : "bg-blue-500")} />
-                    <div>
-                      <p className="font-medium text-sm">{lead.name ?? "Sin nombre"}</p>
-                      <p className="text-xs text-muted-foreground">{lead.phone ?? lead.email ?? "—"}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{lead.name ?? "Sin nombre"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{lead.phone ?? lead.email ?? "—"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-5 sm:ml-0">
                     <Badge variant="outline" className="text-[10px]">{PIPELINE_LABELS[lead.pipeline_stage ?? "nuevo"] ?? "Nuevo"}</Badge>
                     <span className="text-xs text-muted-foreground">hace {hours}h</span>
-                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
                   </div>
                 </div>
               );

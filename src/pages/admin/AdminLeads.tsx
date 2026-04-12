@@ -167,14 +167,40 @@ export default function AdminLeads() {
   const handleClassifyAll = async () => {
     setClassifyingAll(true);
     try {
-      const unclassified = leads.filter(l => !l.ai_summary && l.message);
-      for (const lead of unclassified.slice(0, 10)) {
-        await supabase.functions.invoke("classify-lead", { body: { leadId: lead.id } });
+      const { data, error } = await supabase.functions.invoke("classify-lead", {
+        body: { mode: "batch" },
+      });
+
+      if (error) throw error;
+
+      const result = data as { classified: number; priority_order: string[] };
+
+      // Re-sort leads by AI priority order
+      if (result.priority_order?.length) {
+        setLeads(prev => {
+          const orderMap = new Map(result.priority_order.map((id: string, idx: number) => [id, idx]));
+          return [...prev].sort((a, b) => {
+            const aIdx = orderMap.get(a.id) ?? 999;
+            const bIdx = orderMap.get(b.id) ?? 999;
+            return aIdx - bIdx;
+          });
+        });
       }
-      toast({ title: "Clasificación completada", description: `${Math.min(unclassified.length, 10)} leads clasificados con IA` });
-      loadLeads();
-    } catch {
-      toast({ title: "Error", description: "Error en clasificación IA", variant: "destructive" });
+
+      toast({
+        title: "✅ Clasificación IA completada",
+        description: `${result.classified} leads clasificados y priorizados por urgencia funeraria`,
+      });
+
+      // Reload to get updated AI data
+      await loadLeads();
+    } catch (e: any) {
+      const msg = e?.message?.includes("429")
+        ? "Límite de solicitudes excedido. Intenta en unos minutos."
+        : e?.message?.includes("402")
+        ? "Créditos de IA agotados. Contacta al administrador."
+        : "Error en clasificación IA";
+      toast({ title: "Error", description: msg, variant: "destructive" });
     }
     setClassifyingAll(false);
   };

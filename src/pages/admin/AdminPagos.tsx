@@ -253,76 +253,82 @@ export default function AdminPagos() {
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground">No hay transacciones que coincidan con los filtros.</p>
       ) : (
-        <div className="rounded-md border hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ref</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Monto</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedRows.map(tx => {
-                const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
-                const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
-                return (
-                  <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
-                    <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
-                    <TableCell className="font-medium">
-                      {tx.full_name}
-                      {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
-                    </TableCell>
-                    <TableCell className="font-semibold">{fmt(tx.amount)}</TableCell>
-                    <TableCell>
-                      <Badge className={sc.className} variant="secondary">{sc.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString("es-CL")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => setSelected(tx)}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        {/* Mobile cards */}
-        <div className="space-y-2 md:hidden">
-          {paginatedRows.map(tx => {
-            const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
-            const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
-            return (
-              <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 bg-orange-50/30")} onClick={() => setSelected(tx)}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{tx.full_name}{hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}</p>
-                    <code className="text-[10px] text-muted-foreground font-mono">{tx.transaction_ref}</code>
+        <>
+          {/* Desktop table */}
+          <div className="rounded-md border hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ref</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Monto</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedRows.map(tx => {
+                  const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
+                  const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
+                  return (
+                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
+                      <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
+                      <TableCell className="font-medium">
+                        {tx.full_name}
+                        {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
+                      </TableCell>
+                      <TableCell className="font-semibold">{fmt(tx.amount)}</TableCell>
+                      <TableCell>
+                        <Badge className={sc.className} variant="secondary">{sc.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(tx.created_at).toLocaleDateString("es-CL")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" onClick={() => setSelected(tx)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Mobile cards */}
+          <div className="space-y-2 md:hidden">
+            {paginatedRows.map(tx => {
+              const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
+              const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
+              return (
+                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 bg-orange-50/30")} onClick={() => setSelected(tx)}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {tx.full_name}
+                        {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
+                      </p>
+                      <code className="text-[10px] text-muted-foreground font-mono">{tx.transaction_ref}</code>
+                    </div>
+                    <p className="text-sm font-bold shrink-0">{fmt(tx.amount)}</p>
                   </div>
-                  <p className="text-sm font-bold shrink-0">{fmt(tx.amount)}</p>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className={cn("text-[10px]", sc.className)}>{sc.label}</Badge>
-                    <Badge variant="secondary" className="text-[10px]">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant="secondary" className={cn("text-[10px]", sc.className)}>{sc.label}</Badge>
+                      <Badge variant="secondary" className="text-[10px]">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{new Date(tx.created_at).toLocaleDateString("es-CL")}</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("es-CL")}</span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pagination */}

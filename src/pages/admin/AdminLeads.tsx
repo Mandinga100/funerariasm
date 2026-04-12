@@ -28,11 +28,31 @@ interface Lead {
   estimated_value: number | null;
   next_follow_up: string | null;
   ai_summary: string | null;
+  ai_classification: any | null;
   last_contacted_at: string | null;
   created_at: string;
   message: string | null;
   comuna: string | null;
   selected_plan: string | null;
+}
+
+function getPriorityScore(lead: Lead): number | null {
+  return lead.ai_classification?.priority_score ?? null;
+}
+
+function PriorityBadge({ score }: { score: number | null }) {
+  if (score === null) return null;
+  const color =
+    score >= 80 ? "bg-red-500 text-white" :
+    score >= 60 ? "bg-orange-500 text-white" :
+    score >= 40 ? "bg-amber-400 text-amber-950" :
+    score >= 20 ? "bg-blue-400 text-white" :
+    "bg-gray-300 text-gray-700";
+  return (
+    <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
+      {score}
+    </span>
+  );
 }
 
 const PIPELINE_STAGES = [

@@ -182,7 +182,17 @@ export default function AdminLeads() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold">Pipeline de Leads</h1>
-          <p className="text-xs text-muted-foreground">{filtered.length} contactos</p>
+          <p className="text-xs text-muted-foreground">
+            {filtered.length} contactos
+            {(filterStage !== "all" || filterOverdue || filterUrgency !== "all") && (
+              <button
+                className="ml-2 text-primary hover:underline"
+                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button size="sm" variant="outline" className={cn("h-8 text-xs", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
@@ -190,8 +200,24 @@ export default function AdminLeads() {
             <span className="hidden sm:inline">{classifyingAll ? "Clasificando..." : "Clasificar con IA"}</span>
             <span className="sm:hidden">IA</span>
           </Button>
+          {filterOverdue && (
+            <Badge variant="destructive" className="h-7 text-xs cursor-pointer" onClick={() => setFilterOverdue(false)}>
+              ⚠️ Vencidos ✕
+            </Badge>
+          )}
+          <Select value={filterStage} onValueChange={setFilterStage}>
+            <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
+              <SelectValue placeholder="Etapa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas etapas</SelectItem>
+              {PIPELINE_STAGES.map(s => (
+                <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-            <SelectTrigger className="w-[100px] sm:w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
               <SelectValue placeholder="Urgencia" />
             </SelectTrigger>
             <SelectContent>

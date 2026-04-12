@@ -133,7 +133,7 @@ export default function AdminObituarios() {
   };
 
   const field = (key: keyof Obituary, label: string, opts?: { type?: string; full?: boolean; textarea?: boolean }) => (
-    <div className={opts?.full ? "col-span-2" : ""}>
+    <div className={opts?.full ? "sm:col-span-2" : ""}>
       <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
       {opts?.textarea ? (
         <Textarea className="mt-1" rows={4} value={(editing[key] as string) ?? ""} onChange={e => setEditing(p => ({ ...p, [key]: e.target.value }))} />

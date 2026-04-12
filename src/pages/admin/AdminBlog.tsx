@@ -148,16 +148,16 @@ export default function AdminBlog() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Blog</h1>
-          <p className="text-sm text-muted-foreground">{posts.length} artículos</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Blog</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{posts.length} artículos</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
-            <Sparkles className="w-4 h-4 mr-2" />Generar con IA
+          <Button variant="outline" size="sm" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
+            <Sparkles className="w-4 h-4 mr-1" />IA
           </Button>
-          <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Nuevo Artículo</Button>
+          <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4 mr-1" />Nuevo</Button>
         </div>
       </div>
 
@@ -169,31 +169,65 @@ export default function AdminBlog() {
           <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Crear primer artículo</Button>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="w-[60px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {posts.map(post => (
-                <TableRow key={post.id}>
-                  <TableCell className="font-medium max-w-[300px] truncate">{post.title}</TableCell>
-                  <TableCell>
-                    {post.category && <Badge variant="secondary">{post.category}</Badge>}
-                  </TableCell>
-                  <TableCell>
+        <>
+          <div className="rounded-md border hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead className="w-[60px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {posts.map(post => (
+                  <TableRow key={post.id}>
+                    <TableCell className="font-medium max-w-[300px] truncate">{post.title}</TableCell>
+                    <TableCell>
+                      {post.category && <Badge variant="secondary">{post.category}</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <Switch checked={post.published} onCheckedChange={v => togglePublished(post.id, v)} />
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(post.created_at).toLocaleDateString("es-CL")}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(post)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(post.id, post.title)}>
+                            <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="space-y-2 md:hidden">
+            {posts.map(post => (
+              <div key={post.id} className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium line-clamp-2">{post.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {post.category && <Badge variant="secondary" className="text-[10px]">{post.category}</Badge>}
+                      <span className="text-[10px] text-muted-foreground">{new Date(post.created_at).toLocaleDateString("es-CL")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
                     <Switch checked={post.published} onCheckedChange={v => togglePublished(post.id, v)} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(post.created_at).toLocaleDateString("es-CL")}
-                  </TableCell>
-                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
@@ -208,12 +242,12 @@ export default function AdminBlog() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* AI Generation Dialog */}
@@ -264,10 +298,11 @@ export default function AdminBlog() {
       {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing.id ? "Editar Artículo" : "Nuevo Artículo"}</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             {field("title", "Título *")}
             {field("slug", "Slug (URL)")}
             <div>

@@ -159,6 +159,7 @@ export default function AdminSettings() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Miembro agregado", description: `Rol ${ROLE_META[role].label} asignado correctamente.` });
+      logAudit({ action: "add_member", module: "equipo", description: `Agregó miembro con rol ${ROLE_META[role].label}`, entity_type: "user_role", new_data: { user_id: userId, role } });
       loadAdmins();
     }
     setSaving(false);
@@ -271,6 +272,7 @@ export default function AdminSettings() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Rol actualizado" });
+      logAudit({ action: "update_role", module: "equipo", description: `Cambió rol a ${ROLE_META[role].label}`, entity_type: "user_role", entity_id: adminId, old_data: { role: target?.role }, new_data: { role } });
       loadAdmins();
     }
   };
@@ -319,6 +321,7 @@ export default function AdminSettings() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Acceso removido" });
+      logAudit({ action: "remove_member", module: "equipo", description: `Removió acceso de ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`, entity_type: "user_role", entity_id: selectedAdmin.id, old_data: { role: selectedAdmin.role } });
       loadAdmins();
     }
     setDeleteDialog(false);
@@ -341,6 +344,7 @@ export default function AdminSettings() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Contraseña actualizada" });
+      logAudit({ action: "change_password", module: "seguridad", description: "Cambió su contraseña de acceso" });
       setNewPass("");
       setConfirmPass("");
     }

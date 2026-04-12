@@ -178,72 +178,56 @@ export default function AdminPagos() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Transacciones de Pago</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Transacciones</h1>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSoundEnabled(prev => {
-                const next = !prev;
-                localStorage.setItem("admin_notification_sound", String(next));
-                return next;
-              });
-            }}
-            title={soundEnabled ? "Silenciar notificaciones" : "Activar sonido"}
-          >
+          <Button variant="ghost" size="sm" onClick={() => {
+            setSoundEnabled(prev => { const next = !prev; localStorage.setItem("admin_notification_sound", String(next)); return next; });
+          }} title={soundEnabled ? "Silenciar" : "Activar sonido"}>
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
           </Button>
           <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-            <FileDown className="w-4 h-4 mr-1" /> Exportar CSV
+            <FileDown className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Exportar</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6 items-center">
-        <div className="relative w-64">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre, ref o RUT..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
         </div>
-        <div className="w-48">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              {Object.entries(statusConfig).map(([key, cfg]) => (
-                <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-56">
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los tipos</SelectItem>
-              {Object.entries(typeLabels).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2">
+          <div className="flex-1 sm:w-40">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {Object.entries(statusConfig).map(([key, cfg]) => (
+                  <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1 sm:w-44">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {Object.entries(typeLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         {(filterStatus !== "all" || filterType !== "all" || searchQuery) && (
           <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); setSearchQuery(""); }}>
             <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}
-        <Badge variant="outline" className="ml-auto self-center">{filtered.length} de {transactions.length}</Badge>
+        <Badge variant="outline" className="self-center shrink-0">{filtered.length}/{transactions.length}</Badge>
       </div>
 
       {/* Stats */}
@@ -269,97 +253,115 @@ export default function AdminPagos() {
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground">No hay transacciones que coincidan con los filtros.</p>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ref</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Monto</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedRows.map(tx => {
-                const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
-                const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
-                return (
-                  <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
-                    <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
-                    <TableCell className="font-medium">
-                      {tx.full_name}
-                      {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
-                    </TableCell>
-                    <TableCell className="font-semibold">{fmt(tx.amount)}</TableCell>
-                    <TableCell>
-                      <Badge className={sc.className} variant="secondary">{sc.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString("es-CL")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => setSelected(tx)}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          {/* Desktop table */}
+          <div className="rounded-md border hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ref</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Monto</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedRows.map(tx => {
+                  const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
+                  const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
+                  return (
+                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
+                      <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
+                      <TableCell className="font-medium">
+                        {tx.full_name}
+                        {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
+                      </TableCell>
+                      <TableCell className="font-semibold">{fmt(tx.amount)}</TableCell>
+                      <TableCell>
+                        <Badge className={sc.className} variant="secondary">{sc.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(tx.created_at).toLocaleDateString("es-CL")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" onClick={() => setSelected(tx)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Mobile cards */}
+          <div className="space-y-2 md:hidden">
+            {paginatedRows.map(tx => {
+              const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
+              const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
+              return (
+                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 bg-orange-50/30")} onClick={() => setSelected(tx)}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {tx.full_name}
+                        {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
+                      </p>
+                      <code className="text-[10px] text-muted-foreground font-mono">{tx.transaction_ref}</code>
+                    </div>
+                    <p className="text-sm font-bold shrink-0">{fmt(tx.amount)}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant="secondary" className={cn("text-[10px]", sc.className)}>{sc.label}</Badge>
+                      <Badge variant="secondary" className="text-[10px]">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{new Date(tx.created_at).toLocaleDateString("es-CL")}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-muted-foreground">
-            Página {currentPage} de {totalPages} ({filtered.length} resultados)
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Pág. {currentPage}/{totalPages} ({filtered.length})
           </p>
           <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(p => p - 1)}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+              <ChevronLeft className="w-4 h-4" /><span className="hidden sm:inline ml-1">Anterior</span>
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-              .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((p, i) =>
-                typeof p === "string" ? (
-                  <span key={`e${i}`} className="px-2 text-muted-foreground">…</span>
-                ) : (
-                  <Button
-                    key={p}
-                    variant={p === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className="w-9"
-                    onClick={() => setCurrentPage(p)}
-                  >
-                    {p}
-                  </Button>
-                )
-              )}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(p => p + 1)}
-            >
-              Siguiente <ChevronRight className="w-4 h-4 ml-1" />
+            <span className="text-xs px-2 text-muted-foreground sm:hidden">{currentPage}/{totalPages}</span>
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  typeof p === "string" ? (
+                    <span key={`e${i}`} className="px-1 text-muted-foreground">…</span>
+                  ) : (
+                    <Button key={p} variant={p === currentPage ? "default" : "outline"} size="sm" className="w-9" onClick={() => setCurrentPage(p)}>
+                      {p}
+                    </Button>
+                  )
+                )}
+            </div>
+            <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+              <span className="hidden sm:inline mr-1">Siguiente</span><ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -373,7 +375,7 @@ export default function AdminPagos() {
           </DialogHeader>
           {selected && (
             <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Detail label="Referencia" value={selected.transaction_ref} />
                 <Detail label="Estado" value={(statusConfig[selected.status]?.label) ?? selected.status} />
                 <Detail label="Nombre" value={selected.full_name} />
@@ -421,31 +423,14 @@ export default function AdminPagos() {
 
               {/* Actions */}
               {!["confirmed", "rejected"].includes(selected.status) && (
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "confirmed")}
-                  >
+                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
+                  <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={updating} onClick={() => updateStatus(selected.id, "confirmed")}>
                     <Check className="w-4 h-4 mr-1" /> Confirmar
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="flex-1"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "rejected")}
-                  >
+                  <Button size="sm" variant="destructive" className="flex-1" disabled={updating} onClick={() => updateStatus(selected.id, "rejected")}>
                     <X className="w-4 h-4 mr-1" /> Rechazar
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-orange-300 text-orange-700"
-                    disabled={updating}
-                    onClick={() => updateStatus(selected.id, "suspicious")}
-                  >
+                  <Button size="sm" variant="outline" className="flex-1 border-orange-300 text-orange-700" disabled={updating} onClick={() => updateStatus(selected.id, "suspicious")}>
                     <AlertTriangle className="w-4 h-4 mr-1" /> Sospechoso
                   </Button>
                 </div>

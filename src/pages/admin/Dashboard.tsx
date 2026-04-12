@@ -155,13 +155,13 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Panel CRM</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold">Panel CRM</h1>
         {stats.overdueLeads > 0 && (
           <Badge
             variant="destructive"
-            className="animate-pulse cursor-pointer"
+            className="animate-pulse cursor-pointer self-start sm:self-auto"
             onClick={() => navigate("/admin/leads?filter=overdue")}
           >
             ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
@@ -170,23 +170,22 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs - clickable */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpis.map(k => (
           <Card
             key={k.label}
             className="hover:shadow-md transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98]"
             onClick={() => navigate(k.link)}
           >
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg transition-colors", k.bg, "group-hover:ring-2 group-hover:ring-offset-1 group-hover:ring-current/20")}>
-                  <k.icon className={cn("w-5 h-5", k.color)} />
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={cn("p-1.5 sm:p-2 rounded-lg transition-colors", k.bg)}>
+                  <k.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", k.color)} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-2xl font-bold">{k.value}</p>
-                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <p className="text-lg sm:text-2xl font-bold leading-none">{k.value}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{k.label}</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </CardContent>
           </Card>
@@ -297,22 +296,21 @@ export default function Dashboard() {
                 <div
                   key={lead.id}
                   className={cn(
-                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/30 active:scale-[0.99]",
+                    "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/30 active:scale-[0.99]",
                     isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" && "border-red-300 bg-red-50 hover:bg-red-100/60"
                   )}
                   onClick={() => navigate(`/admin/leads?open=${lead.id}`)}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className={cn("w-2 h-2 rounded-full flex-shrink-0", lead.urgency === "inmediata" ? "bg-red-500" : lead.urgency === "previsión" ? "bg-green-500" : "bg-blue-500")} />
-                    <div>
-                      <p className="font-medium text-sm">{lead.name ?? "Sin nombre"}</p>
-                      <p className="text-xs text-muted-foreground">{lead.phone ?? lead.email ?? "—"}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{lead.name ?? "Sin nombre"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{lead.phone ?? lead.email ?? "—"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-5 sm:ml-0">
                     <Badge variant="outline" className="text-[10px]">{PIPELINE_LABELS[lead.pipeline_stage ?? "nuevo"] ?? "Nuevo"}</Badge>
                     <span className="text-xs text-muted-foreground">hace {hours}h</span>
-                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
                   </div>
                 </div>
               );

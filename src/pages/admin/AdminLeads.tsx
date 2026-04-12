@@ -45,12 +45,14 @@ const PIPELINE_STAGES = [
 
 const urgencyColor: Record<string, string> = {
   inmediata: "bg-red-100 text-red-800 border-red-300",
+  immediate: "bg-red-100 text-red-800 border-red-300",
   normal: "bg-blue-100 text-blue-800 border-blue-300",
   "previsión": "bg-green-100 text-green-800 border-green-300",
 };
 
 const URGENCY_LABELS: Record<string, string> = {
   inmediata: "Urgente",
+  immediate: "Urgente",
   normal: "Normal",
   "previsión": "Previsión",
 };

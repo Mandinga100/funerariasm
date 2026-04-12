@@ -42,12 +42,14 @@ const PIPELINE_LABELS: Record<string, string> = {
 
 const URGENCY_COLORS: Record<string, string> = {
   inmediata: "#ef4444",
+  immediate: "#ef4444",
   normal: "#3b82f6",
   "previsión": "#22c55e",
 };
 
 const URGENCY_LABELS: Record<string, string> = {
   inmediata: "Urgente",
+  immediate: "Urgente",
   normal: "Normal",
   "previsión": "Previsión",
 };

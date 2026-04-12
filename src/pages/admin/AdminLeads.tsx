@@ -529,6 +529,7 @@ function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSel
           {leads.map(lead => (
             <tr key={lead.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(lead)}>
               <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
+              <td className="px-3 py-2 text-center"><PriorityBadge score={(() => { const c = lead.ai_classification as any; return c?.priority_score ?? null; })()} /></td>
               <td className="px-3 py-2 text-xs hidden sm:table-cell">
                 <div className="truncate max-w-[160px]">{lead.email}</div>
                 <div className="text-muted-foreground">{lead.phone}</div>

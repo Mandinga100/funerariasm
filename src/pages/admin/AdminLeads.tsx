@@ -516,6 +516,7 @@ function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSel
         <thead>
           <tr className="border-b bg-muted/50">
             <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Nombre</th>
+            <th className="text-center px-3 py-2 font-medium whitespace-nowrap w-16">Prior.</th>
             <th className="text-left px-3 py-2 font-medium hidden sm:table-cell whitespace-nowrap">Contacto</th>
             <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Urgencia</th>
             <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Etapa</th>

@@ -375,7 +375,7 @@ export default function AdminPagos() {
           </DialogHeader>
           {selected && (
             <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Detail label="Referencia" value={selected.transaction_ref} />
                 <Detail label="Estado" value={(statusConfig[selected.status]?.label) ?? selected.status} />
                 <Detail label="Nombre" value={selected.full_name} />

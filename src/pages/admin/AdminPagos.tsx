@@ -333,48 +333,35 @@ export default function AdminPagos() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-muted-foreground">
-            Página {currentPage} de {totalPages} ({filtered.length} resultados)
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Pág. {currentPage}/{totalPages} ({filtered.length})
           </p>
           <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(p => p - 1)}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+              <ChevronLeft className="w-4 h-4" /><span className="hidden sm:inline ml-1">Anterior</span>
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-              .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((p, i) =>
-                typeof p === "string" ? (
-                  <span key={`e${i}`} className="px-2 text-muted-foreground">…</span>
-                ) : (
-                  <Button
-                    key={p}
-                    variant={p === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className="w-9"
-                    onClick={() => setCurrentPage(p)}
-                  >
-                    {p}
-                  </Button>
-                )
-              )}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(p => p + 1)}
-            >
-              Siguiente <ChevronRight className="w-4 h-4 ml-1" />
+            <span className="text-xs px-2 text-muted-foreground sm:hidden">{currentPage}/{totalPages}</span>
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  typeof p === "string" ? (
+                    <span key={`e${i}`} className="px-1 text-muted-foreground">…</span>
+                  ) : (
+                    <Button key={p} variant={p === currentPage ? "default" : "outline"} size="sm" className="w-9" onClick={() => setCurrentPage(p)}>
+                      {p}
+                    </Button>
+                  )
+                )}
+            </div>
+            <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+              <span className="hidden sm:inline mr-1">Siguiente</span><ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>

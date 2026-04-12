@@ -465,14 +465,18 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
 /* ─── Desktop lead card (kanban) ─── */
 function LeadCard({ lead }: { lead: Lead }) {
   const hours = differenceInHours(new Date(), new Date(lead.created_at));
-  const isOverdue = lead.urgency === "inmediata" ? hours >= 2 : lead.urgency === "normal" ? hours >= 24 : hours >= 72;
+  const isOverdue = lead.urgency === "inmediata" || lead.urgency === "immediate" ? hours >= 2 : lead.urgency === "normal" ? hours >= 24 : hours >= 72;
+  const score = getPriorityScore(lead);
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-1">
-        <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
+        <div className="flex items-center gap-1 min-w-0">
+          <PriorityBadge score={score} />
+          <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
+        </div>
         {lead.urgency && (
-          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
+          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap flex-shrink-0", urgencyColor[lead.urgency] ?? "")}>
             {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}

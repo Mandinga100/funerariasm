@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/hooks/useAuditLog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -175,12 +176,15 @@ export default function AdminLeads() {
     if (error) {
       toast({ title: "Error", description: "No se pudo actualizar", variant: "destructive" });
       loadLeads();
+    } else {
+      logAudit({ action: "update", module: "leads", description: `Movió lead a etapa "${newStage}"`, entity_type: "contact_lead", entity_id: leadId, new_data: updates });
     }
   };
 
   const handleStageChange = async (id: string, stage: string) => {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, pipeline_stage: stage } : l));
     await supabase.from("contact_leads").update({ pipeline_stage: stage }).eq("id", id);
+    logAudit({ action: "update", module: "leads", description: `Cambió etapa de lead a "${stage}"`, entity_type: "contact_lead", entity_id: id, new_data: { pipeline_stage: stage } });
     loadLeads();
   };
 

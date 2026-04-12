@@ -53,13 +53,14 @@ export default function AdminLayout() {
     fetchPending();
     fetchLeads();
 
+    const suffix = Date.now();
     const paymentsChannel = supabase
-      .channel("sidebar-payments")
+      .channel(`sidebar-payments-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => fetchPending())
       .subscribe();
 
     const leadsChannel = supabase
-      .channel("sidebar-leads")
+      .channel(`sidebar-leads-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => fetchLeads())
       .subscribe();
 

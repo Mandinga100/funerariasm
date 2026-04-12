@@ -418,6 +418,8 @@ export default function AdminSettings() {
           <TabsTrigger value="reports" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <BarChart3 className="w-3.5 h-3.5 hidden sm:inline" />Informes
           </TabsTrigger>
+          <TabsTrigger value="audit" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+            <ScrollText className="w-3.5 h-3.5 hidden sm:inline" />Auditoría
           {isCeo && (
             <TabsTrigger value="integrations" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
               <Zap className="w-3.5 h-3.5 hidden sm:inline" />Integraciones

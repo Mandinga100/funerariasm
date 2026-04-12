@@ -81,7 +81,7 @@ export default function AdminTracking() {
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("family_tracking").update({ status }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else load();
+    else { logAudit({ action: "update", module: "tracking", description: `Cambió estado a "${status}"`, entity_type: "family_tracking", entity_id: id, new_data: { status } }); load(); }
   };
 
   const createTracking = async () => {
@@ -94,6 +94,7 @@ export default function AdminTracking() {
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
       toast({ title: "Seguimiento creado", description: "Se ha generado el código de tracking para la familia." });
+      logAudit({ action: "create", module: "tracking", description: `Creó seguimiento para "${form.family_name}"`, entity_type: "family_tracking" });
       setForm({ family_name: "", family_email: "", family_phone: "", notes: "" });
       setDialogOpen(false);
       load();
@@ -123,6 +124,7 @@ export default function AdminTracking() {
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
       toast({ title: "Eliminado", description: "El seguimiento ha sido eliminado." });
+      logAudit({ action: "delete", module: "tracking", description: `Eliminó seguimiento de "${selectedItem.family_name}"`, entity_type: "family_tracking", entity_id: selectedItem.id });
       setDeleteDialog(false);
       setSelectedItem(null);
       load();

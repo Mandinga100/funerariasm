@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,20 +50,38 @@ const urgencyColor: Record<string, string> = {
 };
 
 export default function AdminLeads() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
-  const [filterUrgency, setFilterUrgency] = useState("all");
+  const [filterUrgency, setFilterUrgency] = useState(searchParams.get("urgency") ?? "all");
+  const [filterStage, setFilterStage] = useState(searchParams.get("stage") ?? "all");
+  const [filterOverdue, setFilterOverdue] = useState(searchParams.get("filter") === "overdue");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
+  // Open a specific lead from URL param ?open=<id>
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId && leads.length > 0) {
+      const found = leads.find(l => l.id === openId);
+      if (found) {
+        setSelectedLead(found);
+        // Clean up the param after opening
+        const next = new URLSearchParams(searchParams);
+        next.delete("open");
+        setSearchParams(next, { replace: true });
+      }
+    }
+  }, [leads, searchParams]);
+
   useEffect(() => {
     loadLeads();
     const channel = supabase
-      .channel("crm-leads")
+      .channel(`crm-leads-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => loadLeads())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -79,11 +98,20 @@ export default function AdminLeads() {
   };
 
   const filtered = useMemo(() => {
+    const now = new Date();
     return leads.filter(l => {
       if (filterUrgency !== "all" && l.urgency !== filterUrgency) return false;
+      if (filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
+      if (filterOverdue) {
+        if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
+        const hours = differenceInHours(now, new Date(l.created_at));
+        if (l.urgency === "inmediata" && hours < 2) return false;
+        if (l.urgency === "normal" && hours < 24) return false;
+        if (l.urgency !== "inmediata" && l.urgency !== "normal" && hours < 72) return false;
+      }
       return true;
     });
-  }, [leads, filterUrgency]);
+  }, [leads, filterUrgency, filterStage, filterOverdue]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
@@ -154,7 +182,17 @@ export default function AdminLeads() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold">Pipeline de Leads</h1>
-          <p className="text-xs text-muted-foreground">{filtered.length} contactos</p>
+          <p className="text-xs text-muted-foreground">
+            {filtered.length} contactos
+            {(filterStage !== "all" || filterOverdue || filterUrgency !== "all") && (
+              <button
+                className="ml-2 text-primary hover:underline"
+                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button size="sm" variant="outline" className={cn("h-8 text-xs", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
@@ -162,8 +200,24 @@ export default function AdminLeads() {
             <span className="hidden sm:inline">{classifyingAll ? "Clasificando..." : "Clasificar con IA"}</span>
             <span className="sm:hidden">IA</span>
           </Button>
+          {filterOverdue && (
+            <Badge variant="destructive" className="h-7 text-xs cursor-pointer" onClick={() => setFilterOverdue(false)}>
+              ⚠️ Vencidos ✕
+            </Badge>
+          )}
+          <Select value={filterStage} onValueChange={setFilterStage}>
+            <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
+              <SelectValue placeholder="Etapa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas etapas</SelectItem>
+              {PIPELINE_STAGES.map(s => (
+                <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-            <SelectTrigger className="w-[100px] sm:w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
               <SelectValue placeholder="Urgencia" />
             </SelectTrigger>
             <SelectContent>

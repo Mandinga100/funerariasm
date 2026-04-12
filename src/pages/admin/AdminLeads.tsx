@@ -49,6 +49,12 @@ const urgencyColor: Record<string, string> = {
   "previsión": "bg-green-100 text-green-800 border-green-300",
 };
 
+const URGENCY_LABELS: Record<string, string> = {
+  inmediata: "Urgente",
+  normal: "Normal",
+  "previsión": "Previsión",
+};
+
 export default function AdminLeads() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);

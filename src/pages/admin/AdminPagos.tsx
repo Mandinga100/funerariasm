@@ -88,7 +88,7 @@ export default function AdminPagos() {
   // Realtime subscription for new transactions
   useEffect(() => {
     const channel = supabase
-      .channel("admin-payments-realtime")
+      .channel(`admin-payments-realtime-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "payment_transactions" },

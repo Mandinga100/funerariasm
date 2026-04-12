@@ -83,7 +83,7 @@ export default function AdminLayout() {
 
   const SidebarNav = () => (
     <>
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-1.5 space-y-0.5 overflow-y-auto">
         {navItems.map(item => {
           const count = getBadgeCount("badgeKey" in item ? item.badgeKey : undefined);
           return (
@@ -93,7 +93,7 @@ export default function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors",
                   isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"
                 )
               }

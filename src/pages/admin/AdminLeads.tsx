@@ -49,6 +49,12 @@ const urgencyColor: Record<string, string> = {
   "previsión": "bg-green-100 text-green-800 border-green-300",
 };
 
+const URGENCY_LABELS: Record<string, string> = {
+  inmediata: "Urgente",
+  normal: "Normal",
+  "previsión": "Previsión",
+};
+
 export default function AdminLeads() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -216,7 +222,7 @@ export default function AdminLeads() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="inmediata">🔴 Inmediata</SelectItem>
+              <SelectItem value="inmediata">🔴 Urgente</SelectItem>
               <SelectItem value="normal">🔵 Normal</SelectItem>
               <SelectItem value="previsión">🟢 Previsión</SelectItem>
             </SelectContent>
@@ -365,7 +371,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
         <p className="font-medium text-sm leading-tight flex-1">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
           <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
-            {lead.urgency}
+            {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
       </div>
@@ -419,7 +425,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
           <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
-            {lead.urgency}
+            {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
       </div>
@@ -451,41 +457,45 @@ function LeadCard({ lead }: { lead: Lead }) {
 function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSelect: (l: Lead) => void; onStageChange: (id: string, stage: string) => void }) {
   return (
     <div className="rounded-md border overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm table-auto">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="text-left p-3 font-medium">Nombre</th>
-            <th className="text-left p-3 font-medium hidden sm:table-cell">Contacto</th>
-            <th className="text-left p-3 font-medium">Urgencia</th>
-            <th className="text-left p-3 font-medium">Etapa</th>
-            <th className="text-left p-3 font-medium hidden md:table-cell">Fuente</th>
-            <th className="text-left p-3 font-medium hidden md:table-cell">Fecha</th>
-            <th className="text-left p-3 font-medium"></th>
+            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Nombre</th>
+            <th className="text-left px-3 py-2 font-medium hidden sm:table-cell whitespace-nowrap">Contacto</th>
+            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Urgencia</th>
+            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Etapa</th>
+            <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fuente</th>
+            <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fecha</th>
+            <th className="px-3 py-2 w-10"></th>
           </tr>
         </thead>
         <tbody>
           {leads.map(lead => (
             <tr key={lead.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(lead)}>
-              <td className="p-3 font-medium">{lead.name ?? "—"}</td>
-              <td className="p-3 text-xs hidden sm:table-cell">
-                <div>{lead.email}</div>
+              <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
+              <td className="px-3 py-2 text-xs hidden sm:table-cell">
+                <div className="truncate max-w-[160px]">{lead.email}</div>
                 <div className="text-muted-foreground">{lead.phone}</div>
               </td>
-              <td className="p-3">
-                {lead.urgency && <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">{lead.urgency}</Badge>}
+              <td className="px-3 py-2">
+                {lead.urgency && (
+                  <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">
+                    {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
+                  </Badge>
+                )}
               </td>
-              <td className="p-3">
+              <td className="px-3 py-2">
                 <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>
-                  <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-7 text-xs w-[120px]" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </td>
-              <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
-              <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
-              <td className="p-3">
-                <Button size="sm" variant="ghost" className="h-7"><Eye className="w-3.5 h-3.5" /></Button>
+              <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
+              <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
+              <td className="px-3 py-2">
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button>
               </td>
             </tr>
           ))}

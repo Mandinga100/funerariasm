@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -22,14 +22,14 @@ export default function NotificationCenter() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const instanceIdRef = useRef(crypto.randomUUID());
 
   useEffect(() => {
     if (!user) return;
     loadNotifications();
 
-    const channelName = `admin-notif-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel(channelName)
+      .channel(`admin-notif-${user.id}-${instanceIdRef.current}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "admin_notifications", filter: `user_id=eq.${user.id}` },
@@ -37,7 +37,9 @@ export default function NotificationCenter() {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const loadNotifications = async () => {

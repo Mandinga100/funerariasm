@@ -63,14 +63,12 @@ export default function AdminLeads() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Open a specific lead from URL param ?open=<id>
   useEffect(() => {
     const openId = searchParams.get("open");
     if (openId && leads.length > 0) {
       const found = leads.find(l => l.id === openId);
       if (found) {
         setSelectedLead(found);
-        // Clean up the param after opening
         const next = new URLSearchParams(searchParams);
         next.delete("open");
         setSearchParams(next, { replace: true });
@@ -97,11 +95,14 @@ export default function AdminLeads() {
     setLoading(false);
   };
 
+  // For kanban mode, ignore filterStage so cards don't disappear when dragged
   const filtered = useMemo(() => {
     const now = new Date();
+    const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
       if (filterUrgency !== "all" && l.urgency !== filterUrgency) return false;
-      if (filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
+      // In kanban mode, don't filter by stage — all stages are visible as columns
+      if (!isKanban && filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
       if (filterOverdue) {
         if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
         const hours = differenceInHours(now, new Date(l.created_at));
@@ -111,7 +112,7 @@ export default function AdminLeads() {
       }
       return true;
     });
-  }, [leads, filterUrgency, filterStage, filterOverdue]);
+  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
@@ -128,6 +129,8 @@ export default function AdminLeads() {
     if (!result.destination) return;
     const leadId = result.draggableId;
     const newStage = result.destination.droppableId;
+
+    // Optimistic update
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: newStage } : l));
 
     const updates: { pipeline_stage: string; last_contacted_at?: string; status?: string } = { pipeline_stage: newStage };
@@ -172,6 +175,8 @@ export default function AdminLeads() {
     setExpandedStages(prev => ({ ...prev, [stageId]: !prev[stageId] }));
   };
 
+  const hasActiveFilters = filterStage !== "all" || filterOverdue || filterUrgency !== "all";
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   }
@@ -181,10 +186,10 @@ export default function AdminLeads() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
-          <h1 className="text-lg sm:text-2xl font-bold">Pipeline de Leads</h1>
+          <h1 className="text-lg sm:text-2xl font-bold">Leads</h1>
           <p className="text-xs text-muted-foreground">
             {filtered.length} contactos
-            {(filterStage !== "all" || filterOverdue || filterUrgency !== "all") && (
+            {hasActiveFilters && (
               <button
                 className="ml-2 text-primary hover:underline"
                 onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); }}
@@ -205,17 +210,6 @@ export default function AdminLeads() {
               ⚠️ Vencidos ✕
             </Badge>
           )}
-          <Select value={filterStage} onValueChange={setFilterStage}>
-            <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
-              <SelectValue placeholder="Etapa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas etapas</SelectItem>
-              {PIPELINE_STAGES.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Select value={filterUrgency} onValueChange={setFilterUrgency}>
             <SelectTrigger className="w-[100px] sm:w-[130px] h-8 text-xs">
               <SelectValue placeholder="Urgencia" />
@@ -251,7 +245,7 @@ export default function AdminLeads() {
         />
       ) : viewMode === "kanban" ? (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 240px)" }}>
+          <div className="grid grid-cols-5 gap-2 lg:gap-3" style={{ minHeight: "calc(100vh - 240px)" }}>
             {PIPELINE_STAGES.map(stage => (
               <Droppable key={stage.id} droppableId={stage.id}>
                 {(provided, snapshot) => (
@@ -259,16 +253,16 @@ export default function AdminLeads() {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "flex-shrink-0 w-[230px] lg:w-[260px] rounded-lg border-2 p-2 transition-colors",
+                      "rounded-lg border-2 p-1.5 lg:p-2 transition-colors min-w-0",
                       stage.color,
                       snapshot.isDraggingOver && "ring-2 ring-primary"
                     )}
                   >
-                    <div className="flex items-center justify-between mb-2 px-1">
-                      <span className="text-sm font-semibold">{stage.emoji} {stage.label}</span>
-                      <Badge variant="secondary" className="text-[10px] h-5">{leadsByStage[stage.id]?.length ?? 0}</Badge>
+                    <div className="flex items-center justify-between mb-1.5 px-1">
+                      <span className="text-xs lg:text-sm font-semibold truncate">{stage.emoji} {stage.label}</span>
+                      <Badge variant="secondary" className="text-[10px] h-5 flex-shrink-0">{leadsByStage[stage.id]?.length ?? 0}</Badge>
                     </div>
-                    <div className="space-y-2 min-h-[100px]">
+                    <div className="space-y-1.5 min-h-[80px]">
                       {(leadsByStage[stage.id] ?? []).map((lead, index) => (
                         <Draggable key={lead.id} draggableId={lead.id} index={index}>
                           {(provided, snapshot) => (
@@ -277,7 +271,7 @@ export default function AdminLeads() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               className={cn(
-                                "bg-background rounded-md border p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
+                                "bg-background rounded-md border p-2 lg:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
                                 snapshot.isDragging && "shadow-lg ring-2 ring-primary rotate-2"
                               )}
                               onClick={() => setSelectedLead(lead)}
@@ -319,25 +313,25 @@ function MobileStagesView({
   onStageChange: (id: string, stage: string) => void;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {PIPELINE_STAGES.map(stage => {
         const stageLeads = leadsByStage[stage.id] ?? [];
         const isExpanded = expandedStages[stage.id] ?? false;
         return (
-          <div key={stage.id} className={cn("rounded-lg border-2 overflow-hidden", stage.color)}>
+          <div key={stage.id} className={cn("rounded-lg border overflow-hidden", stage.color)}>
             <button
               onClick={() => onToggle(stage.id)}
-              className="w-full flex items-center justify-between p-3 text-left"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left"
             >
               <div className="flex items-center gap-2">
-                <div className={cn("w-2.5 h-2.5 rounded-full", stage.dotColor)} />
+                <div className={cn("w-2 h-2 rounded-full", stage.dotColor)} />
                 <span className="text-sm font-semibold">{stage.label}</span>
                 <Badge variant="secondary" className="text-[10px] h-5">{stageLeads.length}</Badge>
               </div>
               {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             </button>
             {isExpanded && stageLeads.length > 0 && (
-              <div className="px-2 pb-2 space-y-2">
+              <div className="px-2 pb-2 space-y-1.5">
                 {stageLeads.map(lead => (
                   <MobileLeadCard
                     key={lead.id}
@@ -349,7 +343,7 @@ function MobileStagesView({
               </div>
             )}
             {isExpanded && stageLeads.length === 0 && (
-              <p className="px-3 pb-3 text-xs text-muted-foreground">Sin leads en esta etapa</p>
+              <p className="px-3 pb-2 text-xs text-muted-foreground">Sin leads en esta etapa</p>
             )}
           </div>
         );
@@ -364,10 +358,10 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
 
   return (
     <div
-      className="bg-background rounded-lg border p-3 shadow-sm active:shadow-md transition-shadow"
+      className="bg-background rounded-lg border p-2.5 shadow-sm active:shadow-md transition-shadow"
       onClick={() => onSelect(lead)}
     >
-      <div className="flex items-start justify-between gap-2 mb-1.5">
+      <div className="flex items-start justify-between gap-2 mb-1">
         <p className="font-medium text-sm leading-tight flex-1">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
           <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
@@ -376,7 +370,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
         )}
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-1.5">
         {lead.phone && (
           <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>
         )}
@@ -384,7 +378,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
       </div>
 
       {lead.ai_summary && (
-        <p className="text-[10px] text-muted-foreground bg-violet-50 rounded px-2 py-1 line-clamp-2 mb-2">
+        <p className="text-[10px] text-muted-foreground bg-violet-50 rounded px-2 py-1 line-clamp-2 mb-1.5">
           🤖 {lead.ai_summary}
         </p>
       )}
@@ -420,28 +414,28 @@ function LeadCard({ lead }: { lead: Lead }) {
   const isOverdue = lead.urgency === "inmediata" ? hours >= 2 : lead.urgency === "normal" ? hours >= 24 : hours >= 72;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-start justify-between">
-        <p className="font-medium text-sm leading-tight">{lead.name ?? "Sin nombre"}</p>
+    <div className="space-y-1.5">
+      <div className="flex items-start justify-between gap-1">
+        <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
-          <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border", urgencyColor[lead.urgency] ?? "")}>
+          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
             {lead.urgency}
           </span>
         )}
       </div>
       {lead.phone && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Phone className="w-3 h-3" /> {lead.phone}
+        <div className="flex items-center gap-1 text-[10px] lg:text-xs text-muted-foreground">
+          <Phone className="w-3 h-3 flex-shrink-0" /> <span className="truncate">{lead.phone}</span>
         </div>
       )}
       {lead.ai_summary && (
-        <p className="text-[10px] text-muted-foreground bg-violet-50 rounded px-1.5 py-1 line-clamp-2">
+        <p className="text-[9px] lg:text-[10px] text-muted-foreground bg-violet-50 rounded px-1.5 py-1 line-clamp-2">
           🤖 {lead.ai_summary}
         </p>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-muted-foreground">{lead.source ?? "—"}</span>
-        <span className={cn("text-[10px]", isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" ? "text-red-600 font-bold" : "text-muted-foreground")}>
+        <span className="text-[10px] text-muted-foreground truncate">{lead.source ?? "—"}</span>
+        <span className={cn("text-[10px] flex-shrink-0", isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" ? "text-red-600 font-bold" : "text-muted-foreground")}>
           <Clock className="w-3 h-3 inline mr-0.5" />
           {hours}h
         </span>

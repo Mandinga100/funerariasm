@@ -12,11 +12,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" as const },
   { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false },
   { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false },
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
-  { to: "/admin/leads", label: "Contactos", icon: MessageSquare, end: false, badgeKey: "leads" as const },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
 ];
 

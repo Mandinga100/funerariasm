@@ -116,7 +116,7 @@ export default function AdminLeads() {
   const loadLeads = async () => {
     const { data } = await supabase
       .from("contact_leads")
-      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, last_contacted_at, created_at, message, comuna, selected_plan")
+      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan")
       .order("created_at", { ascending: false })
       .limit(500);
     setLeads((data as Lead[]) ?? []);

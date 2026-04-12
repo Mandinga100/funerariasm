@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { logAudit } from "@/hooks/useAuditLog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,8 @@ import {
   Users, Shield, Bell, Moon, Sun, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
-  Link2, Webhook, Brain, CloudCog
+  Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
+  Filter
 } from "lucide-react";
 
 type AppRole = "ceo" | "admin" | "moderator";

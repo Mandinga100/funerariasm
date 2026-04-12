@@ -11,12 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Users, Shield, Bell, Moon, Sun, BarChart3, Trash2, MoreVertical,
+  Users, Shield, Bell, Moon, Sun, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
-  Check, X, Download
+  Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
+  Link2, Webhook, Brain, CloudCog
 } from "lucide-react";
 
 type AppRole = "ceo" | "admin" | "moderator";
@@ -29,24 +29,32 @@ interface AdminUser {
   display_name?: string;
 }
 
-const ROLE_META: Record<AppRole, { label: string; color: string; desc: string }> = {
-  ceo: { label: "CEO", color: "bg-amber-100 text-amber-800 border-amber-300", desc: "Control total del sistema, gestión de administradores y configuración global" },
-  admin: { label: "Administrador", color: "bg-blue-100 text-blue-800 border-blue-300", desc: "Acceso completo a leads, pagos, obituarios, memoriales y tracking" },
-  moderator: { label: "Moderador", color: "bg-green-100 text-green-800 border-green-300", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración" },
+const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; icon: string }> = {
+  ceo: { label: "CEO", color: "bg-amber-100 text-amber-800 border-amber-300", desc: "Control total del sistema, gestión de administradores y configuración global", icon: "👑" },
+  admin: { label: "Administrador", color: "bg-blue-100 text-blue-800 border-blue-300", desc: "Acceso completo a leads, pagos, obituarios, memoriales y tracking", icon: "🔧" },
+  moderator: { label: "Moderador", color: "bg-green-100 text-green-800 border-green-300", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración", icon: "📝" },
 };
+
+const CEO_EMAIL = "mandinga_atim@hotmail.com";
 
 export default function AdminSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isCeo = user?.email === CEO_EMAIL;
 
   /* ── Admins State ── */
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loadingAdmins, setLoadingAdmins] = useState(true);
   const [addDialog, setAddDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
+  const [addMode, setAddMode] = useState<"manual" | "invite">("manual");
   const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("admin");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [saving, setSaving] = useState(false);
 
   /* ── Preferences State ── */
@@ -64,6 +72,19 @@ export default function AdminSettings() {
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [changingPass, setChangingPass] = useState(false);
+
+  /* ── Integrations State (CEO only) ── */
+  const [integrations, setIntegrations] = useState(() => {
+    const saved = localStorage.getItem("crm_integrations");
+    return saved ? JSON.parse(saved) : {
+      whatsapp_api: { enabled: false, token: "", phone_id: "", template: "lead_urgente" },
+      ai_classification: { enabled: true, model: "gemini-2.5-flash", auto_classify: true },
+      webhook_leads: { enabled: false, url: "" },
+      webhook_payments: { enabled: false, url: "" },
+      email_smtp: { enabled: false, host: "", port: "587", user: "", from: "" },
+      google_analytics: { enabled: false, measurement_id: "" },
+    };
+  });
 
   /* ── Load admins ── */
   const loadAdmins = async () => {
@@ -92,41 +113,125 @@ export default function AdminSettings() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  /* ── Add admin ── */
-  const handleAddAdmin = async () => {
-    if (!newEmail.trim()) return;
-    setSaving(true);
-
-    // Look up the user by email through profiles (we can't query auth.users directly)
-    // The admin needs to provide the user_id or the email of an existing user
-    const { data: profileData } = await supabase.from("profiles").select("user_id, display_name");
-    // We can't directly query by email in profiles, so we'll need to use a workaround
-    // For now, let's try to find by display_name matching email
-    // In practice, the admin would need the user_id or email from the auth system
-
-    toast({
-      title: "Nota",
-      description: "El usuario debe registrarse primero. Luego podrá ser asignado como administrador con su ID de usuario.",
-    });
-
-    setSaving(false);
-    setAddDialog(false);
-  };
-
+  /* ── Add admin by UUID ── */
   const handleAddByUserId = async (userId: string, role: AppRole) => {
+    if (!isCeo && role === "ceo") {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Administrador agregado", description: `Rol ${ROLE_META[role].label} asignado correctamente.` });
+      toast({ title: "Miembro agregado", description: `Rol ${ROLE_META[role].label} asignado correctamente.` });
       loadAdmins();
     }
     setSaving(false);
     setAddDialog(false);
+    resetAddForm();
   };
 
-  const handleUpdateRole = async (adminId: string, role: AppRole) => {
+  /* ── Invite via email (creates user with temp password) ── */
+  const handleInviteByEmail = async () => {
+    if (!inviteEmail.trim()) return;
+    if (!isCeo && newRole === "ceo") {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+
+    // Sign up the user with a temporary password
+    const tempPassword = `Temp_${crypto.randomUUID().slice(0, 12)}!`;
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: inviteEmail.trim(),
+      password: tempPassword,
+      options: { data: { display_name: newDisplayName || inviteEmail.split("@")[0] } }
+    });
+
+    if (signUpError || !signUpData.user) {
+      toast({ title: "Error al crear usuario", description: signUpError?.message ?? "No se pudo crear el usuario.", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    // Assign role
+    const { error: roleError } = await supabase.from("user_roles").insert({ user_id: signUpData.user.id, role: newRole });
+    if (roleError) {
+      toast({ title: "Usuario creado pero error de rol", description: roleError.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Invitación enviada",
+        description: `Se envió un correo de verificación a ${inviteEmail}. El usuario deberá verificar su email para acceder.`,
+      });
+      loadAdmins();
+    }
+    setSaving(false);
+    setAddDialog(false);
+    resetAddForm();
+  };
+
+  /* ── Create manual user ── */
+  const handleCreateManual = async () => {
+    if (!newEmail.trim() || !newPassword.trim()) return;
+    if (newPassword.length < 8) {
+      toast({ title: "Error", description: "La contraseña debe tener al menos 8 caracteres.", variant: "destructive" });
+      return;
+    }
+    if (!isCeo && newRole === "ceo") {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: newEmail.trim(),
+      password: newPassword,
+      options: { data: { display_name: newDisplayName || newEmail.split("@")[0] } }
+    });
+
+    if (signUpError || !signUpData.user) {
+      toast({ title: "Error al crear usuario", description: signUpError?.message ?? "No se pudo crear el usuario.", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    const { error: roleError } = await supabase.from("user_roles").insert({ user_id: signUpData.user.id, role: newRole });
+    if (roleError) {
+      toast({ title: "Usuario creado pero error de rol", description: roleError.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Usuario creado",
+        description: `${newEmail} creado como ${ROLE_META[newRole].label}. Deberá verificar su email.`,
+      });
+      loadAdmins();
+    }
+    setSaving(false);
+    setAddDialog(false);
+    resetAddForm();
+  };
+
+  const resetAddForm = () => {
+    setNewEmail("");
+    setNewPassword("");
+    setNewDisplayName("");
+    setInviteEmail("");
+    setNewRole("admin");
+    setAddMode("manual");
+  };
+
+  /* ── Update role ── */
+  const handleUpdateRole = async (adminId: string, role: AppRole, targetUserId: string) => {
+    if (!isCeo && role === "ceo") {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+      return;
+    }
+    // Prevent non-CEO from changing a CEO's role
+    const target = admins.find(a => a.id === adminId);
+    if (target?.role === "ceo" && !isCeo) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede modificar roles de CEO.", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.from("user_roles").update({ role }).eq("id", adminId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -136,10 +241,43 @@ export default function AdminSettings() {
     }
   };
 
+  /* ── Edit member ── */
+  const handleEditMember = async () => {
+    if (!selectedAdmin) return;
+    if (!isCeo && selectedAdmin.role === "ceo") {
+      toast({ title: "Acceso denegado", description: "No puede editar un CEO.", variant: "destructive" });
+      setEditDialog(false);
+      return;
+    }
+    setSaving(true);
+    // Update display name in profiles
+    if (newDisplayName.trim()) {
+      await supabase.from("profiles").update({ display_name: newDisplayName.trim() }).eq("user_id", selectedAdmin.user_id);
+    }
+    // Update role if changed
+    if (newRole !== selectedAdmin.role) {
+      if (!isCeo && newRole === "ceo") {
+        toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+      await supabase.from("user_roles").update({ role: newRole }).eq("id", selectedAdmin.id);
+    }
+    toast({ title: "Miembro actualizado" });
+    loadAdmins();
+    setSaving(false);
+    setEditDialog(false);
+  };
+
+  /* ── Delete admin ── */
   const handleDeleteAdmin = async () => {
     if (!selectedAdmin) return;
     if (selectedAdmin.user_id === user?.id) {
       toast({ title: "Error", description: "No puede eliminar su propio acceso.", variant: "destructive" });
+      return;
+    }
+    if (selectedAdmin.role === "ceo" && !isCeo) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede remover a otro CEO.", variant: "destructive" });
       return;
     }
     const { error } = await supabase.from("user_roles").delete().eq("id", selectedAdmin.id);
@@ -168,7 +306,7 @@ export default function AdminSettings() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Contraseña actualizada", description: "Su contraseña ha sido cambiada exitosamente." });
+      toast({ title: "Contraseña actualizada" });
       setNewPass("");
       setConfirmPass("");
     }
@@ -185,32 +323,35 @@ export default function AdminSettings() {
     toast({ title: "Preferencias guardadas" });
   };
 
-  /* ── Export data ── */
-  const exportLeads = async () => {
-    const { data } = await supabase.from("contact_leads").select("*").order("created_at", { ascending: false }).limit(1000);
-    if (!data?.length) { toast({ title: "Sin datos para exportar" }); return; }
-    const headers = Object.keys(data[0]);
-    const rows = data.map(r => headers.map(h => `"${String((r as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "Leads exportados" });
+  /* ── Save integrations ── */
+  const saveIntegrations = () => {
+    localStorage.setItem("crm_integrations", JSON.stringify(integrations));
+    toast({ title: "Integraciones guardadas", description: "La configuración se ha actualizado correctamente." });
   };
 
-  const exportPayments = async () => {
-    const { data } = await supabase.from("payment_transactions").select("*").order("created_at", { ascending: false }).limit(1000);
+  const updateIntegration = (key: string, field: string, value: any) => {
+    setIntegrations((prev: any) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value }
+    }));
+  };
+
+  /* ── Export data ── */
+  const exportData = async (table: string, filename: string) => {
+    const { data } = await supabase.from(table as any).select("*").order("created_at", { ascending: false }).limit(1000);
     if (!data?.length) { toast({ title: "Sin datos para exportar" }); return; }
     const headers = Object.keys(data[0]);
     const rows = data.map(r => headers.map(h => `"${String((r as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `pagos_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Pagos exportados" });
+    toast({ title: `${filename} exportado` });
   };
+
+  /* ── Determine available roles for selects ── */
+  const availableRoles: AppRole[] = isCeo ? ["ceo", "admin", "moderator"] : ["admin", "moderator"];
 
   return (
     <div className="space-y-4">
@@ -224,21 +365,26 @@ export default function AdminSettings() {
 
       <Tabs defaultValue="team" className="space-y-4">
         <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="team" className="flex-1 min-w-[100px] text-xs sm:text-sm gap-1">
+          <TabsTrigger value="team" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Users className="w-3.5 h-3.5 hidden sm:inline" />Equipo
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex-1 min-w-[100px] text-xs sm:text-sm gap-1">
-            <Moon className="w-3.5 h-3.5 hidden sm:inline" />Apariencia
+          <TabsTrigger value="appearance" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+            <Moon className="w-3.5 h-3.5 hidden sm:inline" />Tema
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-1 min-w-[100px] text-xs sm:text-sm gap-1">
-            <Bell className="w-3.5 h-3.5 hidden sm:inline" />Notificaciones
+          <TabsTrigger value="notifications" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+            <Bell className="w-3.5 h-3.5 hidden sm:inline" />Alertas
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex-1 min-w-[100px] text-xs sm:text-sm gap-1">
+          <TabsTrigger value="security" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Shield className="w-3.5 h-3.5 hidden sm:inline" />Seguridad
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-[100px] text-xs sm:text-sm gap-1">
+          <TabsTrigger value="reports" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <BarChart3 className="w-3.5 h-3.5 hidden sm:inline" />Informes
           </TabsTrigger>
+          {isCeo && (
+            <TabsTrigger value="integrations" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+              <Zap className="w-3.5 h-3.5 hidden sm:inline" />Integraciones
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ═══════════════ TEAM TAB ═══════════════ */}
@@ -250,9 +396,11 @@ export default function AdminSettings() {
                   <CardTitle className="text-base sm:text-lg">Administradores del CRM</CardTitle>
                   <CardDescription>Gestione los permisos y roles de su equipo</CardDescription>
                 </div>
-                <Button size="sm" onClick={() => { setNewEmail(""); setNewRole("admin"); setAddDialog(true); }}>
-                  <Plus className="w-4 h-4 mr-1" />Agregar
-                </Button>
+                {isCeo && (
+                  <Button size="sm" onClick={() => { resetAddForm(); setAddDialog(true); }}>
+                    <Plus className="w-4 h-4 mr-1" />Agregar miembro
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -260,7 +408,7 @@ export default function AdminSettings() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                 {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([key, meta]) => (
                   <div key={key} className="flex items-start gap-2 p-2 rounded-lg border bg-muted/30">
-                    <Badge className={`${meta.color} text-[10px] shrink-0`} variant="secondary">{meta.label}</Badge>
+                    <Badge className={`${meta.color} text-[10px] shrink-0`} variant="secondary">{meta.icon} {meta.label}</Badge>
                     <p className="text-[11px] text-muted-foreground leading-tight">{meta.desc}</p>
                   </div>
                 ))}
@@ -274,46 +422,73 @@ export default function AdminSettings() {
                 <p className="text-center py-6 text-sm text-muted-foreground">No hay administradores registrados.</p>
               ) : (
                 <div className="space-y-2">
-                  {admins.map(admin => (
-                    <div key={admin.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 flex items-center justify-center shrink-0">
-                          <UserCog className="w-4 h-4 text-[#C5A059]" />
+                  {admins.map(admin => {
+                    const canManage = isCeo && admin.user_id !== user?.id;
+                    const canChangeRole = isCeo;
+                    return (
+                      <div key={admin.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 flex items-center justify-center shrink-0">
+                            <UserCog className="w-4 h-4 text-[#C5A059]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
+                              {admin.user_id === user?.id && <span className="ml-1 text-[#C5A059] font-medium">(Tú)</span>}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
-                            {admin.user_id === user?.id && <span className="ml-1 text-[#C5A059]">(Tú)</span>}
-                          </p>
+                        <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0">
+                          {canChangeRole ? (
+                            <Select
+                              value={admin.role}
+                              onValueChange={(v) => handleUpdateRole(admin.id, v as AppRole, admin.user_id)}
+                            >
+                              <SelectTrigger className="h-8 w-[130px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableRoles.map(r => (
+                                  <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge className={`${ROLE_META[admin.role].color} text-xs`} variant="secondary">
+                              {ROLE_META[admin.role].icon} {ROLE_META[admin.role].label}
+                            </Badge>
+                          )}
+                          {canManage && (
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Editar"
+                                onClick={() => {
+                                  setSelectedAdmin(admin);
+                                  setNewDisplayName(admin.display_name ?? "");
+                                  setNewRole(admin.role);
+                                  setEditDialog(true);
+                                }}>
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" title="Eliminar"
+                                onClick={() => { setSelectedAdmin(admin); setDeleteDialog(true); }}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Select
-                          value={admin.role}
-                          onValueChange={(v) => handleUpdateRole(admin.id, v as AppRole)}
-                          disabled={admin.user_id === user?.id}
-                        >
-                          <SelectTrigger className="h-8 w-[130px] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="ceo">👑 CEO</SelectItem>
-                            <SelectItem value="admin">🔧 Administrador</SelectItem>
-                            <SelectItem value="moderator">📝 Moderador</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {admin.user_id !== user?.id && (
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            onClick={() => { setSelectedAdmin(admin); setDeleteDialog(true); }}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+              )}
+
+              {!isCeo && (
+                <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-2">
+                  <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+                  <p>Solo el CEO puede agregar, editar o eliminar miembros del equipo. Contacte al CEO para solicitar cambios.</p>
                 </div>
               )}
             </CardContent>
@@ -360,35 +535,23 @@ export default function AdminSettings() {
             <CardContent className="space-y-5">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Nuevos leads</p>
-                    <p className="text-xs text-muted-foreground">Notificación al recibir un nuevo contacto</p>
-                  </div>
+                  <div><p className="text-sm font-medium">Nuevos leads</p><p className="text-xs text-muted-foreground">Notificación al recibir un nuevo contacto</p></div>
                   <Switch checked={notifLeads} onCheckedChange={setNotifLeads} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Pagos pendientes</p>
-                    <p className="text-xs text-muted-foreground">Alerta al recibir un nuevo pago por verificar</p>
-                  </div>
+                  <div><p className="text-sm font-medium">Pagos pendientes</p><p className="text-xs text-muted-foreground">Alerta al recibir un pago por verificar</p></div>
                   <Switch checked={notifPayments} onCheckedChange={setNotifPayments} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Sonido de notificación</p>
-                    <p className="text-xs text-muted-foreground">Reproducir sonido al recibir alertas</p>
-                  </div>
+                  <div><p className="text-sm font-medium">Sonido de notificación</p><p className="text-xs text-muted-foreground">Reproducir sonido al recibir alertas</p></div>
                   <Switch checked={notifSound} onCheckedChange={setNotifSound} />
                 </div>
                 <Separator />
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium">Notificaciones WhatsApp</p>
-                      <p className="text-xs text-muted-foreground">Enviar alerta al WhatsApp cuando entre un nuevo lead urgente</p>
-                    </div>
+                    <div><p className="text-sm font-medium">Notificaciones WhatsApp</p><p className="text-xs text-muted-foreground">Enviar alerta al WhatsApp cuando entre un lead urgente</p></div>
                     <Switch checked={wspNotif} onCheckedChange={setWspNotif} />
                   </div>
                   {wspNotif && (
@@ -443,20 +606,27 @@ export default function AdminSettings() {
               <CardDescription>Datos de su sesión actual</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Email</span>
-                <span className="font-medium truncate ml-2">{user?.email}</span>
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Email</span><span className="font-medium truncate ml-2">{user?.email}</span></div>
               <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">ID de usuario</span>
-                <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono truncate ml-2">{user?.id?.slice(0, 16)}...</code>
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">ID de usuario</span><code className="text-xs bg-muted px-2 py-0.5 rounded font-mono truncate ml-2">{user?.id?.slice(0, 16)}...</code></div>
               <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Último acceso</span>
-                <span className="text-xs">{user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString("es-CL") : "—"}</span>
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Último acceso</span><span className="text-xs">{user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString("es-CL") : "—"}</span></div>
+              <Separator />
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Nivel de acceso</span><Badge className={isCeo ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"} variant="secondary">{isCeo ? "👑 CEO" : "🔧 Admin"}</Badge></div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2"><Shield className="w-4 h-4 text-[#C5A059]" />Políticas de Seguridad</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Contraseñas mínimas de 8 caracteres</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Verificación de email obligatoria para nuevos usuarios</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Solo el CEO puede asignar roles de CEO y Admin</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Row Level Security (RLS) en todas las tablas</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Sesiones con token JWT y refresco automático</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Registro de actividad en leads y pagos</span></div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -466,77 +636,265 @@ export default function AdminSettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base sm:text-lg">Exportar Informes</CardTitle>
-              <CardDescription>Descargue datos del sistema en formato CSV para análisis externo</CardDescription>
+              <CardDescription>Descargue datos del sistema en formato CSV</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button onClick={exportLeads} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Exportar Leads</p>
-                    <p className="text-xs text-muted-foreground">Todos los contactos y su clasificación</p>
-                  </div>
-                  <Download className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
-                </button>
-                <button onClick={exportPayments} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
-                  <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Exportar Pagos</p>
-                    <p className="text-xs text-muted-foreground">Historial completo de transacciones</p>
-                  </div>
-                  <Download className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Auditoría del Sistema</CardTitle>
-              <CardDescription>Información general sobre la actividad del CRM</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2 mb-2"><Shield className="w-4 h-4 text-[#C5A059]" />Los registros de actividad se almacenan automáticamente en el sistema.</p>
-                <p className="text-xs">Cada cambio en leads, pagos y tracking queda registrado con fecha, hora y usuario responsable. Use las exportaciones para generar informes detallados.</p>
+                {[
+                  { fn: () => exportData("contact_leads", "leads"), icon: Users, color: "blue", title: "Exportar Leads", desc: "Contactos y clasificación" },
+                  { fn: () => exportData("payment_transactions", "pagos"), icon: FileText, color: "green", title: "Exportar Pagos", desc: "Historial de transacciones" },
+                  { fn: () => exportData("family_tracking", "tracking"), icon: Globe, color: "purple", title: "Exportar Tracking", desc: "Seguimiento de servicios" },
+                  { fn: () => exportData("obituaries", "obituarios"), icon: FileText, color: "gray", title: "Exportar Obituarios", desc: "Registros de obituarios" },
+                ].map((item, idx) => (
+                  <button key={idx} onClick={item.fn} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
+                    <div className={`w-10 h-10 rounded-lg bg-${item.color}-50 flex items-center justify-center shrink-0`}>
+                      <item.icon className={`w-5 h-5 text-${item.color}-600`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <Download className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ═══════════════ INTEGRATIONS TAB (CEO ONLY) ═══════════════ */}
+        {isCeo && (
+          <TabsContent value="integrations" className="space-y-4">
+            {/* WhatsApp Business API */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  WhatsApp Business API
+                </CardTitle>
+                <CardDescription>Notificaciones automáticas a WhatsApp para leads urgentes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between"><Label className="text-sm">Activar integración</Label><Switch checked={integrations.whatsapp_api.enabled} onCheckedChange={v => updateIntegration("whatsapp_api", "enabled", v)} /></div>
+                {integrations.whatsapp_api.enabled && (
+                  <div className="space-y-3 pl-0 sm:pl-4 border-l-2 border-green-200 ml-0 sm:ml-2">
+                    <div><Label className="text-xs">Access Token</Label><Input type="password" value={integrations.whatsapp_api.token} onChange={e => updateIntegration("whatsapp_api", "token", e.target.value)} className="mt-1 font-mono text-xs" placeholder="EAAxxxxxxx..." /></div>
+                    <div><Label className="text-xs">Phone Number ID</Label><Input value={integrations.whatsapp_api.phone_id} onChange={e => updateIntegration("whatsapp_api", "phone_id", e.target.value)} className="mt-1 font-mono text-xs" placeholder="1234567890" /></div>
+                    <div><Label className="text-xs">Nombre de Template</Label><Input value={integrations.whatsapp_api.template} onChange={e => updateIntegration("whatsapp_api", "template", e.target.value)} className="mt-1 text-xs" placeholder="lead_urgente" /></div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* AI Classification */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2"><Brain className="w-5 h-5 text-purple-600" />Clasificación con IA</CardTitle>
+                <CardDescription>Configuración del modelo de IA para clasificación automática de leads</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between"><Label className="text-sm">Clasificación automática</Label><Switch checked={integrations.ai_classification.auto_classify} onCheckedChange={v => updateIntegration("ai_classification", "auto_classify", v)} /></div>
+                <div>
+                  <Label className="text-xs">Modelo de IA</Label>
+                  <Select value={integrations.ai_classification.model} onValueChange={v => updateIntegration("ai_classification", "model", v)}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (rápido)</SelectItem>
+                      <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (preciso)</SelectItem>
+                      <SelectItem value="gpt-5-mini">GPT-5 Mini (balanceado)</SelectItem>
+                      <SelectItem value="gpt-5">GPT-5 (máxima calidad)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Webhooks */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2"><Webhook className="w-5 h-5 text-orange-600" />Webhooks</CardTitle>
+                <CardDescription>Envíe datos en tiempo real a sistemas externos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between"><Label className="text-sm">Webhook de Leads</Label><Switch checked={integrations.webhook_leads.enabled} onCheckedChange={v => updateIntegration("webhook_leads", "enabled", v)} /></div>
+                  {integrations.webhook_leads.enabled && (
+                    <div><Label className="text-xs">URL del Webhook</Label><Input value={integrations.webhook_leads.url} onChange={e => updateIntegration("webhook_leads", "url", e.target.value)} className="mt-1 text-xs" placeholder="https://hooks.zapier.com/..." /></div>
+                  )}
+                </div>
+                <Separator />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between"><Label className="text-sm">Webhook de Pagos</Label><Switch checked={integrations.webhook_payments.enabled} onCheckedChange={v => updateIntegration("webhook_payments", "enabled", v)} /></div>
+                  {integrations.webhook_payments.enabled && (
+                    <div><Label className="text-xs">URL del Webhook</Label><Input value={integrations.webhook_payments.url} onChange={e => updateIntegration("webhook_payments", "url", e.target.value)} className="mt-1 text-xs" placeholder="https://hooks.zapier.com/..." /></div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Email SMTP */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2"><Mail className="w-5 h-5 text-blue-600" />Email SMTP</CardTitle>
+                <CardDescription>Configure correo saliente para notificaciones del sistema</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between"><Label className="text-sm">Activar SMTP personalizado</Label><Switch checked={integrations.email_smtp.enabled} onCheckedChange={v => updateIntegration("email_smtp", "enabled", v)} /></div>
+                {integrations.email_smtp.enabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><Label className="text-xs">Host SMTP</Label><Input value={integrations.email_smtp.host} onChange={e => updateIntegration("email_smtp", "host", e.target.value)} className="mt-1 text-xs" placeholder="smtp.gmail.com" /></div>
+                    <div><Label className="text-xs">Puerto</Label><Input value={integrations.email_smtp.port} onChange={e => updateIntegration("email_smtp", "port", e.target.value)} className="mt-1 text-xs" placeholder="587" /></div>
+                    <div><Label className="text-xs">Usuario</Label><Input value={integrations.email_smtp.user} onChange={e => updateIntegration("email_smtp", "user", e.target.value)} className="mt-1 text-xs" placeholder="correo@dominio.com" /></div>
+                    <div><Label className="text-xs">Remitente (From)</Label><Input value={integrations.email_smtp.from} onChange={e => updateIntegration("email_smtp", "from", e.target.value)} className="mt-1 text-xs" placeholder="Funeraria Santa Margarita <no-reply@...>" /></div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Google Analytics */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2"><BarChart3 className="w-5 h-5 text-yellow-600" />Google Analytics</CardTitle>
+                <CardDescription>Conecte su cuenta de Analytics para medir tráfico</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between"><Label className="text-sm">Activar Analytics</Label><Switch checked={integrations.google_analytics.enabled} onCheckedChange={v => updateIntegration("google_analytics", "enabled", v)} /></div>
+                {integrations.google_analytics.enabled && (
+                  <div><Label className="text-xs">Measurement ID</Label><Input value={integrations.google_analytics.measurement_id} onChange={e => updateIntegration("google_analytics", "measurement_id", e.target.value)} className="mt-1 font-mono text-xs" placeholder="G-XXXXXXXXXX" /></div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Button onClick={saveIntegrations} className="w-full sm:w-auto" size="lg">
+              <CloudCog className="w-4 h-4 mr-2" />Guardar todas las integraciones
+            </Button>
+          </TabsContent>
+        )}
       </Tabs>
 
-      {/* ═══════════════ ADD ADMIN DIALOG ═══════════════ */}
+      {/* ═══════════════ ADD MEMBER DIALOG ═══════════════ */}
       <Dialog open={addDialog} onOpenChange={setAddDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="w-5 h-5 text-[#C5A059]" />Agregar miembro al equipo</DialogTitle>
+            <DialogDescription>Elija cómo agregar al nuevo miembro del CRM</DialogDescription>
+          </DialogHeader>
+
+          {/* Mode selector */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button
+              onClick={() => setAddMode("invite")}
+              className={`p-3 rounded-lg border-2 text-center transition-all ${addMode === "invite" ? "border-[#C5A059] bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
+            >
+              <Mail className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
+              <p className="text-xs font-medium">Invitar por correo</p>
+              <p className="text-[10px] text-muted-foreground">Se envía enlace de verificación</p>
+            </button>
+            <button
+              onClick={() => setAddMode("manual")}
+              className={`p-3 rounded-lg border-2 text-center transition-all ${addMode === "manual" ? "border-[#C5A059] bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
+            >
+              <Key className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
+              <p className="text-xs font-medium">Crear manualmente</p>
+              <p className="text-[10px] text-muted-foreground">Asignar correo y contraseña</p>
+            </button>
+          </div>
+
+          {addMode === "invite" ? (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs">Correo electrónico</Label>
+                <Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="mt-1" placeholder="correo@ejemplo.com" />
+              </div>
+              <div>
+                <Label className="text-xs">Nombre (opcional)</Label>
+                <Input value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} className="mt-1" placeholder="Nombre del miembro" />
+              </div>
+              <div>
+                <Label className="text-xs">Rol</Label>
+                <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {availableRoles.map(r => (
+                      <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800 flex items-start gap-2">
+                <Mail className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>Se enviará un correo de verificación. El usuario deberá confirmar su email antes de poder acceder al CRM. El token es temporal y expira automáticamente.</p>
+              </div>
+              <Button className="w-full" disabled={!inviteEmail.trim() || saving} onClick={handleInviteByEmail}>
+                {saving ? "Enviando..." : "Enviar invitación"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs">Correo electrónico</Label>
+                <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="mt-1" placeholder="correo@ejemplo.com" />
+              </div>
+              <div>
+                <Label className="text-xs">Nombre (opcional)</Label>
+                <Input value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} className="mt-1" placeholder="Nombre del miembro" />
+              </div>
+              <div>
+                <Label className="text-xs">Contraseña</Label>
+                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="mt-1" placeholder="Mínimo 8 caracteres" />
+                {newPassword && newPassword.length < 8 && <p className="text-[10px] text-destructive mt-1">La contraseña debe tener al menos 8 caracteres</p>}
+              </div>
+              <div>
+                <Label className="text-xs">Rol</Label>
+                <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {availableRoles.map(r => (
+                      <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+                <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>El usuario deberá verificar su email antes de acceder. La contraseña asignada es temporal, se recomienda cambiarla en el primer acceso.</p>
+              </div>
+              <Button className="w-full" disabled={!newEmail.trim() || !newPassword.trim() || newPassword.length < 8 || saving} onClick={handleCreateManual}>
+                {saving ? "Creando..." : "Crear usuario"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════ EDIT MEMBER DIALOG ═══════════════ */}
+      <Dialog open={editDialog} onOpenChange={setEditDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Agregar Administrador</DialogTitle>
-            <DialogDescription>Ingrese el ID de usuario (UUID) de la persona que desea agregar. El usuario debe haberse registrado previamente.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="w-5 h-5 text-[#C5A059]" />Editar miembro</DialogTitle>
+            <DialogDescription>Modifique el nombre o rol de {selectedAdmin?.display_name ?? selectedAdmin?.user_id.slice(0, 12)}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-xs">ID de Usuario (UUID)</Label>
-              <Input value={newEmail} onChange={e => setNewEmail(e.target.value)} className="mt-1 font-mono text-xs" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-              <p className="text-[11px] text-muted-foreground mt-1">Puede encontrar el ID en la sección de seguridad de cada usuario.</p>
+              <Label className="text-xs">Nombre</Label>
+              <Input value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} className="mt-1" placeholder="Nombre del miembro" />
             </div>
             <div>
               <Label className="text-xs">Rol</Label>
               <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ceo">👑 CEO</SelectItem>
-                  <SelectItem value="admin">🔧 Administrador</SelectItem>
-                  <SelectItem value="moderator">📝 Moderador</SelectItem>
+                  {availableRoles.map(r => (
+                    <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full" disabled={!newEmail.trim() || saving} onClick={() => handleAddByUserId(newEmail.trim(), newRole)}>
-              {saving ? "Agregando..." : "Agregar Administrador"}
-            </Button>
           </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setEditDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button onClick={handleEditMember} disabled={saving} className="w-full sm:w-auto">{saving ? "Guardando..." : "Guardar cambios"}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

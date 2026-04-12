@@ -298,7 +298,6 @@ export default function AdminBlog() {
       {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing.id ? "Editar Artículo" : "Nuevo Artículo"}</DialogTitle>
           </DialogHeader>

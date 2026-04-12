@@ -222,7 +222,7 @@ export default function AdminLeads() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="inmediata">🔴 Inmediata</SelectItem>
+              <SelectItem value="inmediata">🔴 Urgente</SelectItem>
               <SelectItem value="normal">🔵 Normal</SelectItem>
               <SelectItem value="previsión">🟢 Previsión</SelectItem>
             </SelectContent>
@@ -371,7 +371,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
         <p className="font-medium text-sm leading-tight flex-1">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
           <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
-            {lead.urgency}
+            {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
       </div>
@@ -425,7 +425,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
         {lead.urgency && (
           <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
-            {lead.urgency}
+            {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
       </div>
@@ -478,7 +478,7 @@ function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSel
                 <div className="text-muted-foreground">{lead.phone}</div>
               </td>
               <td className="p-3">
-                {lead.urgency && <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">{lead.urgency}</Badge>}
+                {lead.urgency && <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">{URGENCY_LABELS[lead.urgency] ?? lead.urgency}</Badge>}
               </td>
               <td className="p-3">
                 <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>

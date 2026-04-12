@@ -88,6 +88,38 @@ export default function AdminSettings() {
     };
   });
 
+  /* ── Audit Log State ── */
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditPage, setAuditPage] = useState(0);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditModuleFilter, setAuditModuleFilter] = useState("all");
+  const AUDIT_PER_PAGE = 20;
+
+  const loadAuditLogs = useCallback(async (page = 0, search = "", moduleFilter = "all") => {
+    setAuditLoading(true);
+    let query = supabase.from("audit_logs").select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(page * AUDIT_PER_PAGE, (page + 1) * AUDIT_PER_PAGE - 1);
+
+    if (search) {
+      query = query.or(`description.ilike.%${search}%,user_email.ilike.%${search}%,action.ilike.%${search}%`);
+    }
+    if (moduleFilter !== "all") {
+      query = query.eq("module", moduleFilter);
+    }
+
+    const { data, count } = await query;
+    setAuditLogs(data ?? []);
+    setAuditTotal(count ?? 0);
+    setAuditLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadAuditLogs(auditPage, auditSearch, auditModuleFilter);
+  }, [auditPage, auditSearch, auditModuleFilter, loadAuditLogs]);
+
   /* ── Load admins ── */
   const loadAdmins = async () => {
     setLoadingAdmins(true);

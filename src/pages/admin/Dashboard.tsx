@@ -198,7 +198,7 @@ export default function Dashboard() {
                 data={pipelineData}
                 layout="vertical"
                 margin={{ left: 20 }}
-                onClick={(data) => {
+                onClick={(data: any) => {
                   if (data?.activePayload?.[0]?.payload?.stageId) {
                     navigate(`/admin/leads?stage=${data.activePayload[0].payload.stageId}`);
                   }

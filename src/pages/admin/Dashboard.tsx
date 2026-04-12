@@ -46,6 +46,12 @@ const URGENCY_COLORS: Record<string, string> = {
   "previsión": "#22c55e",
 };
 
+const URGENCY_LABELS: Record<string, string> = {
+  inmediata: "Urgente",
+  normal: "Normal",
+  "previsión": "Previsión",
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
@@ -250,7 +256,7 @@ export default function Dashboard() {
                   innerRadius={50}
                   outerRadius={80}
                   paddingAngle={4}
-                  label={({ name, value }) => `${name}: ${value}`}
+                  label={({ name, value }) => `${URGENCY_LABELS[name] ?? name}: ${value}`}
                   onClick={(data) => {
                     if (data?.name) {
                       navigate(`/admin/leads?urgency=${data.name}`);

@@ -175,7 +175,7 @@ export default function NotificationCenter() {
             <p className="text-xs text-muted-foreground p-4 text-center">
               {activeFilter === "all" ? "Sin notificaciones" : `Sin notificaciones de tipo "${FILTERS.find(f => f.key === activeFilter)?.label}"`}
             </p>
-          ) : notifications.map(n => {
+          ) : filtered.map(n => {
             const urgent = isUrgent(n);
             return (
               <div

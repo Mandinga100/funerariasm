@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { format, subDays, differenceInHours } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
+import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface Stats {
@@ -19,6 +19,9 @@ interface Stats {
   pendingPayments: number;
   totalRevenue: number;
   overdueLeads: number;
+  conversionRate: number;
+  avgDealValue: number;
+  avgResponseTimeMin: number;
 }
 
 interface LeadByStage {
@@ -30,6 +33,13 @@ interface LeadByStage {
 interface LeadByDay {
   date: string;
   count: number;
+}
+
+interface MonthlyData {
+  month: string;
+  leads: number;
+  converted: number;
+  revenue: number;
 }
 
 const PIPELINE_LABELS: Record<string, string> = {
@@ -54,36 +64,75 @@ const URGENCY_LABELS: Record<string, string> = {
   "previsión": "Previsión",
 };
 
+function formatMinutes(mins: number): string {
+  if (mins < 60) return `${Math.round(mins)}min`;
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     obituaries: 0, memorials: 0, totalLeads: 0, newLeads: 0,
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
-    totalRevenue: 0, overdueLeads: 0,
+    totalRevenue: 0, overdueLeads: 0, conversionRate: 0,
+    avgDealValue: 0, avgResponseTimeMin: 0,
   });
   const [pipelineData, setPipelineData] = useState<LeadByStage[]>([]);
   const [leadsTimeline, setLeadsTimeline] = useState<LeadByDay[]>([]);
   const [urgencyData, setUrgencyData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [conversionTrend, setConversionTrend] = useState<{ month: string; rate: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [o, m, leads, c, payments] = await Promise.all([
+      const [o, m, leads, c, payments, activities] = await Promise.all([
         supabase.from("obituaries").select("id", { count: "exact", head: true }),
         supabase.from("memorials").select("id", { count: "exact", head: true }),
-        supabase.from("contact_leads").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("contact_leads").select("*").order("created_at", { ascending: false }).limit(1000),
         supabase.from("condolences").select("id", { count: "exact", head: true }),
-        supabase.from("payment_transactions").select("amount, status"),
+        supabase.from("payment_transactions").select("amount, status, created_at"),
+        supabase.from("lead_activities").select("lead_id, created_at, activity_type").eq("activity_type", "pipeline_change").order("created_at", { ascending: true }).limit(1000),
       ]);
 
       const allLeads = leads.data ?? [];
       const allPayments = payments.data ?? [];
+      const allActivities = activities.data ?? [];
 
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;
       const contactedLeads = allLeads.filter(l => l.pipeline_stage === "contactado").length;
       const pendingPayments = allPayments.filter(p => ["initiated", "pending_verification"].includes(p.status)).length;
-      const totalRevenue = allPayments.filter(p => p.status === "verified").reduce((s, p) => s + (p.amount || 0), 0);
+      const verifiedPayments = allPayments.filter(p => p.status === "verified");
+      const totalRevenue = verifiedPayments.reduce((s, p) => s + (p.amount || 0), 0);
+
+      // Conversion rate: leads that reached "contratado" or "cerrado"
+      const convertedLeads = allLeads.filter(l => ["contratado", "cerrado"].includes(l.pipeline_stage ?? ""));
+      const conversionRate = allLeads.length > 0 ? (convertedLeads.length / allLeads.length) * 100 : 0;
+
+      // Average deal value
+      const avgDealValue = verifiedPayments.length > 0 ? totalRevenue / verifiedPayments.length : 0;
+
+      // Average response time: time from lead creation to first activity
+      const firstActivityByLead: Record<string, string> = {};
+      allActivities.forEach(a => {
+        if (!firstActivityByLead[a.lead_id]) {
+          firstActivityByLead[a.lead_id] = a.created_at;
+        }
+      });
+      const responseTimes: number[] = [];
+      allLeads.forEach(l => {
+        const firstActivity = firstActivityByLead[l.id];
+        if (firstActivity) {
+          const mins = differenceInMinutes(new Date(firstActivity), new Date(l.created_at));
+          if (mins >= 0 && mins < 10080) responseTimes.push(mins); // max 1 week
+        }
+      });
+      const avgResponseTimeMin = responseTimes.length > 0
+        ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+        : 0;
 
       const now = new Date();
       const overdueLeads = allLeads.filter(l => {
@@ -105,6 +154,9 @@ export default function Dashboard() {
         pendingPayments,
         totalRevenue,
         overdueLeads,
+        conversionRate,
+        avgDealValue,
+        avgResponseTimeMin,
       });
 
       const stages = ["nuevo", "contactado", "cotizado", "contratado", "cerrado"];
@@ -123,6 +175,38 @@ export default function Dashboard() {
         timeline.push({ date: label, count });
       }
       setLeadsTimeline(timeline);
+
+      // Monthly data (last 6 months)
+      const monthly: MonthlyData[] = [];
+      const convTrend: { month: string; rate: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        const monthLabel = format(monthDate, "MMM yy", { locale: es });
+
+        const monthLeads = allLeads.filter(l => {
+          const d = new Date(l.created_at);
+          return d >= monthStart && d <= monthEnd;
+        });
+        const monthConverted = monthLeads.filter(l => ["contratado", "cerrado"].includes(l.pipeline_stage ?? ""));
+        const monthRevenue = allPayments
+          .filter(p => p.status === "verified" && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd)
+          .reduce((s, p) => s + (p.amount || 0), 0);
+
+        monthly.push({
+          month: monthLabel,
+          leads: monthLeads.length,
+          converted: monthConverted.length,
+          revenue: monthRevenue,
+        });
+        convTrend.push({
+          month: monthLabel,
+          rate: monthLeads.length > 0 ? Math.round((monthConverted.length / monthLeads.length) * 100) : 0,
+        });
+      }
+      setMonthlyData(monthly);
+      setConversionTrend(convTrend);
 
       const urgencyCounts: Record<string, number> = {};
       allLeads.forEach(l => {
@@ -148,16 +232,22 @@ export default function Dashboard() {
     { label: "Leads Vencidos", value: stats.overdueLeads, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/admin/leads?filter=overdue" },
     { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
     { label: "Ingresos Verificados", value: `$${(stats.totalRevenue).toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos?status=confirmed" },
+    { label: "Tasa Conversión", value: `${stats.conversionRate.toFixed(1)}%`, icon: Percent, color: "text-purple-600", bg: "bg-purple-50", link: "/admin/leads" },
+    { label: "Valor Promedio", value: `$${Math.round(stats.avgDealValue).toLocaleString("es-CL")}`, icon: Banknote, color: "text-teal-600", bg: "bg-teal-50", link: "/admin/pagos" },
+    { label: "Tiempo Respuesta", value: formatMinutes(stats.avgResponseTimeMin), icon: Timer, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/leads" },
+    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/leads" },
+  ];
+
+  const secondaryKpis = [
     { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50", link: "/admin/obituarios" },
     { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/memoriales" },
-    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/leads" },
     { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/memoriales" },
   ];
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h1 className="text-xl sm:text-2xl font-bold">Panel CRM</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Panel de Analíticas</h1>
         {stats.overdueLeads > 0 && (
           <Badge
             variant="destructive"
@@ -169,8 +259,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* KPIs - clickable */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Primary KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {kpis.map(k => (
           <Card
             key={k.label}
@@ -179,11 +269,11 @@ export default function Dashboard() {
           >
             <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className={cn("p-1.5 sm:p-2 rounded-lg transition-colors", k.bg)}>
+                <div className={cn("p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0", k.bg)}>
                   <k.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", k.color)} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg sm:text-2xl font-bold leading-none">{k.value}</p>
+                  <p className="text-base sm:text-2xl font-bold leading-none truncate">{k.value}</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{k.label}</p>
                 </div>
               </div>
@@ -192,15 +282,122 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pipeline Funnel - clickable bars */}
-        <Card className="lg:col-span-1">
+      {/* Secondary KPIs */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {secondaryKpis.map(k => (
+          <Card
+            key={k.label}
+            className="hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => navigate(k.link)}
+          >
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={cn("p-1.5 sm:p-2 rounded-lg flex-shrink-0", k.bg)}>
+                  <k.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", k.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base sm:text-xl font-bold leading-none">{k.value}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{k.label}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Leads por Mes + Ingresos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-muted-foreground" />
+              Leads por Mes (últimos 6 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={monthlyData} margin={{ left: 0, right: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    value,
+                    name === "leads" ? "Total Leads" : "Convertidos"
+                  ]}
+                />
+                <Legend
+                  formatter={(value) => value === "leads" ? "Total" : "Convertidos"}
+                  wrapperStyle={{ fontSize: 12 }}
+                />
+                <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="converted" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              Ingresos Mensuales (CLP)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={monthlyData} margin={{ left: 10, right: 0 }}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  formatter={(value: number) => [`$${value.toLocaleString("es-CL")}`, "Ingresos"]}
+                />
+                <Area type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2} fill="url(#revenueGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tasa de Conversión + Tiempo de Respuesta visual */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Percent className="w-4 h-4 text-muted-foreground" />
+              Tasa de Conversión Mensual
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={conversionTrend} margin={{ left: 0, right: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} domain={[0, 'auto']} />
+                <Tooltip formatter={(value: number) => [`${value}%`, "Conversión"]} />
+                <Line type="monotone" dataKey="rate" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4, fill: "#8b5cf6" }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Pipeline + Urgency side by side on this row */}
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Pipeline de Leads</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart
                 data={pipelineData}
                 layout="vertical"
@@ -214,25 +411,27 @@ export default function Dashboard() {
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="stage" type="category" width={80} tick={{ fontSize: 12 }} />
+                <YAxis dataKey="stage" type="category" width={80} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Leads Timeline */}
-        <Card className="lg:col-span-1">
+      {/* Timeline + Urgency */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Leads Últimos 14 Días</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={240}>
               <LineChart data={leadsTimeline}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis />
+                <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
@@ -240,13 +439,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Urgency Distribution - clickable */}
-        <Card className="lg:col-span-1">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Distribución por Urgencia</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
                   data={urgencyData}
@@ -276,7 +474,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recent Leads - clickable */}
+      {/* Recent Leads */}
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Leads Recientes</CardTitle>

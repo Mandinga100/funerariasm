@@ -94,6 +94,7 @@ export default function NotificationCenter() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const urgentUnread = notifications.filter(n => !n.read && isUrgent(n)).length;
+  const filtered = notifications.filter(n => matchesFilter(n, activeFilter));
 
   const typeIcons: Record<string, string> = {
     new_lead: "🔵",

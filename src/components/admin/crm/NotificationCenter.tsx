@@ -16,6 +16,7 @@ interface Notification {
   message: string | null;
   type: string;
   reference_type: string | null;
+  reference_id: string | null;
   read: boolean;
   created_at: string;
 }

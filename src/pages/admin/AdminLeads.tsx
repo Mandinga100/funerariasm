@@ -129,15 +129,18 @@ export default function AdminLeads() {
     const now = new Date();
     const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
-      if (filterUrgency !== "all" && l.urgency !== filterUrgency) return false;
+      if (filterUrgency !== "all") {
+        const normalizedUrgency = l.urgency === "immediate" ? "inmediata" : l.urgency;
+        if (normalizedUrgency !== filterUrgency) return false;
+      }
       // In kanban mode, don't filter by stage — all stages are visible as columns
       if (!isKanban && filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
       if (filterOverdue) {
         if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
         const hours = differenceInHours(now, new Date(l.created_at));
-        if (l.urgency === "inmediata" && hours < 2) return false;
+        if ((l.urgency === "inmediata" || l.urgency === "immediate") && hours < 2) return false;
         if (l.urgency === "normal" && hours < 24) return false;
-        if (l.urgency !== "inmediata" && l.urgency !== "normal" && hours < 72) return false;
+        if (l.urgency !== "inmediata" && l.urgency !== "immediate" && l.urgency !== "normal" && hours < 72) return false;
       }
       return true;
     });

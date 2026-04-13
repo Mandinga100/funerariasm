@@ -323,15 +323,24 @@ export default function Dashboard() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl sm:text-2xl font-bold">Panel de Analíticas</h1>
-        {stats.overdueLeads > 0 && (
-          <Badge
-            variant="destructive"
-            className="animate-pulse cursor-pointer self-start sm:self-auto"
-            onClick={() => navigate("/admin/leads?filter=overdue")}
-          >
-            ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
-          </Badge>
-        )}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {stats.overdueLeads > 0 && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse cursor-pointer"
+              onClick={() => navigate("/admin/leads?filter=overdue")}
+            >
+              ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
+            </Badge>
+          )}
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />}
+            Exportar PDF
+          </Button>
+        </div>
+      </div>
+
+      <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
       </div>
 
       {/* Primary KPIs */}

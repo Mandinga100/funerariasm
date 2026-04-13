@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, AlertTriangle, Briefcase, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, AlertTriangle, Briefcase, ChevronLeft, ChevronRight, FileDown, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";

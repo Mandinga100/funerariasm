@@ -95,6 +95,36 @@ export default function Dashboard() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const generateAiSummary = async () => {
+    setAiLoading(true);
+    setAiSummary("");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-executive-summary", {
+        body: {
+          stats,
+          monthlyData,
+          pipelineData,
+          urgencyData,
+          dateRange: {
+            from: dateFrom ? format(dateFrom, "dd/MM/yyyy") : null,
+            to: dateTo ? format(dateTo, "dd/MM/yyyy") : null,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setAiSummary(data.summary);
+      toast.success("Resumen ejecutivo generado");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al generar resumen");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleExportPDF = async () => {
     if (!dashboardRef.current) return;

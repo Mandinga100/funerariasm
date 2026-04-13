@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
-import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface Stats {
@@ -89,6 +91,8 @@ export default function Dashboard() {
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [conversionTrend, setConversionTrend] = useState<{ month: string; rate: number }[]>([]);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const handleExportPDF = async () => {
@@ -173,8 +177,19 @@ export default function Dashboard() {
         supabase.from("lead_activities").select("lead_id, created_at, activity_type").eq("activity_type", "pipeline_change").order("created_at", { ascending: true }).limit(1000),
       ]);
 
-      const allLeads = leads.data ?? [];
-      const allPayments = payments.data ?? [];
+      const rangeStart = dateFrom ? startOfDay(dateFrom) : undefined;
+      const rangeEnd = dateTo ? endOfDay(dateTo) : undefined;
+
+      const filterByRange = (dateStr: string) => {
+        if (!rangeStart && !rangeEnd) return true;
+        const d = new Date(dateStr);
+        if (rangeStart && d < rangeStart) return false;
+        if (rangeEnd && d > rangeEnd) return false;
+        return true;
+      };
+
+      const allLeads = (leads.data ?? []).filter(l => filterByRange(l.created_at));
+      const allPayments = (payments.data ?? []).filter(p => filterByRange(p.created_at));
       const allActivities = activities.data ?? [];
 
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;
@@ -296,7 +311,7 @@ export default function Dashboard() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [dateFrom, dateTo]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
@@ -338,6 +353,43 @@ export default function Dashboard() {
             Exportar PDF
           </Button>
         </div>
+      </div>
+
+      {/* Date Range Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs sm:text-sm", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Desde"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" disabled={(d) => dateTo ? d > dateTo : false} />
+          </PopoverContent>
+        </Popover>
+        <span className="text-xs text-muted-foreground">—</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs sm:text-sm", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+              {dateTo ? format(dateTo, "dd/MM/yyyy") : "Hasta"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" disabled={(d) => dateFrom ? d < dateFrom : false} />
+          </PopoverContent>
+        </Popover>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 7)); setDateTo(new Date()); }}>7d</Button>
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 30)); setDateTo(new Date()); }}>30d</Button>
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 90)); setDateTo(new Date()); }}>90d</Button>
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2 text-muted-foreground" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+            <RotateCcw className="w-3 h-3 mr-1" /> Limpiar
+          </Button>
+        )}
       </div>
 
       <div ref={dashboardRef} className="space-y-4 sm:space-y-6">

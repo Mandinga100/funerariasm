@@ -355,6 +355,43 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Date Range Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs sm:text-sm", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Desde"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" disabled={(d) => dateTo ? d > dateTo : false} />
+          </PopoverContent>
+        </Popover>
+        <span className="text-xs text-muted-foreground">—</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs sm:text-sm", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+              {dateTo ? format(dateTo, "dd/MM/yyyy") : "Hasta"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" disabled={(d) => dateFrom ? d < dateFrom : false} />
+          </PopoverContent>
+        </Popover>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 7)); setDateTo(new Date()); }}>7d</Button>
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 30)); setDateTo(new Date()); }}>30d</Button>
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2" onClick={() => { setDateFrom(subDays(new Date(), 90)); setDateTo(new Date()); }}>90d</Button>
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs h-8 px-2 text-muted-foreground" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+            <RotateCcw className="w-3 h-3 mr-1" /> Limpiar
+          </Button>
+        )}
+      </div>
+
       <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
 
       {/* Primary KPIs */}

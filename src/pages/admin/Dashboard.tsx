@@ -101,8 +101,11 @@ export default function Dashboard() {
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
     totalRevenue: 0, overdueLeads: 0, conversionRate: 0,
     avgDealValue: 0, avgResponseTimeMin: 0,
+    totalCases: 0, casesRevenue: 0, leadToCaseRate: 0,
   });
   const [pipelineData, setPipelineData] = useState<LeadByStage[]>([]);
+  const [casesStageData, setCasesStageData] = useState<CasesByStage[]>([]);
+  const [casesPaymentData, setCasesPaymentData] = useState<CasesByPayment[]>([]);
   const [leadsTimeline, setLeadsTimeline] = useState<LeadByDay[]>([]);
   const [urgencyData, setUrgencyData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);

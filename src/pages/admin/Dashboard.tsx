@@ -75,6 +75,8 @@ function formatMinutes(mins: number): string {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Stats>({
     obituaries: 0, memorials: 0, totalLeads: 0, newLeads: 0,
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
@@ -88,6 +90,77 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [conversionTrend, setConversionTrend] = useState<{ month: string; rate: number }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    setExporting(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+
+      const pdf = new jsPDF({ orientation: imgW > imgH ? "l" : "p", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableW = pageW - margin * 2;
+      const scaledH = (imgH * usableW) / imgW;
+
+      // Header
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Funeraria Santa Margarita — Reporte de Analíticas", margin, 12);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: es })}`, margin, 18);
+      pdf.line(margin, 20, pageW - margin, 20);
+
+      const startY = 24;
+      const availH = pageH - startY - margin;
+
+      if (scaledH <= availH) {
+        pdf.addImage(imgData, "JPEG", margin, startY, usableW, scaledH);
+      } else {
+        // Multi-page
+        let srcY = 0;
+        let page = 0;
+        while (srcY < imgH) {
+          const sliceH = Math.min(imgH - srcY, (availH * imgW) / usableW);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = imgW;
+          sliceCanvas.height = sliceH;
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, srcY, imgW, sliceH, 0, 0, imgW, sliceH);
+
+          const sliceImg = sliceCanvas.toDataURL("image/jpeg", 0.95);
+          const sliceRenderedH = (sliceH * usableW) / imgW;
+
+          if (page > 0) pdf.addPage();
+          pdf.addImage(sliceImg, "JPEG", margin, page === 0 ? startY : margin, usableW, sliceRenderedH);
+          srcY += sliceH;
+          page++;
+        }
+      }
+
+      pdf.save(`reporte-analiticas-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      toast.success("Reporte PDF descargado exitosamente");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al generar el PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {

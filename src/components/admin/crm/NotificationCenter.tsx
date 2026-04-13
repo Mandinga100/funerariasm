@@ -140,9 +140,41 @@ export default function NotificationCenter() {
             </Button>
           )}
         </div>
-        <div className="max-h-[360px] overflow-y-auto">
-          {notifications.length === 0 ? (
-            <p className="text-xs text-muted-foreground p-4 text-center">Sin notificaciones</p>
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b overflow-x-auto">
+          {FILTERS.map(f => {
+            const count = notifications.filter(n => matchesFilter(n, f.key)).length;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setActiveFilter(f.key)}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] whitespace-nowrap transition-colors",
+                  activeFilter === f.key
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <span>{f.icon}</span>
+                <span>{f.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-0.5 text-[9px] rounded-full px-1 min-w-[16px] text-center",
+                    activeFilter === f.key ? "bg-primary/20" : "bg-muted"
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="max-h-[320px] overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-muted-foreground p-4 text-center">
+              {activeFilter === "all" ? "Sin notificaciones" : `Sin notificaciones de tipo "${FILTERS.find(f => f.key === activeFilter)?.label}"`}
+            </p>
           ) : notifications.map(n => {
             const urgent = isUrgent(n);
             return (

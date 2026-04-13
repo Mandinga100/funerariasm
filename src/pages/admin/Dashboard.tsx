@@ -91,6 +91,8 @@ export default function Dashboard() {
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [conversionTrend, setConversionTrend] = useState<{ month: string; rate: number }[]>([]);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const handleExportPDF = async () => {

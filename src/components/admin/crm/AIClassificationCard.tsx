@@ -109,7 +109,7 @@ interface Props {
 }
 
 export default function AIClassificationCard({ classification: c, planName }: Props) {
-  const urgency = urgencyMap[c.suggested_urgency ?? ""] ?? { label: c.suggested_urgency, emoji: "❓", color: "bg-muted" };
+  const urgency = urgencyMap[c.suggested_urgency ?? ""] ?? { label: c.suggested_urgency, emoji: "❓", color: "bg-gray-700 text-white border-gray-700 hover:bg-gray-700 hover:text-white" };
   const intent = intentMap[c.intent ?? ""] ?? { label: c.intent, emoji: "❓" };
   const channel = channelMap[c.recommended_channel ?? ""];
   const emotional = emotionalMap[c.emotional_context ?? ""];

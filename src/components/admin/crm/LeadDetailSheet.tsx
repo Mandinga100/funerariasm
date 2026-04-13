@@ -232,7 +232,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Análisis IA</label>
               <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={classifyWithAI} disabled={classifying}>
-                <Sparkles className="w-3 h-3 mr-1" />{classifying ? "Analizando..." : "Analizar"}
+                <Sparkles className="w-3 h-3 mr-1" />{classifying ? "Analizando..." : localClassification ? "Re-analizar" : "Analizar"}
               </Button>
             </div>
             {localClassification ? (

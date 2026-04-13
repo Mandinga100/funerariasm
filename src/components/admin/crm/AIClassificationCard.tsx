@@ -15,11 +15,15 @@ interface Classification {
 }
 
 const urgencyMap: Record<string, { label: string; emoji: string; color: string }> = {
-  immediate: { label: "Atención inmediata", emoji: "❗", color: "bg-black text-white border-black hover:bg-black" },
-  inmediata: { label: "Atención inmediata", emoji: "❗", color: "bg-black text-white border-black hover:bg-black" },
-  normal: { label: "Prioridad normal", emoji: "🔵", color: "bg-blue-100 text-blue-800 border-blue-300" },
-  "previsión": { label: "Planificación futura", emoji: "🌿", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
-  prevision: { label: "Planificación futura", emoji: "🌿", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  immediate: { label: "Atención inmediata", emoji: "❗", color: "bg-black text-white border-black hover:bg-black hover:text-white" },
+  inmediata: { label: "Atención inmediata", emoji: "❗", color: "bg-black text-white border-black hover:bg-black hover:text-white" },
+  normal: { label: "Prioridad normal", emoji: "🔵", color: "bg-blue-700 text-white border-blue-700 hover:bg-blue-700 hover:text-white" },
+  "previsión": { label: "Planificación futura", emoji: "🌿", color: "bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-700 hover:text-white" },
+  prevision: { label: "Planificación futura", emoji: "🌿", color: "bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-700 hover:text-white" },
+  alta: { label: "Prioridad alta", emoji: "🔴", color: "bg-red-700 text-white border-red-700 hover:bg-red-700 hover:text-white" },
+  high: { label: "Prioridad alta", emoji: "🔴", color: "bg-red-700 text-white border-red-700 hover:bg-red-700 hover:text-white" },
+  baja: { label: "Prioridad baja", emoji: "🟢", color: "bg-green-700 text-white border-green-700 hover:bg-green-700 hover:text-white" },
+  low: { label: "Prioridad baja", emoji: "🟢", color: "bg-green-700 text-white border-green-700 hover:bg-green-700 hover:text-white" },
 };
 
 const intentMap: Record<string, { label: string; emoji: string }> = {
@@ -105,7 +109,7 @@ interface Props {
 }
 
 export default function AIClassificationCard({ classification: c, planName }: Props) {
-  const urgency = urgencyMap[c.suggested_urgency ?? ""] ?? { label: c.suggested_urgency, emoji: "❓", color: "bg-muted" };
+  const urgency = urgencyMap[c.suggested_urgency ?? ""] ?? { label: c.suggested_urgency, emoji: "❓", color: "bg-gray-700 text-white border-gray-700 hover:bg-gray-700 hover:text-white" };
   const intent = intentMap[c.intent ?? ""] ?? { label: c.intent, emoji: "❓" };
   const channel = channelMap[c.recommended_channel ?? ""];
   const emotional = emotionalMap[c.emotional_context ?? ""];
@@ -163,7 +167,7 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
             <InfoChip emoji="💎" label="Valor estimado" value={fmt(c.estimated_value!)} />
           )}
           {c.sla_hours != null && (
-            <InfoChip emoji="⏱️" label="SLA máximo" value={`${c.sla_hours}h`} />
+            <InfoChip emoji="⏱️" label="Tiempo máx. de respuesta" value={`${c.sla_hours}h`} />
           )}
         </div>
 

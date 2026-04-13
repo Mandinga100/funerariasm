@@ -68,7 +68,7 @@ export default function AdminLayout() {
     return () => {
       void supabase.removeChannel(urgentChannel);
     };
-  }, [user?.id, toast]);
+  }, [user?.id, toast, playUrgentAlert]);
 
   useEffect(() => {
     setMobileOpen(false);

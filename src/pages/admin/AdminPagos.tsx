@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function AdminPagos() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Transaction | null>(null);
@@ -73,6 +75,20 @@ export default function AdminPagos() {
   });
   const { toast } = useToast();
   const { playNotification } = useNotificationSound();
+
+  // Auto-open transaction from notification link
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId && transactions.length > 0) {
+      const found = transactions.find(t => t.id === openId);
+      if (found) {
+        setSelected(found);
+        const next = new URLSearchParams(searchParams);
+        next.delete("open");
+        setSearchParams(next, { replace: true });
+      }
+    }
+  }, [transactions, searchParams]);
 
   const load = async () => {
     const { data } = await supabase

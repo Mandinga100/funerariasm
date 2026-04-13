@@ -86,7 +86,7 @@ export default function NotificationCenter() {
       return `/admin/leads?open=${n.reference_id}`;
     }
     if (n.reference_type === "payment" || n.type === "payment") {
-      return `/admin/pagos`;
+      return `/admin/pagos${n.reference_id ? `?open=${n.reference_id}` : ""}`;
     }
     return null;
   };

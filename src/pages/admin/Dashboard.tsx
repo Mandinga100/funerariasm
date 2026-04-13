@@ -218,13 +218,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     const load = async () => {
-      const [o, m, leads, c, payments, activities] = await Promise.all([
+      const [o, m, leads, c, payments, activities, casesRes] = await Promise.all([
         supabase.from("obituaries").select("id", { count: "exact", head: true }),
         supabase.from("memorials").select("id", { count: "exact", head: true }),
         supabase.from("contact_leads").select("*").order("created_at", { ascending: false }).limit(1000),
         supabase.from("condolences").select("id", { count: "exact", head: true }),
         supabase.from("payment_transactions").select("amount, status, created_at"),
         supabase.from("lead_activities").select("lead_id, created_at, activity_type").eq("activity_type", "pipeline_change").order("created_at", { ascending: true }).limit(1000),
+        supabase.from("service_cases").select("*").order("created_at", { ascending: false }).limit(1000),
       ]);
 
       const rangeStart = dateFrom ? startOfDay(dateFrom) : undefined;

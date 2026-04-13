@@ -198,6 +198,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     }
   };
 
+  const urgencyLabels: Record<string, string> = {
+    immediate: "Inmediato",
+    inmediata: "Inmediato",
+    normal: "Normal",
+    alta: "Alta",
+    high: "Alta",
+    baja: "Baja",
+    low: "Baja",
+    "previsión": "Previsión",
+    prevision: "Previsión",
+  };
+
   if (!lead) return null;
 
   const noteTypeIcons: Record<string, string> = {
@@ -214,8 +226,8 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
           <SheetTitle className="flex items-center gap-2">
             {lead.name ?? "Sin nombre"}
             {lead.urgency && (
-              <Badge variant="outline" className={cn("text-[10px]", lead.urgency === "inmediata" ? "border-red-300 text-red-700" : "")}>
-                {lead.urgency}
+              <Badge variant="outline" className={cn("text-[10px]", lead.urgency === "inmediata" || lead.urgency === "immediate" ? "border-red-300 text-red-700" : "")}>
+                {urgencyLabels[lead.urgency] ?? lead.urgency}
               </Badge>
             )}
           </SheetTitle>

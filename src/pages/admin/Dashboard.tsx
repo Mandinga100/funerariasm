@@ -423,6 +423,49 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* AI Executive Summary */}
+      <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Resumen Ejecutivo IA
+          </CardTitle>
+          <Button
+            size="sm"
+            variant={aiSummary ? "ghost" : "default"}
+            onClick={generateAiSummary}
+            disabled={aiLoading}
+            className="text-xs"
+          >
+            {aiLoading ? (
+              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Analizando...</>
+            ) : aiSummary ? (
+              <><RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerar</>
+            ) : (
+              <><Sparkles className="w-3.5 h-3.5 mr-1" /> Generar Insights</>
+            )}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {aiSummary ? (
+            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/80 prose-li:text-foreground/80 prose-strong:text-foreground">
+              <ReactMarkdown>{aiSummary}</ReactMarkdown>
+            </div>
+          ) : !aiLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Haz clic en "Generar Insights" para obtener un análisis ejecutivo del período seleccionado con recomendaciones accionables.
+            </p>
+          ) : (
+            <div className="space-y-2 py-4">
+              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-muted animate-pulse rounded w-full" />
+              <div className="h-4 bg-muted animate-pulse rounded w-5/6" />
+              <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
 
       {/* Primary KPIs */}

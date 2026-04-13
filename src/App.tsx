@@ -23,6 +23,7 @@ import AdminMemoriales from "./pages/admin/AdminMemoriales.tsx";
 import AdminTracking from "./pages/admin/AdminTracking.tsx";
 import AdminBlog from "./pages/admin/AdminBlog.tsx";
 import AdminLeads from "./pages/admin/AdminLeads.tsx";
+import AdminCasos from "./pages/admin/AdminCasos.tsx";
 import AdminPagos from "./pages/admin/AdminPagos.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="tracking" element={<AdminTracking />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="leads" element={<AdminLeads />} />
+              <Route path="casos" element={<AdminCasos />} />
               <Route path="pagos" element={<AdminPagos />} />
               <Route path="configuracion" element={<AdminSettings />} />
             </Route>

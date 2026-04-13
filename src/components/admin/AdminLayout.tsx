@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { useNotificationSound } from "@/hooks/use-notification-sound";
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" as const },
+  { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
   { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false },
   { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false },
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },

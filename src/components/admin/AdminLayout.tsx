@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import NotificationCenter from "@/components/admin/crm/NotificationCenter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -28,6 +29,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { playUrgentAlert } = useNotificationSound();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -56,12 +58,8 @@ export default function AdminLayout() {
               duration: 15000,
             });
 
-            // Play alert sound
-            try {
-              const audio = new Audio("/notification.mp3");
-              audio.volume = 0.5;
-              audio.play().catch(() => {});
-            } catch {}
+            // Play urgent alert sound
+            playUrgentAlert();
           }
         }
       )
@@ -70,7 +68,7 @@ export default function AdminLayout() {
     return () => {
       void supabase.removeChannel(urgentChannel);
     };
-  }, [user?.id, toast]);
+  }, [user?.id, toast, playUrgentAlert]);
 
   useEffect(() => {
     setMobileOpen(false);

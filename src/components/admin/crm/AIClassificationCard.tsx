@@ -24,6 +24,7 @@ const urgencyMap: Record<string, { label: string; emoji: string; color: string }
 
 const intentMap: Record<string, { label: string; emoji: string }> = {
   servicio_funerario_urgente: { label: "Servicio funerario urgente", emoji: "⚡" },
+  servicio_funerario: { label: "Servicio funerario", emoji: "🕊️" },
   traslado: { label: "Traslado de restos", emoji: "🚐" },
   cremacion: { label: "Cremación", emoji: "🕯️" },
   cotizacion: { label: "Cotización de servicios", emoji: "💰" },
@@ -32,6 +33,41 @@ const intentMap: Record<string, { label: string; emoji: string }> = {
   consulta_general: { label: "Consulta general", emoji: "💬" },
   reclamo: { label: "Reclamo o queja", emoji: "⚠️" },
 };
+
+// Map plan identifiers to their display names
+const planDisplayNames: Record<string, string> = {
+  margarita: "Plan Margarita",
+  "plan margarita": "Plan Margarita",
+  "plan_margarita": "Plan Margarita",
+  azucena: "Plan Azucena",
+  "plan azucena": "Plan Azucena",
+  "plan_azucena": "Plan Azucena",
+  acacia: "Plan Acacia",
+  "plan acacia": "Plan Acacia",
+  "plan_acacia": "Plan Acacia",
+  orquidea: "Plan Orquídea",
+  "plan orquidea": "Plan Orquídea",
+  "plan orquídea": "Plan Orquídea",
+  "plan_orquidea": "Plan Orquídea",
+  jazmin: "Plan Jazmín",
+  "plan jazmin": "Plan Jazmín",
+  "plan jazmín": "Plan Jazmín",
+  "plan_jazmin": "Plan Jazmín",
+  castano: "Plan Castaño",
+  "plan castano": "Plan Castaño",
+  "plan castaño": "Plan Castaño",
+  "plan_castano": "Plan Castaño",
+  rauli: "Plan Raulí",
+  "plan rauli": "Plan Raulí",
+  "plan raulí": "Plan Raulí",
+  "plan_rauli": "Plan Raulí",
+};
+
+function resolvePlanName(raw?: string | null): string | null {
+  if (!raw) return null;
+  const key = raw.toLowerCase().trim();
+  return planDisplayNames[key] ?? raw;
+}
 
 const channelMap: Record<string, { label: string; emoji: string }> = {
   llamada_telefonica: { label: "Llamada telefónica", emoji: "📞" },
@@ -73,6 +109,7 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
   const intent = intentMap[c.intent ?? ""] ?? { label: c.intent, emoji: "❓" };
   const channel = channelMap[c.recommended_channel ?? ""];
   const emotional = emotionalMap[c.emotional_context ?? ""];
+  const resolvedPlan = resolvePlanName(planName);
 
   return (
     <div className="rounded-lg border border-violet-200 bg-gradient-to-br from-violet-50 to-white overflow-hidden">
@@ -87,17 +124,23 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
       </div>
 
       <div className="p-3 space-y-3">
+        {/* Plan — highlighted first when available */}
+        {resolvedPlan && (
+          <div className="flex items-start gap-2 bg-amber-50 rounded-md p-2.5 border border-amber-200">
+            <span className="text-lg leading-none mt-0.5">🌟</span>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-amber-700/70 font-medium">Plan contratado</p>
+              <p className="text-sm font-bold text-amber-900">{resolvedPlan}</p>
+            </div>
+          </div>
+        )}
+
         {/* Service / Intent */}
         <div className="flex items-start gap-2">
           <span className="text-lg leading-none mt-0.5">{intent.emoji}</span>
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Servicio detectado</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo de servicio</p>
             <p className="text-sm font-semibold text-foreground">{intent.label}</p>
-            {planName && (
-              <Badge variant="secondary" className="mt-1 text-xs bg-amber-100 text-amber-800 border border-amber-300">
-                🌟 {planName}
-              </Badge>
-            )}
           </div>
         </div>
 

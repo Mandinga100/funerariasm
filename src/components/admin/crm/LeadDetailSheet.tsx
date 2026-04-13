@@ -179,7 +179,23 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
     const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos con usted${contexto}. Estamos a su disposición para acompañarle y resolver cualquier inquietud.\n\n¿En qué podemos ayudarle?`;
 
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`, "_blank");
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`;
+    // Open in a real browser window (bypasses iframe restrictions in preview)
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) {
+      // Fallback: copy message and notify
+      navigator.clipboard.writeText(mensaje).then(() => {
+        toast({ title: "📋 Mensaje copiado", description: "No se pudo abrir WhatsApp automáticamente. El mensaje fue copiado al portapapeles." });
+      });
+      // Try navigation as last resort
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   if (!lead) return null;

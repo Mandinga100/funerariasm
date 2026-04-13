@@ -708,6 +708,119 @@ export type Database = {
         }
         Relationships: []
       }
+      service_cases: {
+        Row: {
+          ai_classification: Json | null
+          ai_summary: string | null
+          assigned_to: string | null
+          case_number: string
+          ceremony_date: string | null
+          ceremony_location: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          client_rut: string | null
+          closed_at: string | null
+          comuna: string | null
+          created_at: string
+          deceased_birth_date: string | null
+          deceased_death_date: string | null
+          deceased_name: string | null
+          documents: string[] | null
+          id: string
+          intent: string | null
+          internal_notes: string | null
+          lead_id: string | null
+          notes: string | null
+          original_message: string | null
+          payment_status: string
+          pipeline_stage: string
+          selected_plan: string | null
+          service_description: string | null
+          service_type: string | null
+          source: string | null
+          total_amount: number
+          updated_at: string
+          urgency: string | null
+        }
+        Insert: {
+          ai_classification?: Json | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          case_number?: string
+          ceremony_date?: string | null
+          ceremony_location?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          client_rut?: string | null
+          closed_at?: string | null
+          comuna?: string | null
+          created_at?: string
+          deceased_birth_date?: string | null
+          deceased_death_date?: string | null
+          deceased_name?: string | null
+          documents?: string[] | null
+          id?: string
+          intent?: string | null
+          internal_notes?: string | null
+          lead_id?: string | null
+          notes?: string | null
+          original_message?: string | null
+          payment_status?: string
+          pipeline_stage?: string
+          selected_plan?: string | null
+          service_description?: string | null
+          service_type?: string | null
+          source?: string | null
+          total_amount?: number
+          updated_at?: string
+          urgency?: string | null
+        }
+        Update: {
+          ai_classification?: Json | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          case_number?: string
+          ceremony_date?: string | null
+          ceremony_location?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          client_rut?: string | null
+          closed_at?: string | null
+          comuna?: string | null
+          created_at?: string
+          deceased_birth_date?: string | null
+          deceased_death_date?: string | null
+          deceased_name?: string | null
+          documents?: string[] | null
+          id?: string
+          intent?: string | null
+          internal_notes?: string | null
+          lead_id?: string | null
+          notes?: string | null
+          original_message?: string | null
+          payment_status?: string
+          pipeline_stage?: string
+          selected_plan?: string | null
+          service_description?: string | null
+          service_type?: string | null
+          source?: string | null
+          total_amount?: number
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_cases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "contact_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string

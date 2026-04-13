@@ -69,6 +69,7 @@ export default function AdminPagos() {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [casesRevenue, setCasesRevenue] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem("admin_notification_sound");
     return stored !== "false";
@@ -100,7 +101,17 @@ export default function AdminPagos() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadCasesRevenue(); }, []);
+
+  const loadCasesRevenue = async () => {
+    const { data } = await supabase
+      .from("service_cases")
+      .select("total_amount")
+      .eq("pipeline_stage", "contratado")
+      .eq("payment_status", "pagado");
+    const sum = (data ?? []).reduce((acc: number, c: any) => acc + (c.total_amount || 0), 0);
+    setCasesRevenue(sum);
+  };
 
   // Realtime subscription for new transactions
   useEffect(() => {
@@ -248,19 +259,20 @@ export default function AdminPagos() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {[
-          { label: "Total", value: stats.total, icon: DollarSign, color: "text-primary" },
+          { label: "Total Transacciones", value: stats.total, icon: DollarSign, color: "text-primary" },
           { label: "Pendientes", value: stats.pending, icon: Clock, color: "text-yellow-600" },
           { label: "Confirmados", value: stats.confirmed, icon: CheckCircle2, color: "text-green-600" },
           { label: "Sospechosos", value: stats.suspicious, icon: AlertTriangle, color: "text-orange-600" },
+          { label: "Ingresos por Casos", value: fmt(casesRevenue), icon: DollarSign, color: "text-emerald-600", isString: true },
         ].map(s => (
           <Card key={s.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
               <s.icon className={cn("w-5 h-5", s.color)} />
             </CardHeader>
-            <CardContent><p className="text-2xl font-bold">{s.value}</p></CardContent>
+            <CardContent><p className={cn("font-bold", (s as any).isString ? "text-xl" : "text-2xl")}>{s.value}</p></CardContent>
           </Card>
         ))}
       </div>

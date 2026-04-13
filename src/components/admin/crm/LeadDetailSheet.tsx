@@ -44,6 +44,8 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   useEffect(() => {
     if (!lead) return;
     setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    setLocalClassification(lead.ai_classification && Object.keys(lead.ai_classification).length > 0 ? lead.ai_classification : null);
+    setLocalSummary(lead.ai_summary ?? null);
     loadNotes();
     loadActivities();
   }, [lead?.id]);

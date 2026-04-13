@@ -14,6 +14,7 @@ import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkl
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
+import AIClassificationHistory from "./AIClassificationHistory";
 
 interface LeadDetailSheetProps {
   lead: any | null;

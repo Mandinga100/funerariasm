@@ -375,12 +375,16 @@ export default function Dashboard() {
         const monthRevenue = allPayments
           .filter(p => p.status === "verified" && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd)
           .reduce((s, p) => s + (p.amount || 0), 0);
+        const monthCasesRevenue = allCases
+          .filter(cs => cs.pipeline_stage === "contratado" && cs.payment_status === "pagado" && new Date(cs.created_at) >= monthStart && new Date(cs.created_at) <= monthEnd)
+          .reduce((s, cs) => s + (cs.total_amount || 0), 0);
 
         monthly.push({
           month: monthLabel,
           leads: monthLeads.length,
           converted: monthConverted.length,
           revenue: monthRevenue,
+          casesRevenue: monthCasesRevenue,
         });
         convTrend.push({
           month: monthLabel,

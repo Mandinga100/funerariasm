@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, Check, AlertTriangle, Trash2 } from "lucide-react";
+import { Bell, Check, AlertTriangle, Trash2, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ interface Notification {
   message: string | null;
   type: string;
   reference_type: string | null;
+  reference_id: string | null;
   read: boolean;
   created_at: string;
 }
@@ -43,6 +45,7 @@ const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
 
 export default function NotificationCenter() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
@@ -70,11 +73,31 @@ export default function NotificationCenter() {
     if (!user) return;
     const { data } = await supabase
       .from("admin_notifications")
-      .select("id, title, message, type, reference_type, read, created_at")
+      .select("id, title, message, type, reference_type, reference_id, read, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30);
     setNotifications((data as Notification[]) ?? []);
+  };
+
+  const getNotificationRoute = (n: Notification): string | null => {
+    if (!n.reference_id) return null;
+    if (n.reference_type === "urgent_lead" || n.reference_type === "lead" || ["new_lead", "overdue_lead"].includes(n.type)) {
+      return `/admin/leads?open=${n.reference_id}`;
+    }
+    if (n.reference_type === "payment" || n.type === "payment") {
+      return `/admin/pagos`;
+    }
+    return null;
+  };
+
+  const handleNotificationClick = async (n: Notification) => {
+    await markRead(n.id);
+    const route = getNotificationRoute(n);
+    if (route) {
+      setOpen(false);
+      navigate(route);
+    }
   };
 
   const markRead = async (id: string) => {
@@ -206,7 +229,7 @@ export default function NotificationCenter() {
                   !urgent && !n.read && "bg-blue-50/50 hover:bg-blue-50/80",
                   !urgent && n.read && "hover:bg-muted/50"
                 )}
-                onClick={() => markRead(n.id)}
+                onClick={() => handleNotificationClick(n)}
               >
                 <div className="flex items-start gap-2">
                   <span className={cn("text-sm mt-0.5", urgent && "animate-pulse")}>
@@ -236,9 +259,16 @@ export default function NotificationCenter() {
                         {n.message}
                       </p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
-                    </p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
+                      </p>
+                      {getNotificationRoute(n) && (
+                        <span className="text-[10px] text-primary flex items-center gap-0.5">
+                          <ExternalLink className="w-2.5 h-2.5" /> Ver
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {!n.read && (
                     <div className={cn(

@@ -416,15 +416,16 @@ export default function Dashboard() {
   const kpis = [
     { label: "Leads Nuevos", value: stats.newLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/admin/leads?stage=nuevo" },
     { label: "Leads Vencidos", value: stats.overdueLeads, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/admin/leads?filter=overdue" },
-    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
-    { label: "Ingresos Verificados", value: `$${(stats.totalRevenue).toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos?status=confirmed" },
+    { label: "Total Casos", value: stats.totalCases, icon: Briefcase, color: "text-cyan-600", bg: "bg-cyan-50", link: "/admin/casos" },
+    { label: "Ingresos Casos", value: `$${stats.casesRevenue.toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/casos" },
     { label: "Tasa Conversión", value: `${stats.conversionRate.toFixed(1)}%`, icon: Percent, color: "text-purple-600", bg: "bg-purple-50", link: "/admin/leads" },
-    { label: "Valor Promedio", value: `$${Math.round(stats.avgDealValue).toLocaleString("es-CL")}`, icon: Banknote, color: "text-teal-600", bg: "bg-teal-50", link: "/admin/pagos" },
+    { label: "Lead → Caso", value: `${stats.leadToCaseRate.toFixed(1)}%`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/casos" },
     { label: "Tiempo Respuesta", value: formatMinutes(stats.avgResponseTimeMin), icon: Timer, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/leads" },
-    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/leads" },
+    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
   ];
 
   const secondaryKpis = [
+    { label: "Ingresos Verificados", value: `$${stats.totalRevenue.toLocaleString("es-CL")}`, icon: Banknote, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos" },
     { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50", link: "/admin/obituarios" },
     { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/memoriales" },
     { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/memoriales" },

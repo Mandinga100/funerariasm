@@ -69,6 +69,7 @@ export default function AdminPagos() {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [casesRevenue, setCasesRevenue] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem("admin_notification_sound");
     return stored !== "false";
@@ -100,7 +101,17 @@ export default function AdminPagos() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadCasesRevenue(); }, []);
+
+  const loadCasesRevenue = async () => {
+    const { data } = await supabase
+      .from("service_cases")
+      .select("total_amount")
+      .eq("pipeline_stage", "contratado")
+      .eq("payment_status", "pagado");
+    const sum = (data ?? []).reduce((acc: number, c: any) => acc + (c.total_amount || 0), 0);
+    setCasesRevenue(sum);
+  };
 
   // Realtime subscription for new transactions
   useEffect(() => {

@@ -628,6 +628,69 @@ export default function AdminSettings() {
               <Button onClick={saveNotifPrefs} className="w-full sm:w-auto">Guardar preferencias</Button>
             </CardContent>
           </Card>
+
+          {/* KPI Weekly Report */}
+          <Card className="border-dashed border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                Reporte Semanal de KPIs
+              </CardTitle>
+              <CardDescription>
+                Se genera automáticamente cada lunes a las 8:00 AM y se envía como notificación interna a todos los administradores.
+                <br />
+                <span className="text-xs font-medium mt-1 block">
+                  📧 Destinatarios: funerariasantamargarita2026@gmail.com, mandinga_atim@hotmail.com
+                </span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg border bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Umbrales de Alerta</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-destructive inline-block" /> Leads vencidos {">"} 3</li>
+                    <li className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> Conversión {"<"} 10%</li>
+                    <li className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500 inline-block" /> Respuesta {">"} 2 horas</li>
+                    <li className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> Pagos pendientes {">"} 5</li>
+                  </ul>
+                </div>
+                <div className="p-3 rounded-lg border bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Incluye</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>📊 KPIs semanales vs semana anterior</li>
+                    <li>⚠️ Alertas críticas automáticas</li>
+                    <li>📈 Tendencias de leads e ingresos</li>
+                    <li>💡 Resumen ejecutivo generado por IA</li>
+                  </ul>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  toast({ title: "Generando reporte...", description: "Esto puede tomar unos segundos." });
+                  try {
+                    const { data, error } = await supabase.functions.invoke("weekly-kpi-report");
+                    if (error) throw error;
+                    if (data?.error) throw new Error(data.error);
+                    const alerts = data?.report?.alerts ?? [];
+                    toast({
+                      title: "✅ Reporte generado",
+                      description: alerts.length > 0
+                        ? `${alerts.length} alerta(s) detectada(s). Revise sus notificaciones.`
+                        : "Sin alertas críticas. Notificación enviada al equipo.",
+                    });
+                  } catch (err: any) {
+                    toast({ title: "Error", description: err.message, variant: "destructive" });
+                  }
+                }}
+              >
+                <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+                Generar Reporte Ahora (Manual)
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ═══════════════ SECURITY TAB ═══════════════ */}

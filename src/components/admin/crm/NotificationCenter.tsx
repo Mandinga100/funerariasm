@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, Check, AlertTriangle } from "lucide-react";
+import { Bell, Check, AlertTriangle, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -92,6 +92,18 @@ export default function NotificationCenter() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
+  const clearRead = async () => {
+    if (!user) return;
+    const readIds = notifications.filter(n => n.read).map(n => n.id);
+    if (readIds.length === 0) return;
+    for (const id of readIds) {
+      await supabase.from("admin_notifications").delete().eq("id", id);
+    }
+    setNotifications(prev => prev.filter(n => !n.read));
+  };
+
+  const readCount = notifications.filter(n => n.read).length;
+
   const unreadCount = notifications.filter(n => !n.read).length;
   const urgentUnread = notifications.filter(n => !n.read && isUrgent(n)).length;
   const filtered = notifications.filter(n => matchesFilter(n, activeFilter));
@@ -134,11 +146,18 @@ export default function NotificationCenter() {
               </Badge>
             )}
           </div>
-          {unreadCount > 0 && (
-            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={markAllRead}>
-              <Check className="w-3 h-3 mr-1" />Marcar leídas
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {readCount > 0 && (
+              <Button size="sm" variant="ghost" className="h-6 text-[10px] text-muted-foreground hover:text-destructive" onClick={clearRead}>
+                <Trash2 className="w-3 h-3 mr-1" />Limpiar ({readCount})
+              </Button>
+            )}
+            {unreadCount > 0 && (
+              <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={markAllRead}>
+                <Check className="w-3 h-3 mr-1" />Marcar leídas
+              </Button>
+            )}
+          </div>
         </div>
         {/* Filter tabs */}
         <div className="flex items-center gap-1 px-2 py-1.5 border-b overflow-x-auto">

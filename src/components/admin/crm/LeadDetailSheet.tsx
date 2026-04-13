@@ -155,7 +155,31 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const openWhatsApp = () => {
     if (!lead?.phone) return;
     const phone = lead.phone.replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}`, "_blank");
+    const nombre = lead.name?.split(" ")[0] ?? "";
+    const saludo = nombre ? `Estimado/a ${nombre}` : "Estimado/a";
+
+    let contexto = "";
+    if (lead.selected_plan) {
+      contexto = ` en relación a su consulta sobre el ${lead.selected_plan}`;
+    } else if (lead.intent === "servicio_funerario_urgente" || lead.urgency === "inmediata") {
+      contexto = " en relación a su solicitud de servicio funerario";
+    } else if (lead.intent === "cremacion") {
+      contexto = " en relación a su consulta sobre servicios de cremación";
+    } else if (lead.intent === "traslado") {
+      contexto = " en relación a su consulta sobre traslado de restos";
+    } else if (lead.intent === "cotizacion") {
+      contexto = " en relación a su solicitud de cotización";
+    } else if (lead.intent === "prevision_funeraria") {
+      contexto = " en relación a su consulta sobre previsión funeraria";
+    } else if (lead.intent === "memorial_legado") {
+      contexto = " en relación a su consulta sobre memorial y legado eterno";
+    } else if (lead.message) {
+      contexto = " en relación a su consulta reciente";
+    }
+
+    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos con usted${contexto}. Estamos a su disposición para acompañarle y resolver cualquier inquietud.\n\n¿En qué podemos ayudarle?`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`, "_blank");
   };
 
   if (!lead) return null;

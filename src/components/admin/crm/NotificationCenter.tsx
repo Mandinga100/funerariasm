@@ -83,7 +83,7 @@ export default function NotificationCenter() {
   const getNotificationRoute = (n: Notification): string | null => {
     if (!n.reference_id) return null;
     if (n.reference_type === "urgent_lead" || n.reference_type === "lead" || ["new_lead", "overdue_lead"].includes(n.type)) {
-      return `/admin/leads?lead=${n.reference_id}`;
+      return `/admin/leads?open=${n.reference_id}`;
     }
     if (n.reference_type === "payment" || n.type === "payment") {
       return `/admin/pagos`;

@@ -34,6 +34,13 @@ export default function AdminLayout() {
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
   // Real-time urgent lead alerts
   useEffect(() => {
     if (!user?.id) return;
@@ -58,8 +65,19 @@ export default function AdminLayout() {
               duration: 15000,
             });
 
-            // Play urgent alert sound
             playUrgentAlert();
+
+            // Browser push notification (works even when tab is not focused)
+            if ("Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification(notification.title || "🚨 Alerta Urgente", {
+                  body: notification.message?.substring(0, 200) || "Nuevo lead con urgencia inmediata",
+                  icon: "/favicon.ico",
+                  tag: `urgent-${notification.id}`,
+                  requireInteraction: true,
+                });
+              } catch {}
+            }
           }
         }
       )

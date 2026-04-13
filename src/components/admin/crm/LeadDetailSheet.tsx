@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import AIClassificationCard from "./AIClassificationCard";
 
 interface LeadDetailSheetProps {
   lead: any | null;

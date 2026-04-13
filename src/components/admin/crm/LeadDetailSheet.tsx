@@ -63,6 +63,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     setNotes(data ?? []);
   };
 
+  const loadClassificationHistory = async () => {
+    if (!lead) return;
+    const { data } = await supabase
+      .from("lead_activities")
+      .select("id, metadata, created_at")
+      .eq("lead_id", lead.id)
+      .eq("activity_type", "ai_classification")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setClassificationHistory(data ?? []);
+  };
+
   const loadActivities = async () => {
     if (!lead) return;
     const { data } = await supabase

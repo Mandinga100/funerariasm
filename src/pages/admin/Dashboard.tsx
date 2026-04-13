@@ -286,6 +286,13 @@ export default function Dashboard() {
         return hours >= 72;
       }).length;
 
+      // Cases metrics
+      const totalCases = allCases.length;
+      const casesRevenue = allCases
+        .filter(c => c.pipeline_stage === "contratado" && c.payment_status === "pagado")
+        .reduce((s, c) => s + (c.total_amount || 0), 0);
+      const leadToCaseRate = allLeads.length > 0 ? (totalCases / allLeads.length) * 100 : 0;
+
       setStats({
         obituaries: o.count ?? 0,
         memorials: m.count ?? 0,
@@ -299,7 +306,40 @@ export default function Dashboard() {
         conversionRate,
         avgDealValue,
         avgResponseTimeMin,
+        totalCases,
+        casesRevenue,
+        leadToCaseRate,
       });
+
+      // Cases by pipeline stage
+      const caseStages = ["contactado", "cotizado", "contratado", "cerrado"];
+      setCasesStageData(caseStages.map(stage => ({
+        stage: PIPELINE_LABELS[stage] || stage,
+        stageId: stage,
+        count: allCases.filter(c => (c.pipeline_stage ?? "contactado") === stage).length,
+      })));
+
+      // Cases by payment status
+      const PAYMENT_COLORS: Record<string, string> = {
+        pendiente: "#f59e0b",
+        cotizado: "#3b82f6",
+        aprobado: "#8b5cf6",
+        pagado: "#22c55e",
+        cancelado: "#ef4444",
+      };
+      const PAYMENT_LABELS: Record<string, string> = {
+        pendiente: "Pendiente",
+        cotizado: "Cotizado",
+        aprobado: "Aprobado",
+        pagado: "Pagado",
+        cancelado: "Cancelado",
+      };
+      const paymentStatuses = ["pendiente", "cotizado", "aprobado", "pagado", "cancelado"];
+      setCasesPaymentData(paymentStatuses.map(status => ({
+        status: PAYMENT_LABELS[status] || status,
+        count: allCases.filter(c => (c.payment_status ?? "pendiente") === status).length,
+        color: PAYMENT_COLORS[status] || "#94a3b8",
+      })).filter(d => d.count > 0));
 
       const stages = ["nuevo", "contactado", "cotizado", "contratado", "cerrado"];
       setPipelineData(stages.map(stage => ({

@@ -50,6 +50,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     setLocalSummary(lead.ai_summary ?? null);
     loadNotes();
     loadActivities();
+    loadClassificationHistory();
   }, [lead?.id]);
 
   const loadNotes = async () => {

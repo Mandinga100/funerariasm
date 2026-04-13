@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import AIClassificationCard from "./AIClassificationCard";
 
 interface LeadDetailSheetProps {
   lead: any | null;
@@ -35,12 +36,16 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [noteType, setNoteType] = useState("nota");
   const [estimatedValue, setEstimatedValue] = useState("");
   const [classifying, setClassifying] = useState(false);
+  const [localClassification, setLocalClassification] = useState<any>(null);
+  const [localSummary, setLocalSummary] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
     if (!lead) return;
     setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    setLocalClassification(lead.ai_classification && Object.keys(lead.ai_classification).length > 0 ? lead.ai_classification : null);
+    setLocalSummary(lead.ai_summary ?? null);
     loadNotes();
     loadActivities();
   }, [lead?.id]);
@@ -104,11 +109,29 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     if (!lead) return;
     setClassifying(true);
     try {
-      await supabase.functions.invoke("classify-lead", { body: { leadId: lead.id } });
-      toast({ title: "Clasificación IA completada" });
+      const { data, error } = await supabase.functions.invoke("classify-lead", { body: { leadId: lead.id } });
+      if (error) throw error;
+      // Show result instantly from the function response
+      if (data?.classification) {
+        setLocalClassification(data.classification);
+        setLocalSummary(data.classification.summary ?? null);
+        // Update estimated value if returned
+        if (data.classification.estimated_value) {
+          setEstimatedValue(data.classification.estimated_value.toString());
+        }
+      } else {
+        // Fallback: re-fetch the lead from DB
+        const { data: updated } = await supabase.from("contact_leads").select("ai_classification, ai_summary").eq("id", lead.id).single();
+        if (updated) {
+          setLocalClassification(updated.ai_classification && Object.keys(updated.ai_classification as any).length > 0 ? updated.ai_classification : null);
+          setLocalSummary(updated.ai_summary ?? null);
+        }
+      }
+      toast({ title: "✅ Análisis IA completado" });
       onUpdate();
+      loadActivities();
     } catch {
-      toast({ title: "Error", description: "No se pudo clasificar", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }
     setClassifying(false);
   };
@@ -204,7 +227,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             </div>
           )}
 
-          {/* AI Summary */}
+          {/* AI Classification */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Análisis IA</label>
@@ -212,10 +235,10 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
                 <Sparkles className="w-3 h-3 mr-1" />{classifying ? "Analizando..." : "Analizar"}
               </Button>
             </div>
-            {lead.ai_summary ? (
-              <div className="p-3 rounded-md bg-violet-50 border border-violet-200 text-sm">{lead.ai_summary}</div>
+            {localClassification ? (
+              <AIClassificationCard classification={localClassification} planName={lead.selected_plan} />
             ) : (
-              <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar.</p>
+              <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar con IA.</p>
             )}
           </div>
 

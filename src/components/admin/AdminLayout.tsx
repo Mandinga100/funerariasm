@@ -29,6 +29,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { playUrgentAlert } = useNotificationSound();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);

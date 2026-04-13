@@ -27,6 +27,9 @@ interface Stats {
   conversionRate: number;
   avgDealValue: number;
   avgResponseTimeMin: number;
+  totalCases: number;
+  casesRevenue: number;
+  leadToCaseRate: number;
 }
 
 interface LeadByStage {
@@ -45,6 +48,19 @@ interface MonthlyData {
   leads: number;
   converted: number;
   revenue: number;
+  casesRevenue: number;
+}
+
+interface CasesByStage {
+  stage: string;
+  stageId: string;
+  count: number;
+}
+
+interface CasesByPayment {
+  status: string;
+  count: number;
+  color: string;
 }
 
 const PIPELINE_LABELS: Record<string, string> = {

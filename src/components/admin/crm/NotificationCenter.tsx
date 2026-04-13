@@ -92,6 +92,18 @@ export default function NotificationCenter() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
+  const clearRead = async () => {
+    if (!user) return;
+    const readIds = notifications.filter(n => n.read).map(n => n.id);
+    if (readIds.length === 0) return;
+    for (const id of readIds) {
+      await supabase.from("admin_notifications").delete().eq("id", id);
+    }
+    setNotifications(prev => prev.filter(n => !n.read));
+  };
+
+  const readCount = notifications.filter(n => n.read).length;
+
   const unreadCount = notifications.filter(n => !n.read).length;
   const urgentUnread = notifications.filter(n => !n.read && isUrgent(n)).length;
   const filtered = notifications.filter(n => matchesFilter(n, activeFilter));

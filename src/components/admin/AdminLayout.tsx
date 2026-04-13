@@ -58,12 +58,8 @@ export default function AdminLayout() {
               duration: 15000,
             });
 
-            // Play alert sound
-            try {
-              const audio = new Audio("/notification.mp3");
-              audio.volume = 0.5;
-              audio.play().catch(() => {});
-            } catch {}
+            // Play urgent alert sound
+            playUrgentAlert();
           }
         }
       )

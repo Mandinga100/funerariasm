@@ -22,10 +22,30 @@ interface Notification {
 const isUrgent = (n: Notification) =>
   n.type === "urgent" || n.reference_type === "urgent_lead";
 
+type FilterKey = "all" | "urgent" | "leads" | "payments" | "reports";
+
+const FILTERS: { key: FilterKey; label: string; icon: string }[] = [
+  { key: "all", label: "Todas", icon: "📋" },
+  { key: "urgent", label: "Urgentes", icon: "🚨" },
+  { key: "leads", label: "Leads", icon: "🔵" },
+  { key: "payments", label: "Pagos", icon: "💰" },
+  { key: "reports", label: "Reportes", icon: "📊" },
+];
+
+const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
+  if (filter === "all") return true;
+  if (filter === "urgent") return isUrgent(n);
+  if (filter === "leads") return ["new_lead", "overdue_lead"].includes(n.type) || n.reference_type === "lead";
+  if (filter === "payments") return n.type === "payment" || n.reference_type === "payment";
+  if (filter === "reports") return n.type === "warning" || n.type === "info" || n.reference_type === "kpi_report";
+  return true;
+};
+
 export default function NotificationCenter() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const instanceIdRef = useRef(crypto.randomUUID());
 
   useEffect(() => {
@@ -74,6 +94,7 @@ export default function NotificationCenter() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const urgentUnread = notifications.filter(n => !n.read && isUrgent(n)).length;
+  const filtered = notifications.filter(n => matchesFilter(n, activeFilter));
 
   const typeIcons: Record<string, string> = {
     new_lead: "🔵",
@@ -119,10 +140,42 @@ export default function NotificationCenter() {
             </Button>
           )}
         </div>
-        <div className="max-h-[360px] overflow-y-auto">
-          {notifications.length === 0 ? (
-            <p className="text-xs text-muted-foreground p-4 text-center">Sin notificaciones</p>
-          ) : notifications.map(n => {
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b overflow-x-auto">
+          {FILTERS.map(f => {
+            const count = notifications.filter(n => matchesFilter(n, f.key)).length;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setActiveFilter(f.key)}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] whitespace-nowrap transition-colors",
+                  activeFilter === f.key
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <span>{f.icon}</span>
+                <span>{f.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-0.5 text-[9px] rounded-full px-1 min-w-[16px] text-center",
+                    activeFilter === f.key ? "bg-primary/20" : "bg-muted"
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="max-h-[320px] overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-muted-foreground p-4 text-center">
+              {activeFilter === "all" ? "Sin notificaciones" : `Sin notificaciones de tipo "${FILTERS.find(f => f.key === activeFilter)?.label}"`}
+            </p>
+          ) : filtered.map(n => {
             const urgent = isUrgent(n);
             return (
               <div

@@ -635,10 +635,81 @@ export default function Dashboard() {
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toLocaleString("es-CL")}`, "Ingresos"]}
+                  formatter={(value: number, name: string) => [
+                    `$${value.toLocaleString("es-CL")}`,
+                    name === "revenue" ? "Pagos Verificados" : "Casos Pagados"
+                  ]}
+                />
+                <Legend
+                  formatter={(value) => value === "revenue" ? "Pagos Verificados" : "Casos Pagados"}
+                  wrapperStyle={{ fontSize: 12 }}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="casesRevenue" stroke="#3b82f6" strokeWidth={2} fill="url(#casesGradient)" />
               </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Casos por Etapa + Estado de Pago */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-muted-foreground" />
+              Casos por Etapa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={casesStageData}
+                margin={{ left: 0, right: 0 }}
+                onClick={(data: any) => {
+                  if (data?.activePayload?.[0]?.payload?.stageId) {
+                    navigate(`/admin/casos?stage=${data.activePayload[0].payload.stageId}`);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Casos" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              Estado de Pago de Casos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={casesPaymentData}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={4}
+                  label={({ status, count }) => `${status}: ${count}`}
+                >
+                  {casesPaymentData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

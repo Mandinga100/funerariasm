@@ -145,6 +145,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
       toast({ title: "✅ Análisis IA completado" });
       onUpdate();
       loadActivities();
+      loadClassificationHistory();
     } catch {
       toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }
@@ -256,6 +257,9 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
               <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar con IA.</p>
             )}
           </div>
+
+          {/* AI Classification History */}
+          <AIClassificationHistory entries={classificationHistory} planName={lead.selected_plan} />
 
           {lead.selected_plan && (
             <div>

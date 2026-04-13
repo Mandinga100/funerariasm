@@ -227,7 +227,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             </div>
           )}
 
-          {/* AI Summary */}
+          {/* AI Classification */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Análisis IA</label>
@@ -235,10 +235,10 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
                 <Sparkles className="w-3 h-3 mr-1" />{classifying ? "Analizando..." : "Analizar"}
               </Button>
             </div>
-            {lead.ai_summary ? (
-              <div className="p-3 rounded-md bg-violet-50 border border-violet-200 text-sm">{lead.ai_summary}</div>
+            {localClassification ? (
+              <AIClassificationCard classification={localClassification} planName={lead.selected_plan} />
             ) : (
-              <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar.</p>
+              <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar con IA.</p>
             )}
           </div>
 

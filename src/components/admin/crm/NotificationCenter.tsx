@@ -229,7 +229,7 @@ export default function NotificationCenter() {
                   !urgent && !n.read && "bg-blue-50/50 hover:bg-blue-50/80",
                   !urgent && n.read && "hover:bg-muted/50"
                 )}
-                onClick={() => markRead(n.id)}
+                onClick={() => handleNotificationClick(n)}
               >
                 <div className="flex items-start gap-2">
                   <span className={cn("text-sm mt-0.5", urgent && "animate-pulse")}>

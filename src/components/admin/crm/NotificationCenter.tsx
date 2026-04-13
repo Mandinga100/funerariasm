@@ -259,9 +259,16 @@ export default function NotificationCenter() {
                         {n.message}
                       </p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
-                    </p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
+                      </p>
+                      {getNotificationRoute(n) && (
+                        <span className="text-[10px] text-primary flex items-center gap-0.5">
+                          <ExternalLink className="w-2.5 h-2.5" /> Ver
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {!n.read && (
                     <div className={cn(

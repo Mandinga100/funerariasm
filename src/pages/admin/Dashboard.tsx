@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw } from "lucide-react";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
+import ReactMarkdown from "react-markdown";
 
 interface Stats {
   obituaries: number;
@@ -94,6 +95,36 @@ export default function Dashboard() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const generateAiSummary = async () => {
+    setAiLoading(true);
+    setAiSummary("");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-executive-summary", {
+        body: {
+          stats,
+          monthlyData,
+          pipelineData,
+          urgencyData,
+          dateRange: {
+            from: dateFrom ? format(dateFrom, "dd/MM/yyyy") : null,
+            to: dateTo ? format(dateTo, "dd/MM/yyyy") : null,
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setAiSummary(data.summary);
+      toast.success("Resumen ejecutivo generado");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al generar resumen");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleExportPDF = async () => {
     if (!dashboardRef.current) return;
@@ -391,6 +422,49 @@ export default function Dashboard() {
           </Button>
         )}
       </div>
+
+      {/* AI Executive Summary */}
+      <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Resumen Ejecutivo IA
+          </CardTitle>
+          <Button
+            size="sm"
+            variant={aiSummary ? "ghost" : "default"}
+            onClick={generateAiSummary}
+            disabled={aiLoading}
+            className="text-xs"
+          >
+            {aiLoading ? (
+              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Analizando...</>
+            ) : aiSummary ? (
+              <><RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerar</>
+            ) : (
+              <><Sparkles className="w-3.5 h-3.5 mr-1" /> Generar Insights</>
+            )}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {aiSummary ? (
+            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/80 prose-li:text-foreground/80 prose-strong:text-foreground">
+              <ReactMarkdown>{aiSummary}</ReactMarkdown>
+            </div>
+          ) : !aiLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Haz clic en "Generar Insights" para obtener un análisis ejecutivo del período seleccionado con recomendaciones accionables.
+            </p>
+          ) : (
+            <div className="space-y-2 py-4">
+              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-muted animate-pulse rounded w-full" />
+              <div className="h-4 bg-muted animate-pulse rounded w-5/6" />
+              <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
 

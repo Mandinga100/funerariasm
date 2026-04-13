@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw, Sparkles, RefreshCw } from "lucide-react";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw, Sparkles, RefreshCw, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
@@ -27,6 +27,9 @@ interface Stats {
   conversionRate: number;
   avgDealValue: number;
   avgResponseTimeMin: number;
+  totalCases: number;
+  casesRevenue: number;
+  leadToCaseRate: number;
 }
 
 interface LeadByStage {
@@ -45,6 +48,19 @@ interface MonthlyData {
   leads: number;
   converted: number;
   revenue: number;
+  casesRevenue: number;
+}
+
+interface CasesByStage {
+  stage: string;
+  stageId: string;
+  count: number;
+}
+
+interface CasesByPayment {
+  status: string;
+  count: number;
+  color: string;
 }
 
 const PIPELINE_LABELS: Record<string, string> = {
@@ -85,8 +101,11 @@ export default function Dashboard() {
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
     totalRevenue: 0, overdueLeads: 0, conversionRate: 0,
     avgDealValue: 0, avgResponseTimeMin: 0,
+    totalCases: 0, casesRevenue: 0, leadToCaseRate: 0,
   });
   const [pipelineData, setPipelineData] = useState<LeadByStage[]>([]);
+  const [casesStageData, setCasesStageData] = useState<CasesByStage[]>([]);
+  const [casesPaymentData, setCasesPaymentData] = useState<CasesByPayment[]>([]);
   const [leadsTimeline, setLeadsTimeline] = useState<LeadByDay[]>([]);
   const [urgencyData, setUrgencyData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
@@ -199,13 +218,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     const load = async () => {
-      const [o, m, leads, c, payments, activities] = await Promise.all([
+      const [o, m, leads, c, payments, activities, casesRes] = await Promise.all([
         supabase.from("obituaries").select("id", { count: "exact", head: true }),
         supabase.from("memorials").select("id", { count: "exact", head: true }),
         supabase.from("contact_leads").select("*").order("created_at", { ascending: false }).limit(1000),
         supabase.from("condolences").select("id", { count: "exact", head: true }),
         supabase.from("payment_transactions").select("amount, status, created_at"),
         supabase.from("lead_activities").select("lead_id, created_at, activity_type").eq("activity_type", "pipeline_change").order("created_at", { ascending: true }).limit(1000),
+        supabase.from("service_cases").select("*").order("created_at", { ascending: false }).limit(1000),
       ]);
 
       const rangeStart = dateFrom ? startOfDay(dateFrom) : undefined;
@@ -221,6 +241,7 @@ export default function Dashboard() {
 
       const allLeads = (leads.data ?? []).filter(l => filterByRange(l.created_at));
       const allPayments = (payments.data ?? []).filter(p => filterByRange(p.created_at));
+      const allCases = (casesRes.data ?? []).filter(c => filterByRange(c.created_at));
       const allActivities = activities.data ?? [];
 
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;
@@ -265,6 +286,13 @@ export default function Dashboard() {
         return hours >= 72;
       }).length;
 
+      // Cases metrics
+      const totalCases = allCases.length;
+      const casesRevenue = allCases
+        .filter(c => c.pipeline_stage === "contratado" && c.payment_status === "pagado")
+        .reduce((s, c) => s + (c.total_amount || 0), 0);
+      const leadToCaseRate = allLeads.length > 0 ? (totalCases / allLeads.length) * 100 : 0;
+
       setStats({
         obituaries: o.count ?? 0,
         memorials: m.count ?? 0,
@@ -278,7 +306,40 @@ export default function Dashboard() {
         conversionRate,
         avgDealValue,
         avgResponseTimeMin,
+        totalCases,
+        casesRevenue,
+        leadToCaseRate,
       });
+
+      // Cases by pipeline stage
+      const caseStages = ["contactado", "cotizado", "contratado", "cerrado"];
+      setCasesStageData(caseStages.map(stage => ({
+        stage: PIPELINE_LABELS[stage] || stage,
+        stageId: stage,
+        count: allCases.filter(c => (c.pipeline_stage ?? "contactado") === stage).length,
+      })));
+
+      // Cases by payment status
+      const PAYMENT_COLORS: Record<string, string> = {
+        pendiente: "#f59e0b",
+        cotizado: "#3b82f6",
+        aprobado: "#8b5cf6",
+        pagado: "#22c55e",
+        cancelado: "#ef4444",
+      };
+      const PAYMENT_LABELS: Record<string, string> = {
+        pendiente: "Pendiente",
+        cotizado: "Cotizado",
+        aprobado: "Aprobado",
+        pagado: "Pagado",
+        cancelado: "Cancelado",
+      };
+      const paymentStatuses = ["pendiente", "cotizado", "aprobado", "pagado", "cancelado"];
+      setCasesPaymentData(paymentStatuses.map(status => ({
+        status: PAYMENT_LABELS[status] || status,
+        count: allCases.filter(c => (c.payment_status ?? "pendiente") === status).length,
+        color: PAYMENT_COLORS[status] || "#94a3b8",
+      })).filter(d => d.count > 0));
 
       const stages = ["nuevo", "contactado", "cotizado", "contratado", "cerrado"];
       setPipelineData(stages.map(stage => ({
@@ -314,12 +375,16 @@ export default function Dashboard() {
         const monthRevenue = allPayments
           .filter(p => p.status === "verified" && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd)
           .reduce((s, p) => s + (p.amount || 0), 0);
+        const monthCasesRevenue = allCases
+          .filter(cs => cs.pipeline_stage === "contratado" && cs.payment_status === "pagado" && new Date(cs.created_at) >= monthStart && new Date(cs.created_at) <= monthEnd)
+          .reduce((s, cs) => s + (cs.total_amount || 0), 0);
 
         monthly.push({
           month: monthLabel,
           leads: monthLeads.length,
           converted: monthConverted.length,
           revenue: monthRevenue,
+          casesRevenue: monthCasesRevenue,
         });
         convTrend.push({
           month: monthLabel,
@@ -351,15 +416,16 @@ export default function Dashboard() {
   const kpis = [
     { label: "Leads Nuevos", value: stats.newLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/admin/leads?stage=nuevo" },
     { label: "Leads Vencidos", value: stats.overdueLeads, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/admin/leads?filter=overdue" },
-    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
-    { label: "Ingresos Verificados", value: `$${(stats.totalRevenue).toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos?status=confirmed" },
+    { label: "Total Casos", value: stats.totalCases, icon: Briefcase, color: "text-cyan-600", bg: "bg-cyan-50", link: "/admin/casos" },
+    { label: "Ingresos Casos", value: `$${stats.casesRevenue.toLocaleString("es-CL")}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50", link: "/admin/casos" },
     { label: "Tasa Conversión", value: `${stats.conversionRate.toFixed(1)}%`, icon: Percent, color: "text-purple-600", bg: "bg-purple-50", link: "/admin/leads" },
-    { label: "Valor Promedio", value: `$${Math.round(stats.avgDealValue).toLocaleString("es-CL")}`, icon: Banknote, color: "text-teal-600", bg: "bg-teal-50", link: "/admin/pagos" },
+    { label: "Lead → Caso", value: `${stats.leadToCaseRate.toFixed(1)}%`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/casos" },
     { label: "Tiempo Respuesta", value: formatMinutes(stats.avgResponseTimeMin), icon: Timer, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/leads" },
-    { label: "Total Leads", value: stats.totalLeads, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", link: "/admin/leads" },
+    { label: "Pagos Pendientes", value: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", link: "/admin/pagos?status=pending" },
   ];
 
   const secondaryKpis = [
+    { label: "Ingresos Verificados", value: `$${stats.totalRevenue.toLocaleString("es-CL")}`, icon: Banknote, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos" },
     { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50", link: "/admin/obituarios" },
     { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/memoriales" },
     { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/memoriales" },
@@ -492,7 +558,7 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {secondaryKpis.map(k => (
           <Card
             key={k.label}
@@ -561,6 +627,10 @@ export default function Dashboard() {
                     <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                   </linearGradient>
+                  <linearGradient id="casesGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
@@ -569,10 +639,81 @@ export default function Dashboard() {
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toLocaleString("es-CL")}`, "Ingresos"]}
+                  formatter={(value: number, name: string) => [
+                    `$${value.toLocaleString("es-CL")}`,
+                    name === "revenue" ? "Pagos Verificados" : "Casos Pagados"
+                  ]}
+                />
+                <Legend
+                  formatter={(value) => value === "revenue" ? "Pagos Verificados" : "Casos Pagados"}
+                  wrapperStyle={{ fontSize: 12 }}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="casesRevenue" stroke="#3b82f6" strokeWidth={2} fill="url(#casesGradient)" />
               </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Casos por Etapa + Estado de Pago */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-muted-foreground" />
+              Casos por Etapa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={casesStageData}
+                margin={{ left: 0, right: 0 }}
+                onClick={(data: any) => {
+                  if (data?.activePayload?.[0]?.payload?.stageId) {
+                    navigate(`/admin/casos?stage=${data.activePayload[0].payload.stageId}`);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Casos" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              Estado de Pago de Casos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={casesPaymentData}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={4}
+                  label={({ name, value }: any) => `${name}: ${value}`}
+                >
+                  {casesPaymentData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

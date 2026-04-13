@@ -73,11 +73,31 @@ export default function NotificationCenter() {
     if (!user) return;
     const { data } = await supabase
       .from("admin_notifications")
-      .select("id, title, message, type, reference_type, read, created_at")
+      .select("id, title, message, type, reference_type, reference_id, read, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30);
     setNotifications((data as Notification[]) ?? []);
+  };
+
+  const getNotificationRoute = (n: Notification): string | null => {
+    if (!n.reference_id) return null;
+    if (n.reference_type === "urgent_lead" || n.reference_type === "lead" || ["new_lead", "overdue_lead"].includes(n.type)) {
+      return `/admin/leads?lead=${n.reference_id}`;
+    }
+    if (n.reference_type === "payment" || n.type === "payment") {
+      return `/admin/pagos`;
+    }
+    return null;
+  };
+
+  const handleNotificationClick = async (n: Notification) => {
+    await markRead(n.id);
+    const route = getNotificationRoute(n);
+    if (route) {
+      setOpen(false);
+      navigate(route);
+    }
   };
 
   const markRead = async (id: string) => {

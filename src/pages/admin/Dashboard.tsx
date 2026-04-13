@@ -177,8 +177,19 @@ export default function Dashboard() {
         supabase.from("lead_activities").select("lead_id, created_at, activity_type").eq("activity_type", "pipeline_change").order("created_at", { ascending: true }).limit(1000),
       ]);
 
-      const allLeads = leads.data ?? [];
-      const allPayments = payments.data ?? [];
+      const rangeStart = dateFrom ? startOfDay(dateFrom) : undefined;
+      const rangeEnd = dateTo ? endOfDay(dateTo) : undefined;
+
+      const filterByRange = (dateStr: string) => {
+        if (!rangeStart && !rangeEnd) return true;
+        const d = new Date(dateStr);
+        if (rangeStart && d < rangeStart) return false;
+        if (rangeEnd && d > rangeEnd) return false;
+        return true;
+      };
+
+      const allLeads = (leads.data ?? []).filter(l => filterByRange(l.created_at));
+      const allPayments = (payments.data ?? []).filter(p => filterByRange(p.created_at));
       const allActivities = activities.data ?? [];
 
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;

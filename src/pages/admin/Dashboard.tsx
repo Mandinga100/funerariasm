@@ -706,7 +706,7 @@ export default function Dashboard() {
                   innerRadius={50}
                   outerRadius={85}
                   paddingAngle={4}
-                  label={({ status, count }) => `${status}: ${count}`}
+                  label={({ name, value }: any) => `${name}: ${value}`}
                 >
                   {casesPaymentData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />

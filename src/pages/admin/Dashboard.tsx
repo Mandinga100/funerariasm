@@ -341,7 +341,6 @@ export default function Dashboard() {
       </div>
 
       <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
-      </div>
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">

@@ -24,6 +24,7 @@ const urgencyMap: Record<string, { label: string; emoji: string; color: string }
 
 const intentMap: Record<string, { label: string; emoji: string }> = {
   servicio_funerario_urgente: { label: "Servicio funerario urgente", emoji: "⚡" },
+  servicio_funerario: { label: "Servicio funerario", emoji: "🕊️" },
   traslado: { label: "Traslado de restos", emoji: "🚐" },
   cremacion: { label: "Cremación", emoji: "🕯️" },
   cotizacion: { label: "Cotización de servicios", emoji: "💰" },
@@ -32,6 +33,41 @@ const intentMap: Record<string, { label: string; emoji: string }> = {
   consulta_general: { label: "Consulta general", emoji: "💬" },
   reclamo: { label: "Reclamo o queja", emoji: "⚠️" },
 };
+
+// Map plan identifiers to their display names
+const planDisplayNames: Record<string, string> = {
+  margarita: "Plan Margarita",
+  "plan margarita": "Plan Margarita",
+  "plan_margarita": "Plan Margarita",
+  azucena: "Plan Azucena",
+  "plan azucena": "Plan Azucena",
+  "plan_azucena": "Plan Azucena",
+  acacia: "Plan Acacia",
+  "plan acacia": "Plan Acacia",
+  "plan_acacia": "Plan Acacia",
+  orquidea: "Plan Orquídea",
+  "plan orquidea": "Plan Orquídea",
+  "plan orquídea": "Plan Orquídea",
+  "plan_orquidea": "Plan Orquídea",
+  jazmin: "Plan Jazmín",
+  "plan jazmin": "Plan Jazmín",
+  "plan jazmín": "Plan Jazmín",
+  "plan_jazmin": "Plan Jazmín",
+  castano: "Plan Castaño",
+  "plan castano": "Plan Castaño",
+  "plan castaño": "Plan Castaño",
+  "plan_castano": "Plan Castaño",
+  rauli: "Plan Raulí",
+  "plan rauli": "Plan Raulí",
+  "plan raulí": "Plan Raulí",
+  "plan_rauli": "Plan Raulí",
+};
+
+function resolvePlanName(raw?: string | null): string | null {
+  if (!raw) return null;
+  const key = raw.toLowerCase().trim();
+  return planDisplayNames[key] ?? raw;
+}
 
 const channelMap: Record<string, { label: string; emoji: string }> = {
   llamada_telefonica: { label: "Llamada telefónica", emoji: "📞" },

@@ -146,11 +146,18 @@ export default function NotificationCenter() {
               </Badge>
             )}
           </div>
-          {unreadCount > 0 && (
-            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={markAllRead}>
-              <Check className="w-3 h-3 mr-1" />Marcar leídas
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {readCount > 0 && (
+              <Button size="sm" variant="ghost" className="h-6 text-[10px] text-muted-foreground hover:text-destructive" onClick={clearRead}>
+                <Trash2 className="w-3 h-3 mr-1" />Limpiar ({readCount})
+              </Button>
+            )}
+            {unreadCount > 0 && (
+              <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={markAllRead}>
+                <Check className="w-3 h-3 mr-1" />Marcar leídas
+              </Button>
+            )}
+          </div>
         </div>
         {/* Filter tabs */}
         <div className="flex items-center gap-1 px-2 py-1.5 border-b overflow-x-auto">

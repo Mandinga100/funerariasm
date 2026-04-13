@@ -22,10 +22,30 @@ interface Notification {
 const isUrgent = (n: Notification) =>
   n.type === "urgent" || n.reference_type === "urgent_lead";
 
+type FilterKey = "all" | "urgent" | "leads" | "payments" | "reports";
+
+const FILTERS: { key: FilterKey; label: string; icon: string }[] = [
+  { key: "all", label: "Todas", icon: "📋" },
+  { key: "urgent", label: "Urgentes", icon: "🚨" },
+  { key: "leads", label: "Leads", icon: "🔵" },
+  { key: "payments", label: "Pagos", icon: "💰" },
+  { key: "reports", label: "Reportes", icon: "📊" },
+];
+
+const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
+  if (filter === "all") return true;
+  if (filter === "urgent") return isUrgent(n);
+  if (filter === "leads") return ["new_lead", "overdue_lead"].includes(n.type) || n.reference_type === "lead";
+  if (filter === "payments") return n.type === "payment" || n.reference_type === "payment";
+  if (filter === "reports") return n.type === "warning" || n.type === "info" || n.reference_type === "kpi_report";
+  return true;
+};
+
 export default function NotificationCenter() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const instanceIdRef = useRef(crypto.randomUUID());
 
   useEffect(() => {

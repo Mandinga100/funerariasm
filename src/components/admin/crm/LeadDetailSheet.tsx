@@ -14,6 +14,7 @@ import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkl
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
+import AIClassificationHistory from "./AIClassificationHistory";
 
 interface LeadDetailSheetProps {
   lead: any | null;
@@ -38,6 +39,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [classifying, setClassifying] = useState(false);
   const [localClassification, setLocalClassification] = useState<any>(null);
   const [localSummary, setLocalSummary] = useState<string | null>(null);
+  const [classificationHistory, setClassificationHistory] = useState<any[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -48,6 +50,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     setLocalSummary(lead.ai_summary ?? null);
     loadNotes();
     loadActivities();
+    loadClassificationHistory();
   }, [lead?.id]);
 
   const loadNotes = async () => {
@@ -58,6 +61,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
       .eq("lead_id", lead.id)
       .order("created_at", { ascending: false });
     setNotes(data ?? []);
+  };
+
+  const loadClassificationHistory = async () => {
+    if (!lead) return;
+    const { data } = await supabase
+      .from("lead_activities")
+      .select("id, metadata, created_at")
+      .eq("lead_id", lead.id)
+      .eq("activity_type", "ai_classification")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setClassificationHistory(data ?? []);
   };
 
   const loadActivities = async () => {
@@ -130,6 +145,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
       toast({ title: "✅ Análisis IA completado" });
       onUpdate();
       loadActivities();
+      loadClassificationHistory();
     } catch {
       toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }
@@ -241,6 +257,9 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
               <p className="text-xs text-muted-foreground">Sin análisis aún. Haz clic en "Analizar" para clasificar con IA.</p>
             )}
           </div>
+
+          {/* AI Classification History */}
+          <AIClassificationHistory entries={classificationHistory} planName={lead.selected_plan} />
 
           {lead.selected_plan && (
             <div>

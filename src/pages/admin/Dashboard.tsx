@@ -241,6 +241,7 @@ export default function Dashboard() {
 
       const allLeads = (leads.data ?? []).filter(l => filterByRange(l.created_at));
       const allPayments = (payments.data ?? []).filter(p => filterByRange(p.created_at));
+      const allCases = (casesRes.data ?? []).filter(c => filterByRange(c.created_at));
       const allActivities = activities.data ?? [];
 
       const newLeads = allLeads.filter(l => (l.pipeline_stage ?? "nuevo") === "nuevo").length;

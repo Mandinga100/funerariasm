@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO } from "date-fns";
@@ -73,6 +75,8 @@ function formatMinutes(mins: number): string {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Stats>({
     obituaries: 0, memorials: 0, totalLeads: 0, newLeads: 0,
     contactedLeads: 0, condolences: 0, pendingPayments: 0,
@@ -86,6 +90,77 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [conversionTrend, setConversionTrend] = useState<{ month: string; rate: number }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    setExporting(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+
+      const pdf = new jsPDF({ orientation: imgW > imgH ? "l" : "p", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableW = pageW - margin * 2;
+      const scaledH = (imgH * usableW) / imgW;
+
+      // Header
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Funeraria Santa Margarita — Reporte de Analíticas", margin, 12);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: es })}`, margin, 18);
+      pdf.line(margin, 20, pageW - margin, 20);
+
+      const startY = 24;
+      const availH = pageH - startY - margin;
+
+      if (scaledH <= availH) {
+        pdf.addImage(imgData, "JPEG", margin, startY, usableW, scaledH);
+      } else {
+        // Multi-page
+        let srcY = 0;
+        let page = 0;
+        while (srcY < imgH) {
+          const sliceH = Math.min(imgH - srcY, (availH * imgW) / usableW);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = imgW;
+          sliceCanvas.height = sliceH;
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, srcY, imgW, sliceH, 0, 0, imgW, sliceH);
+
+          const sliceImg = sliceCanvas.toDataURL("image/jpeg", 0.95);
+          const sliceRenderedH = (sliceH * usableW) / imgW;
+
+          if (page > 0) pdf.addPage();
+          pdf.addImage(sliceImg, "JPEG", margin, page === 0 ? startY : margin, usableW, sliceRenderedH);
+          srcY += sliceH;
+          page++;
+        }
+      }
+
+      pdf.save(`reporte-analiticas-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      toast.success("Reporte PDF descargado exitosamente");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al generar el PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -248,16 +323,24 @@ export default function Dashboard() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl sm:text-2xl font-bold">Panel de Analíticas</h1>
-        {stats.overdueLeads > 0 && (
-          <Badge
-            variant="destructive"
-            className="animate-pulse cursor-pointer self-start sm:self-auto"
-            onClick={() => navigate("/admin/leads?filter=overdue")}
-          >
-            ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
-          </Badge>
-        )}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {stats.overdueLeads > 0 && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse cursor-pointer"
+              onClick={() => navigate("/admin/leads?filter=overdue")}
+            >
+              ⚠️ {stats.overdueLeads} lead{stats.overdueLeads > 1 ? "s" : ""} sin contactar
+            </Badge>
+          )}
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />}
+            Exportar PDF
+          </Button>
+        </div>
       </div>
+
+      <div ref={dashboardRef} className="space-y-4 sm:space-y-6">
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -516,6 +599,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -45,6 +45,7 @@ const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
 
 export default function NotificationCenter() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");

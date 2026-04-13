@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import NotificationCenter from "@/components/admin/crm/NotificationCenter";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -26,9 +27,50 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Real-time urgent lead alerts
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const urgentChannel = supabase
+      .channel(`urgent-alerts-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "admin_notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const notification = payload.new as any;
+          if (notification.type === "urgent" || notification.reference_type === "urgent_lead") {
+            toast({
+              title: notification.title,
+              description: notification.message?.substring(0, 120),
+              variant: "destructive",
+              duration: 15000,
+            });
+
+            // Play alert sound
+            try {
+              const audio = new Audio("/notification.mp3");
+              audio.volume = 0.5;
+              audio.play().catch(() => {});
+            } catch {}
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(urgentChannel);
+    };
+  }, [user?.id, toast]);
 
   useEffect(() => {
     setMobileOpen(false);

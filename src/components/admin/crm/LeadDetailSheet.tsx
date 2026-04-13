@@ -109,11 +109,29 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     if (!lead) return;
     setClassifying(true);
     try {
-      await supabase.functions.invoke("classify-lead", { body: { leadId: lead.id } });
-      toast({ title: "Clasificación IA completada" });
+      const { data, error } = await supabase.functions.invoke("classify-lead", { body: { leadId: lead.id } });
+      if (error) throw error;
+      // Show result instantly from the function response
+      if (data?.classification) {
+        setLocalClassification(data.classification);
+        setLocalSummary(data.classification.summary ?? null);
+        // Update estimated value if returned
+        if (data.classification.estimated_value) {
+          setEstimatedValue(data.classification.estimated_value.toString());
+        }
+      } else {
+        // Fallback: re-fetch the lead from DB
+        const { data: updated } = await supabase.from("contact_leads").select("ai_classification, ai_summary").eq("id", lead.id).single();
+        if (updated) {
+          setLocalClassification(updated.ai_classification && Object.keys(updated.ai_classification as any).length > 0 ? updated.ai_classification : null);
+          setLocalSummary(updated.ai_summary ?? null);
+        }
+      }
+      toast({ title: "✅ Análisis IA completado" });
       onUpdate();
+      loadActivities();
     } catch {
-      toast({ title: "Error", description: "No se pudo clasificar", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }
     setClassifying(false);
   };

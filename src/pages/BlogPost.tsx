@@ -336,28 +336,29 @@ const BlogPostPage = () => {
               {/* Right: Sharp image with frame & reflection */}
               <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[440px] relative self-center">
                 {isLogo ? (
-                  /* ── Logo mode: fully transparent with soft gold backlight ── */
+                  /* ── Logo mode: transparent with professional backlight ── */
                   <div className="relative flex items-center justify-center py-6">
-                    {/* Outer ambient glow */}
-                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 50% / 0.12) 0%, hsl(40 56% 41% / 0.05) 45%, transparent 70%)' }} />
+                    {/* Outer ambient gold glow */}
+                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 50% / 0.10) 0%, transparent 60%)' }} />
                     {/* Inner concentrated backlight */}
-                    <div className="absolute inset-[20%] rounded-full pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.20), transparent 60%)' }} />
-                    {/* Sharp logo — transparent PNG, no background */}
+                    <div className="absolute inset-[25%] rounded-full pointer-events-none blur-[50px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.15), transparent 55%)' }} />
+                    {/* Sharp logo — mix-blend-screen removes white bg on dark backgrounds */}
                     <img
                       src={heroImage}
                       alt={post.title}
                       className="relative z-10 w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] lg:w-[280px] lg:h-[280px] object-contain"
                       style={{
-                        filter: 'drop-shadow(0 0 40px rgba(197,160,89,0.25)) drop-shadow(0 0 80px rgba(197,160,89,0.10)) brightness(1.1)',
+                        mixBlendMode: 'screen',
+                        filter: 'drop-shadow(0 0 50px rgba(197,160,89,0.20)) brightness(1.15) contrast(1.1)',
                       }}
                     />
                     {/* Subtle reflection below */}
-                    <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-[60%] h-16 overflow-hidden opacity-15 pointer-events-none" aria-hidden="true">
+                    <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-[60%] h-16 overflow-hidden opacity-10 pointer-events-none" aria-hidden="true">
                       <img
                         src={heroImage}
                         alt=""
-                        className="w-full h-[280px] object-contain scale-y-[-1] origin-top blur-[10px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)' }}
+                        className="w-full h-[280px] object-contain scale-y-[-1] origin-top blur-[12px]"
+                        style={{ mixBlendMode: 'screen', maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)' }}
                       />
                     </div>
                   </div>

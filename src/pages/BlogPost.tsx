@@ -335,30 +335,56 @@ const BlogPostPage = () => {
 
               {/* Right: Sharp image with frame & reflection */}
               <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[440px] relative self-center">
-                {/* Glow behind image */}
-                <div className="absolute -inset-4 rounded-2xl opacity-30 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, hsl(40 56% 41% / 0.4), transparent 70%)' }} />
-                {/* Main sharp image */}
-                <div className="relative rounded-xl overflow-hidden shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] border border-white/10">
-                  <img
-                    src={heroImage}
-                    alt={post.title}
-                    className="w-full h-[200px] sm:h-[240px] md:h-[300px] lg:h-[340px] object-cover"
-                    style={{ imageRendering: 'auto', filter: 'contrast(1.02) saturate(1.05)' }}
-                  />
-                  {/* Subtle inner border glow */}
-                  <div className="absolute inset-0 rounded-xl border border-white/5 pointer-events-none" />
-                  {/* Bottom gold accent on image */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
-                </div>
-                {/* Mirror reflection below image */}
-                <div className="relative h-16 mt-px overflow-hidden rounded-b-xl opacity-25 pointer-events-none" aria-hidden="true">
-                  <img
-                    src={heroImage}
-                    alt=""
-                    className="w-full h-[340px] object-cover scale-y-[-1] origin-top blur-[6px]"
-                    style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' }}
-                  />
-                </div>
+                {isLogo ? (
+                  /* ── Logo mode: transparent with backlight glow ── */
+                  <div className="relative flex items-center justify-center py-6">
+                    {/* Outer soft glow */}
+                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 41% / 0.18) 0%, hsl(40 56% 41% / 0.08) 40%, transparent 70%)' }} />
+                    {/* Inner bright backlight */}
+                    <div className="absolute inset-[15%] rounded-full pointer-events-none blur-3xl" style={{ background: 'radial-gradient(circle, hsl(40 56% 50% / 0.25), transparent 65%)' }} />
+                    {/* Sharp logo — no frame, no background */}
+                    <img
+                      src={heroImage}
+                      alt={post.title}
+                      className="relative z-10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[260px] md:h-[260px] lg:w-[300px] lg:h-[300px] object-contain drop-shadow-[0_0_30px_rgba(197,160,89,0.3)]"
+                    />
+                    {/* Mirror reflection below logo */}
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-20 overflow-hidden opacity-20 pointer-events-none" aria-hidden="true">
+                      <img
+                        src={heroImage}
+                        alt=""
+                        className="w-full h-[300px] object-contain scale-y-[-1] origin-top blur-[8px]"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)' }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Photo mode: framed image with reflection ── */
+                  <>
+                    {/* Glow behind image */}
+                    <div className="absolute -inset-4 rounded-2xl opacity-30 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, hsl(40 56% 41% / 0.4), transparent 70%)' }} />
+                    {/* Main sharp image */}
+                    <div className="relative rounded-xl overflow-hidden shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] border border-white/10">
+                      <img
+                        src={heroImage}
+                        alt={post.title}
+                        className="w-full h-[200px] sm:h-[240px] md:h-[300px] lg:h-[340px] object-cover"
+                        style={{ imageRendering: 'auto', filter: 'contrast(1.02) saturate(1.05)' }}
+                      />
+                      <div className="absolute inset-0 rounded-xl border border-white/5 pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+                    </div>
+                    {/* Mirror reflection below image */}
+                    <div className="relative h-16 mt-px overflow-hidden rounded-b-xl opacity-25 pointer-events-none" aria-hidden="true">
+                      <img
+                        src={heroImage}
+                        alt=""
+                        className="w-full h-[340px] object-cover scale-y-[-1] origin-top blur-[6px]"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </section>

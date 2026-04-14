@@ -278,7 +278,7 @@ export default function AdminCasos() {
                   <TableRow key={c.id} className={cn("cursor-pointer hover:bg-muted/30", stale && "bg-red-50 dark:bg-red-950/20 border-l-2 border-l-red-500")} onClick={() => setSelected(c)}>
                     <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-1.5">
-                        {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" title={`${staleHours(c)}h sin cambios`} />}
+                        {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
                         {c.case_number}
                       </div>
                     </TableCell>

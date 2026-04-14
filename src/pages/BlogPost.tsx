@@ -264,7 +264,7 @@ const BlogPostPage = () => {
       {/* Hero — Senior UI/UX split layout */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
-        const isLogo = heroImage.includes("logo-oficial");
+        const isLogo = heroImage.includes("logo-oficial") || heroImage.includes("logo-oficial-transparent");
         return (
           <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
             {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}
@@ -336,25 +336,28 @@ const BlogPostPage = () => {
               {/* Right: Sharp image with frame & reflection */}
               <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[440px] relative self-center">
                 {isLogo ? (
-                  /* ── Logo mode: transparent with backlight glow ── */
+                  /* ── Logo mode: fully transparent with soft gold backlight ── */
                   <div className="relative flex items-center justify-center py-6">
-                    {/* Outer soft glow */}
-                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 41% / 0.18) 0%, hsl(40 56% 41% / 0.08) 40%, transparent 70%)' }} />
-                    {/* Inner bright backlight */}
-                    <div className="absolute inset-[15%] rounded-full pointer-events-none blur-3xl" style={{ background: 'radial-gradient(circle, hsl(40 56% 50% / 0.25), transparent 65%)' }} />
-                    {/* Sharp logo — no frame, no background */}
+                    {/* Outer ambient glow */}
+                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 50% / 0.12) 0%, hsl(40 56% 41% / 0.05) 45%, transparent 70%)' }} />
+                    {/* Inner concentrated backlight */}
+                    <div className="absolute inset-[20%] rounded-full pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.20), transparent 60%)' }} />
+                    {/* Sharp logo — transparent PNG, no background */}
                     <img
                       src={heroImage}
                       alt={post.title}
-                      className="relative z-10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[260px] md:h-[260px] lg:w-[300px] lg:h-[300px] object-contain drop-shadow-[0_0_30px_rgba(197,160,89,0.3)]"
+                      className="relative z-10 w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] lg:w-[280px] lg:h-[280px] object-contain"
+                      style={{
+                        filter: 'drop-shadow(0 0 40px rgba(197,160,89,0.25)) drop-shadow(0 0 80px rgba(197,160,89,0.10)) brightness(1.1)',
+                      }}
                     />
-                    {/* Mirror reflection below logo */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-20 overflow-hidden opacity-20 pointer-events-none" aria-hidden="true">
+                    {/* Subtle reflection below */}
+                    <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-[60%] h-16 overflow-hidden opacity-15 pointer-events-none" aria-hidden="true">
                       <img
                         src={heroImage}
                         alt=""
-                        className="w-full h-[300px] object-contain scale-y-[-1] origin-top blur-[8px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)' }}
+                        className="w-full h-[280px] object-contain scale-y-[-1] origin-top blur-[10px]"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)' }}
                       />
                     </div>
                   </div>

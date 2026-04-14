@@ -51,8 +51,8 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
 
 // Map category name → image path for article cover fallback
 const CATEGORY_IMAGES: Record<string, string> = {
-  novedades: "/assets/images/brand/logo-oficial-transparent.png",
-  guias: "/assets/images/brand/logo-oficial-transparent.png",
+  novedades: "/assets/images/brand/logo-oficial.webp",
+  guias: "/assets/images/brand/logo-oficial.webp",
   duelo: "/assets/images/blog/duelo.jpg",
   servicios: "/assets/images/blog/servicios.jpg",
   prevision: "/assets/images/blog/prevision.jpg",
@@ -62,7 +62,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
 };
 
 export const getCategoryImage = (category: string | null): string => {
-  if (!category) return "/assets/images/brand/logo-oficial-transparent.png";
+  if (!category) return "/assets/images/brand/logo-oficial.webp";
   const normalized = category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-  return CATEGORY_IMAGES[normalized] || "/assets/images/brand/logo-oficial-transparent.png";
+  return CATEGORY_IMAGES[normalized] || "/assets/images/brand/logo-oficial.webp";
 };

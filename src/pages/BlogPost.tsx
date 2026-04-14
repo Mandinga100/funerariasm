@@ -264,22 +264,30 @@ const BlogPostPage = () => {
       {/* Hero — Senior UI/UX split layout */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
-        const isLogo = heroImage.includes("logo-oficial") || heroImage.includes("logo-oficial-transparent");
+        const isLogo = heroImage.includes("logo-oficial");
+        const logoSrc = isLogo ? "/assets/images/brand/logo-white.webp" : heroImage;
         return (
           <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
             {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-              <img
-                src={heroImage}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
-              />
-              {/* Mirrored reflection — flipped & extra blur */}
-              <img
-                src={heroImage}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
-              />
+              {isLogo ? (
+                /* For logo: skip the blurred bg images (they'd show white rectangles) */
+                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
+              ) : (
+                <>
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
+                  />
+                  {/* Mirrored reflection — flipped & extra blur */}
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
+                  />
+                </>
+              )}
             </div>
 
             {/* ── Layer 2: Multi-stop gradient overlays for depth ── */}
@@ -336,28 +344,28 @@ const BlogPostPage = () => {
               {/* Right: Sharp image with frame & reflection */}
               <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[440px] relative self-center">
                 {isLogo ? (
-                  /* ── Logo mode: fully transparent with soft gold backlight ── */
-                  <div className="relative flex items-center justify-center py-6">
-                    {/* Outer ambient glow */}
-                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 50% / 0.12) 0%, hsl(40 56% 41% / 0.05) 45%, transparent 70%)' }} />
+                  /* ── Logo mode: white logo on dark bg, fully transparent ── */
+                  <div className="relative flex items-center justify-center py-8">
+                    {/* Outer ambient gold glow */}
+                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(40 56% 50% / 0.12) 0%, transparent 55%)' }} />
                     {/* Inner concentrated backlight */}
-                    <div className="absolute inset-[20%] rounded-full pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.20), transparent 60%)' }} />
-                    {/* Sharp logo — transparent PNG, no background */}
+                    <div className="absolute inset-[20%] rounded-full pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.18), transparent 55%)' }} />
+                    {/* White logo — naturally transparent on dark bg */}
                     <img
-                      src={heroImage}
+                      src={logoSrc}
                       alt={post.title}
-                      className="relative z-10 w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] lg:w-[280px] lg:h-[280px] object-contain"
+                      className="relative z-10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[260px] md:h-[260px] lg:w-[300px] lg:h-[300px] object-contain"
                       style={{
-                        filter: 'drop-shadow(0 0 40px rgba(197,160,89,0.25)) drop-shadow(0 0 80px rgba(197,160,89,0.10)) brightness(1.1)',
+                        filter: 'drop-shadow(0 0 40px rgba(197,160,89,0.25)) drop-shadow(0 0 80px rgba(197,160,89,0.12))',
                       }}
                     />
                     {/* Subtle reflection below */}
-                    <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-[60%] h-16 overflow-hidden opacity-15 pointer-events-none" aria-hidden="true">
+                    <div className="absolute bottom-[-8px] left-1/2 -translate-x-1/2 w-[60%] h-16 overflow-hidden opacity-15 pointer-events-none" aria-hidden="true">
                       <img
-                        src={heroImage}
+                        src={logoSrc}
                         alt=""
-                        className="w-full h-[280px] object-contain scale-y-[-1] origin-top blur-[10px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 80%)' }}
+                        className="w-full h-[300px] object-contain scale-y-[-1] origin-top blur-[10px]"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.35), transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.35), transparent 80%)' }}
                       />
                     </div>
                   </div>

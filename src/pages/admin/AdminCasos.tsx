@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, AlertTriangle, Briefcase, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, AlertTriangle, Briefcase, ChevronLeft, ChevronRight, FileDown, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
@@ -68,6 +68,13 @@ const PAYMENT_STATUSES = [
 ];
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
+
+const STALE_MS = 48 * 60 * 60 * 1000;
+const isStale = (c: ServiceCase) =>
+  !["cerrado"].includes(c.pipeline_stage) && (Date.now() - new Date(c.updated_at).getTime()) > STALE_MS;
+
+const staleHours = (c: ServiceCase) =>
+  Math.round((Date.now() - new Date(c.updated_at).getTime()) / 3600000);
 
 export default function AdminCasos() {
   const [cases, setCases] = useState<ServiceCase[]>([]);
@@ -265,9 +272,16 @@ export default function AdminCasos() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedRows.map(c => (
-                  <TableRow key={c.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setSelected(c)}>
-                    <TableCell className="font-mono text-xs">{c.case_number}</TableCell>
+                {paginatedRows.map(c => {
+                  const stale = isStale(c);
+                  return (
+                  <TableRow key={c.id} className={cn("cursor-pointer hover:bg-muted/30", stale && "bg-red-50 dark:bg-red-950/20 border-l-2 border-l-red-500")} onClick={() => setSelected(c)}>
+                    <TableCell className="font-mono text-xs">
+                      <div className="flex items-center gap-1.5">
+                        {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+                        {c.case_number}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm">{c.client_name ?? "Sin nombre"}</p>
@@ -278,7 +292,12 @@ export default function AdminCasos() {
                     <TableCell>{getPipelineBadge(c.pipeline_stage)}</TableCell>
                     <TableCell>{getPaymentBadge(c.payment_status)}</TableCell>
                     <TableCell className="font-semibold">{c.total_amount > 0 ? fmt(c.total_amount) : "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yy", { locale: es })}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yy", { locale: es })}</span>
+                        {stale && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{staleHours(c)}h</Badge>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -306,18 +325,24 @@ export default function AdminCasos() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
 
           {/* Mobile cards */}
           <div className="space-y-2 md:hidden">
-            {paginatedRows.map(c => (
-              <div key={c.id} className="border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30" onClick={() => setSelected(c)}>
+            {paginatedRows.map(c => {
+              const stale = isStale(c);
+              return (
+              <div key={c.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", stale && "border-red-400 bg-red-50 dark:bg-red-950/20")} onClick={() => setSelected(c)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{c.client_name ?? "Sin nombre"}</p>
+                    <div className="flex items-center gap-1.5">
+                      {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+                      <p className="text-sm font-medium truncate">{c.client_name ?? "Sin nombre"}</p>
+                    </div>
                     <code className="text-[10px] text-muted-foreground font-mono">{c.case_number}</code>
                   </div>
                   <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
@@ -351,9 +376,13 @@ export default function AdminCasos() {
                   {getPaymentBadge(c.payment_status)}
                   {c.selected_plan && <Badge variant="outline" className="text-[10px]">{c.selected_plan}</Badge>}
                 </div>
-                <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: es })}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: es })}
+                  {stale && <span className="text-red-500 font-semibold ml-1">⚠ {staleHours(c)}h sin cambios</span>}
+                </p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

@@ -282,9 +282,9 @@ const BlogPostPage = () => {
             </div>
 
             {/* ── Layer 2: Cinematic gradient overlays ── */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-black/40 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/60 pointer-events-none" />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 90% at 72% 50%, transparent 35%, rgba(0,0,0,0.75) 100%)' }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/50 pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 90% at 72% 50%, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
 
             {/* ── Layer 3: Gold accent lines ── */}
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />

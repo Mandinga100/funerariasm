@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import TableOfContents, { extractHeadings } from "@/components/blog/TableOfContents";
 import RelatedPosts from "@/components/blog/RelatedPosts";
+import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, User, Share2 } from "lucide-react";
 
 interface BlogPost {
@@ -260,56 +261,74 @@ const BlogPostPage = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
 
-      {/* Header */}
-      <section className="pt-28 pb-16 bg-primary text-primary-foreground">
-        <div className="container max-w-3xl">
-          <Breadcrumbs
-            items={[
-              { label: "Blog", href: "/blog" },
-              ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category}` }] : []),
-              { label: post.title },
-            ]}
-          />
-
-          <h1 className="text-section font-playfair italic leading-tight">{post.title}</h1>
-          {post.excerpt && (
-            <p className="text-primary-foreground/60 mt-4 text-lg">{post.excerpt}</p>
-          )}
-
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mt-6 mb-4" />
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/50">
-            {post.category && (
-              <span className="flex items-center gap-1">
-                <Tag className="w-3 h-3 text-gold" />
-                {post.category}
-              </span>
-            )}
-            {post.published_at && (
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {post.author_name}
-            </span>
-            <span className="text-primary-foreground/30">·</span>
-            <span>{readingTime} min de lectura</span>
-          </div>
-        </div>
-      </section>
+      {/* Hero Image */}
+      {(() => {
+        const heroImage = post.cover_image || getCategoryImage(post.category);
+        return (
+          <section className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] overflow-hidden">
+            {/* Background image */}
+            <img
+              src={heroImage}
+              alt={post.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Dark gradient overlay for text legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            {/* Mirror reflection effect at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 overflow-hidden opacity-20 pointer-events-none">
+              <img
+                src={heroImage}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-[480px] object-cover transform scale-y-[-1] origin-top blur-[2px]"
+              />
+            </div>
+            {/* Gold accent line */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+            {/* Content overlay */}
+            <div className="relative z-10 h-full flex flex-col justify-end container max-w-3xl pb-10">
+              <Breadcrumbs
+                items={[
+                  { label: "Blog", href: "/blog" },
+                  ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category}` }] : []),
+                  { label: post.title },
+                ]}
+              />
+              <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-playfair italic leading-tight text-white drop-shadow-lg">
+                {post.title}
+              </h1>
+              {post.excerpt && (
+                <p className="text-white/60 mt-3 text-base sm:text-lg max-w-2xl drop-shadow">{post.excerpt}</p>
+              )}
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mt-5 mb-3" />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/50">
+                {post.category && (
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3 text-gold" />
+                    {post.category}
+                  </span>
+                )}
+                {post.published_at && (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {post.author_name}
+                </span>
+                <span className="text-white/30">·</span>
+                <span>{readingTime} min de lectura</span>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Content */}
       <section className="py-16 bg-background">
         <article className="container max-w-3xl">
-          {post.cover_image && (
-            <div className="rounded-lg overflow-hidden mb-10 aspect-[16/9]">
-              <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
-            </div>
-          )}
-
           <TableOfContents content={post.content} />
 
           <div className="prose-funeraria">

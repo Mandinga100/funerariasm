@@ -81,8 +81,7 @@ const Blog = () => {
       }
       return posts.filter((p) => {
         const cat = p.category ? normalize(p.category) : "";
-        const tags = (p.tags || []).map((t) => normalize(t));
-        return cat === activeFilter || tags.includes(activeFilter);
+        return cat === activeFilter;
       });
     }
 

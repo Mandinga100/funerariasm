@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import TableOfContents, { extractHeadings } from "@/components/blog/TableOfContents";
 import RelatedPosts from "@/components/blog/RelatedPosts";
+import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, User, Share2 } from "lucide-react";
 
 interface BlogPost {

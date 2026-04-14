@@ -297,7 +297,7 @@ const BlogPostPage = () => {
                 <Breadcrumbs
                   items={[
                     { label: "Blog", href: "/blog" },
-                    ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category}` }] : []),
+                    ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}` }] : []),
                     { label: post.title },
                   ]}
                 />

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
@@ -24,7 +24,17 @@ const SITE_URL = "https://funerariasantamargarita.cl";
 const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeFilter, setActiveFilter] = useState<string | null>(searchParams.get("cat"));
+
+  const handleFilterChange = (filter: string | null) => {
+    setActiveFilter(filter);
+    if (filter) {
+      setSearchParams({ cat: filter }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   useEffect(() => {
     const title = "Blog — Guías y Orientación Funeraria | Funeraria Santa Margarita";
@@ -118,7 +128,7 @@ const Blog = () => {
 
       <section className="py-16 bg-background">
         <div className="container">
-          <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
+          <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

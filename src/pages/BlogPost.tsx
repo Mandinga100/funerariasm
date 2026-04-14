@@ -338,7 +338,6 @@ const BlogPostPage = () => {
                       {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
                     </span>
                   )}
-                  <span className="w-px h-3.5 bg-white/15" />
                   <span className="flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-white/30" />
                     {post.author_name}

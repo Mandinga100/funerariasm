@@ -267,41 +267,29 @@ const BlogPostPage = () => {
         const isLogo = heroImage.includes("logo-oficial");
         const logoSrc = isLogo ? "/assets/images/brand/logo-white.webp" : heroImage;
         return (
-          <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
-            {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}
+          <section className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] overflow-hidden bg-[#080808]">
+            {/* ── Layer 1: Blurred cinematic background ── */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               {isLogo ? (
-                /* For logo: skip the blurred bg images (they'd show white rectangles) */
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  <img
-                    src={heroImage}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
-                  />
-                  {/* Mirrored reflection — flipped & extra blur */}
-                  <img
-                    src={heroImage}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
-                  />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-125 blur-[40px] opacity-35" />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-125 blur-[50px] opacity-15 mix-blend-soft-light" />
                 </>
               )}
             </div>
 
-            {/* ── Layer 2: Multi-stop gradient overlays for depth ── */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
-            {/* Radial vignette for cinematic depth */}
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 100% at 75% 50%, transparent 40%, rgba(0,0,0,0.7) 100%)' }} />
+            {/* ── Layer 2: Cinematic gradient overlays ── */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-black/40 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/60 pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 90% at 72% 50%, transparent 35%, rgba(0,0,0,0.75) 100%)' }} />
 
             {/* ── Layer 3: Gold accent lines ── */}
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent z-20" />
 
-            {/* ── Layer 4: Content grid — text left, sharp image right ── */}
-            <div className="relative z-10 h-full container max-w-6xl flex flex-col md:flex-row items-end md:items-center gap-6 md:gap-10 py-10 md:py-0 min-h-[420px] sm:min-h-[480px] md:min-h-[540px]">
+            {/* ── Layer 4: Content — with proper navbar clearance ── */}
+            <div className="relative z-10 h-full container max-w-6xl flex flex-col md:flex-row items-end md:items-center gap-6 md:gap-12 pt-28 pb-12 md:pt-24 md:pb-16 min-h-[480px] sm:min-h-[540px] md:min-h-[600px]">
               
               {/* Left: Text content */}
               <div className="flex-1 flex flex-col justify-center md:pr-8 order-2 md:order-1">
@@ -347,67 +335,60 @@ const BlogPostPage = () => {
                 </div>
               </div>
 
-              {/* Right: Sharp image with frame & reflection */}
-              <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[400px] lg:w-[460px] relative self-center">
+              {/* Right: Cinematic image showcase */}
+              <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[420px] xl:w-[460px] relative self-center">
                 {isLogo ? (
-                  /* ── Logo mode: white logo on dark bg, fully transparent ── */
+                  /* ── Logo mode ── */
                   <div className="relative flex items-center justify-center py-10">
-                    {/* Outermost atmospheric glow */}
                     <div className="absolute inset-[-20%] rounded-full pointer-events-none blur-[80px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 45% / 0.08), transparent 60%)' }} />
-                    {/* Mid-range gold halo */}
                     <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 48%, hsl(40 56% 50% / 0.14) 0%, transparent 50%)' }} />
-                    {/* Inner concentrated backlight */}
                     <div className="absolute inset-[15%] rounded-full pointer-events-none blur-[50px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.22), transparent 50%)' }} />
-                    {/* White logo — naturally transparent */}
                     <img
                       src={logoSrc}
                       alt={post.title}
                       className="relative z-10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] object-contain"
-                      style={{
-                        filter: 'drop-shadow(0 0 30px rgba(197,160,89,0.30)) drop-shadow(0 0 60px rgba(197,160,89,0.15)) drop-shadow(0 0 120px rgba(197,160,89,0.08)) brightness(1.08)',
-                      }}
+                      style={{ filter: 'drop-shadow(0 0 30px rgba(197,160,89,0.30)) drop-shadow(0 0 60px rgba(197,160,89,0.15)) drop-shadow(0 0 120px rgba(197,160,89,0.08)) brightness(1.08)' }}
                     />
-                    {/* Subtle glass reflection below */}
-                    <div className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 w-[55%] h-20 overflow-hidden opacity-12 pointer-events-none" aria-hidden="true">
-                      <img
-                        src={logoSrc}
-                        alt=""
-                        className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }}
-                      />
+                    <div className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 w-[55%] h-20 overflow-hidden opacity-[0.12] pointer-events-none" aria-hidden="true">
+                      <img src={logoSrc} alt="" className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]" style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }} />
                     </div>
                   </div>
                 ) : (
-                  /* ── Photo mode: cinematic framed image ── */
-                  <>
-                    {/* Multi-layer glow behind image */}
-                    <div className="absolute -inset-6 rounded-2xl opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, hsl(40 56% 41% / 0.5), transparent 70%)' }} />
-                    <div className="absolute -inset-2 rounded-2xl opacity-15 blur-xl pointer-events-none" style={{ background: 'linear-gradient(135deg, hsl(40 56% 50% / 0.2), transparent 60%)' }} />
-                    {/* Main sharp image with premium frame */}
-                    <div className="relative rounded-xl overflow-hidden shadow-[0_12px_50px_-10px_rgba(0,0,0,0.8),0_4px_20px_-4px_rgba(197,160,89,0.15)]">
-                      {/* Top gold accent */}
-                      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/40 to-transparent z-10" />
+                  /* ── Photo mode: cinematic floating image ── */
+                  <div className="relative">
+                    {/* Atmospheric glow */}
+                    <div className="absolute -inset-8 rounded-[2rem] pointer-events-none blur-[40px]" style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 50%, hsl(40 56% 41% / 0.20), transparent 70%)' }} />
+                    
+                    {/* Main image with rounded corners and sophisticated framing */}
+                    <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: '0 25px 60px -15px rgba(0,0,0,0.8), 0 10px 30px -10px rgba(197,160,89,0.12), 0 0 0 1px rgba(255,255,255,0.06)' }}>
+                      {/* Top light leak */}
+                      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/[0.04] to-transparent z-10 pointer-events-none" />
+                      {/* Gold top accent */}
+                      <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent z-10" />
+                      
                       <img
                         src={heroImage}
                         alt={post.title}
-                        className="w-full h-[220px] sm:h-[260px] md:h-[320px] lg:h-[360px] object-cover"
-                        style={{ imageRendering: 'auto', filter: 'contrast(1.03) saturate(1.08) brightness(1.02)' }}
+                        className="w-full h-[200px] sm:h-[240px] md:h-[300px] lg:h-[340px] object-cover"
+                        style={{ filter: 'contrast(1.04) saturate(1.10) brightness(1.02)' }}
                       />
-                      {/* Inner border overlay */}
-                      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 0 rgba(255,255,255,0.1)' }} />
+                      
+                      {/* Inner vignette */}
+                      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 60px 10px rgba(0,0,0,0.25)' }} />
                       {/* Bottom gold accent */}
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/50 to-transparent z-10" />
+                      <div className="absolute bottom-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-gold/40 to-transparent z-10" />
                     </div>
-                    {/* Mirror reflection below image */}
-                    <div className="relative h-20 mt-px overflow-hidden rounded-b-xl opacity-20 pointer-events-none" aria-hidden="true">
+                    
+                    {/* Reflection */}
+                    <div className="relative h-16 mt-1 mx-4 overflow-hidden rounded-b-2xl opacity-[0.15] pointer-events-none" aria-hidden="true">
                       <img
                         src={heroImage}
                         alt=""
-                        className="w-full h-[360px] object-cover scale-y-[-1] origin-top blur-[8px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 70%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 70%)' }}
+                        className="w-full h-[340px] object-cover scale-y-[-1] origin-top blur-[10px]"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 60%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 60%)' }}
                       />
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

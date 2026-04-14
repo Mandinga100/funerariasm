@@ -51,14 +51,14 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
 
 // Map category name → image path for article cover fallback
 const CATEGORY_IMAGES: Record<string, string> = {
-  novedades: "/assets/images/brand/logo-oficial.webp",
+  novedades: "/assets/images/blog/novedades-hero.jpg",
   guias: "/assets/images/brand/logo-oficial.webp",
-  duelo: "/assets/images/blog/duelo.jpg",
-  servicios: "/assets/images/blog/servicios.jpg",
-  prevision: "/assets/images/blog/prevision.jpg",
-  "contencion-emocional": "/assets/images/blog/contencion-emocional.jpg",
-  "salud-mental": "/assets/images/blog/salud-mental.jpg",
-  "apoyo-familiar": "/assets/images/blog/apoyo-familiar.jpg",
+  duelo: "/assets/images/blog/duelo-hero.jpg",
+  servicios: "/assets/images/blog/servicios-hero.jpg",
+  prevision: "/assets/images/blog/prevision-hero.jpg",
+  "contencion-emocional": "/assets/images/blog/contencion-emocional-hero.jpg",
+  "salud-mental": "/assets/images/blog/salud-mental-hero.jpg",
+  "apoyo-familiar": "/assets/images/blog/apoyo-familiar-hero.jpg",
 };
 
 export const getCategoryImage = (category: string | null): string => {

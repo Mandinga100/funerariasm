@@ -354,39 +354,25 @@ const BlogPostPage = () => {
                     </div>
                   </div>
                 ) : (
-                  /* ── Photo mode: cinematic floating image ── */
+                  /* ── Photo mode: cinematic feathered image ── */
                   <div className="relative">
-                    {/* Atmospheric glow */}
-                    <div className="absolute -inset-8 rounded-[2rem] pointer-events-none blur-[40px]" style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 50%, hsl(40 56% 41% / 0.20), transparent 70%)' }} />
+                    {/* Atmospheric glow behind image */}
+                    <div className="absolute -inset-12 pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(40 56% 41% / 0.15), transparent 70%)' }} />
                     
-                    {/* Main image with rounded corners and sophisticated framing */}
-                    <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: '0 25px 60px -15px rgba(0,0,0,0.8), 0 10px 30px -10px rgba(197,160,89,0.12), 0 0 0 1px rgba(255,255,255,0.06)' }}>
-                      {/* Top light leak */}
-                      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/[0.04] to-transparent z-10 pointer-events-none" />
-                      {/* Gold top accent */}
-                      <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent z-10" />
-                      
+                    {/* Main image with feathered/faded edges — no hard borders */}
+                    <div className="relative">
                       <img
                         src={heroImage}
                         alt={post.title}
-                        className="w-full h-[200px] sm:h-[240px] md:h-[300px] lg:h-[340px] object-cover"
-                        style={{ filter: 'contrast(1.04) saturate(1.10) brightness(1.02)' }}
+                        className="w-full h-[240px] sm:h-[280px] md:h-[340px] lg:h-[380px] object-cover"
+                        style={{
+                          filter: 'contrast(1.04) saturate(1.12) brightness(1.02)',
+                          maskImage: 'radial-gradient(ellipse 85% 80% at 50% 50%, black 40%, transparent 72%)',
+                          WebkitMaskImage: 'radial-gradient(ellipse 85% 80% at 50% 50%, black 40%, transparent 72%)',
+                        }}
                       />
-                      
-                      {/* Inner vignette */}
-                      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 60px 10px rgba(0,0,0,0.25)' }} />
-                      {/* Bottom gold accent */}
-                      <div className="absolute bottom-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-gold/40 to-transparent z-10" />
-                    </div>
-                    
-                    {/* Reflection */}
-                    <div className="relative h-16 mt-1 mx-4 overflow-hidden rounded-b-2xl opacity-[0.15] pointer-events-none" aria-hidden="true">
-                      <img
-                        src={heroImage}
-                        alt=""
-                        className="w-full h-[340px] object-cover scale-y-[-1] origin-top blur-[10px]"
-                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 60%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 60%)' }}
-                      />
+                      {/* Subtle gold shimmer overlay */}
+                      <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, hsl(40 56% 60%), transparent 70%)' }} />
                     </div>
                   </div>
                 )}

@@ -268,28 +268,30 @@ const BlogPostPage = () => {
         const logoSrc = isLogo ? "/assets/images/brand/logo-white.webp" : heroImage;
         return (
           <section className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] overflow-hidden bg-[#080808]">
-            {/* ── Layer 1: Blurred cinematic background ── */}
+            {/* ── Layer 1: Full cinematic background image or logo ambient ── */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               {isLogo ? (
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.4] blur-[50px] opacity-50" />
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.3] blur-[30px] opacity-20 mix-blend-soft-light" />
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-[1.3] blur-[60px] opacity-15 mix-blend-overlay" />
+                  {/* Primary: full-bleed image at real size with slight blur for depth */}
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }} />
+                  {/* Secondary: scaled soft glow layer for cinematic atmosphere */}
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light" />
                 </>
               )}
             </div>
 
-            {/* ── Layer 2: Cinematic gradient overlays ── */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/50 pointer-events-none" />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 90% at 72% 50%, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
+            {/* ── Layer 2: Cinematic gradient overlays — ensure text legibility ── */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/30 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/60 pointer-events-none" />
+            {/* Vignette */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
 
-            {/* ── Layer 3: Gold accent lines ── */}
+            {/* ── Layer 3: Gold accent line ── */}
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />
 
-            {/* ── Layer 4: Content — with proper navbar clearance ── */}
+            {/* ── Layer 4: Content ── */}
             <div className="relative z-10 h-full container max-w-6xl flex flex-col md:flex-row items-end md:items-center gap-6 md:gap-12 pt-28 pb-12 md:pt-24 md:pb-16 min-h-[480px] sm:min-h-[540px] md:min-h-[600px]">
               
               {/* Left: Text content */}
@@ -301,11 +303,11 @@ const BlogPostPage = () => {
                     { label: post.title },
                   ]}
                 />
-                <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] lg:text-5xl font-playfair italic leading-[1.15] text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] mt-2">
+                <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] lg:text-5xl font-playfair italic leading-[1.15] text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)] mt-2">
                   {post.title}
                 </h1>
                 {post.excerpt && (
-                  <p className="text-white/55 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-sm">{post.excerpt}</p>
+                  <p className="text-white/60 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">{post.excerpt}</p>
                 )}
                 {/* Gold separator with glow */}
                 <div className="relative mt-8 mb-5">
@@ -313,33 +315,32 @@ const BlogPostPage = () => {
                   <div className="w-full max-w-xs h-px bg-gradient-to-r from-gold/50 via-gold/20 to-transparent" />
                 </div>
 
-                {/* Metadata row — refined spacing & styling */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-white/50 tracking-wide">
+                {/* Metadata row */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-white/55 tracking-wide">
                   {post.category && (
-                    <span className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-full px-3.5 py-1.5 text-white/60 hover:border-gold/30 hover:text-gold/80 transition-all duration-300">
+                    <span className="flex items-center gap-1.5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-full px-3.5 py-1.5 text-white/65 hover:border-gold/30 hover:text-gold/80 transition-all duration-300">
                       <Tag className="w-3.5 h-3.5 text-gold/70" />
                       {post.category}
                     </span>
                   )}
                   {post.published_at && (
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-white/30" />
+                      <Calendar className="w-3.5 h-3.5 text-white/35" />
                       {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
                     </span>
                   )}
                   <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-white/30" />
+                    <User className="w-3.5 h-3.5 text-white/35" />
                     {post.author_name}
                   </span>
                   <span className="text-white/25">·</span>
-                  <span className="text-white/40 whitespace-nowrap">{readingTime} min de lectura</span>
+                  <span className="text-white/45 whitespace-nowrap">{readingTime} min de lectura</span>
                 </div>
               </div>
 
-              {/* Right: Cinematic image showcase */}
-              <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[420px] xl:w-[460px] relative self-center">
-                {isLogo ? (
-                  /* ── Logo mode ── */
+              {/* Right: Logo showcase OR empty (photo is now full background) */}
+              {isLogo && (
+                <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[420px] xl:w-[460px] relative self-center">
                   <div className="relative flex items-center justify-center py-10">
                     <div className="absolute inset-[-20%] rounded-full pointer-events-none blur-[80px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 45% / 0.08), transparent 60%)' }} />
                     <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 48%, hsl(40 56% 50% / 0.14) 0%, transparent 50%)' }} />
@@ -354,30 +355,8 @@ const BlogPostPage = () => {
                       <img src={logoSrc} alt="" className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]" style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }} />
                     </div>
                   </div>
-                ) : (
-                  /* ── Photo mode: cinematic feathered image ── */
-                  <div className="relative">
-                    {/* Atmospheric glow behind image */}
-                    <div className="absolute -inset-12 pointer-events-none blur-[60px]" style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(40 56% 41% / 0.15), transparent 70%)' }} />
-                    
-                    {/* Main image with feathered/faded edges — no hard borders */}
-                    <div className="relative">
-                      <img
-                        src={heroImage}
-                        alt={post.title}
-                        className="w-full h-[240px] sm:h-[280px] md:h-[340px] lg:h-[380px] object-cover"
-                        style={{
-                          filter: 'contrast(1.04) saturate(1.12) brightness(1.02)',
-                          maskImage: 'radial-gradient(ellipse 85% 80% at 50% 50%, black 40%, transparent 72%)',
-                          WebkitMaskImage: 'radial-gradient(ellipse 85% 80% at 50% 50%, black 40%, transparent 72%)',
-                        }}
-                      />
-                      {/* Subtle gold shimmer overlay */}
-                      <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, hsl(40 56% 60%), transparent 70%)' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </section>
         );

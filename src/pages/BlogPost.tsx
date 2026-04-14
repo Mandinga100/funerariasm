@@ -264,6 +264,7 @@ const BlogPostPage = () => {
       {/* Hero — Senior UI/UX split layout */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
+        const isLogo = heroImage.includes("logo-oficial");
         return (
           <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
             {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}

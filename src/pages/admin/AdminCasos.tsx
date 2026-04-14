@@ -327,6 +327,7 @@ export default function AdminCasos() {
                   </TableRow>
                   );
                 })}
+              </TableBody>
             </Table>
           </div>
 

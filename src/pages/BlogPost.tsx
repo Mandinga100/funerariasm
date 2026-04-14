@@ -261,65 +261,103 @@ const BlogPostPage = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
 
-      {/* Hero Image */}
+      {/* Hero — Senior UI/UX split layout */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
         return (
-          <section className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] overflow-hidden">
-            {/* Background image */}
-            <img
-              src={heroImage}
-              alt={post.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {/* Dark gradient overlay for text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-            {/* Mirror reflection effect at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 overflow-hidden opacity-20 pointer-events-none">
+          <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
+            {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               <img
                 src={heroImage}
                 alt=""
-                aria-hidden="true"
-                className="w-full h-[480px] object-cover transform scale-y-[-1] origin-top blur-[2px]"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
+              />
+              {/* Mirrored reflection — flipped & extra blur */}
+              <img
+                src={heroImage}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
               />
             </div>
-            {/* Gold accent line */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-            {/* Content overlay */}
-            <div className="relative z-10 h-full flex flex-col justify-end container max-w-3xl pb-10">
-              <Breadcrumbs
-                items={[
-                  { label: "Blog", href: "/blog" },
-                  ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category}` }] : []),
-                  { label: post.title },
-                ]}
-              />
-              <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-playfair italic leading-tight text-white drop-shadow-lg">
-                {post.title}
-              </h1>
-              {post.excerpt && (
-                <p className="text-white/60 mt-3 text-base sm:text-lg max-w-2xl drop-shadow">{post.excerpt}</p>
-              )}
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mt-5 mb-3" />
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/50">
-                {post.category && (
-                  <span className="flex items-center gap-1">
-                    <Tag className="w-3 h-3 text-gold" />
-                    {post.category}
-                  </span>
+
+            {/* ── Layer 2: Multi-stop gradient overlays for depth ── */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
+            {/* Radial vignette for cinematic depth */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 100% at 75% 50%, transparent 40%, rgba(0,0,0,0.7) 100%)' }} />
+
+            {/* ── Layer 3: Gold accent lines ── */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent z-20" />
+
+            {/* ── Layer 4: Content grid — text left, sharp image right ── */}
+            <div className="relative z-10 h-full container max-w-6xl flex flex-col md:flex-row items-end md:items-center gap-6 md:gap-10 py-10 md:py-0 min-h-[420px] sm:min-h-[480px] md:min-h-[540px]">
+              
+              {/* Left: Text content */}
+              <div className="flex-1 flex flex-col justify-center md:pr-8 order-2 md:order-1">
+                <Breadcrumbs
+                  items={[
+                    { label: "Blog", href: "/blog" },
+                    ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category}` }] : []),
+                    { label: post.title },
+                  ]}
+                />
+                <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] lg:text-5xl font-playfair italic leading-[1.15] text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] mt-2">
+                  {post.title}
+                </h1>
+                {post.excerpt && (
+                  <p className="text-white/55 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-sm">{post.excerpt}</p>
                 )}
-                {post.published_at && (
+                <div className="w-full max-w-xs h-px bg-gradient-to-r from-gold/40 via-gold/20 to-transparent mt-6 mb-3" />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45 tracking-wide">
+                  {post.category && (
+                    <span className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1">
+                      <Tag className="w-3 h-3 text-gold" />
+                      {post.category}
+                    </span>
+                  )}
+                  {post.published_at && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                    </span>
+                  )}
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                    <User className="w-3 h-3" />
+                    {post.author_name}
                   </span>
-                )}
-                <span className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  {post.author_name}
-                </span>
-                <span className="text-white/30">·</span>
-                <span>{readingTime} min de lectura</span>
+                  <span className="text-white/25">·</span>
+                  <span>{readingTime} min de lectura</span>
+                </div>
+              </div>
+
+              {/* Right: Sharp image with frame & reflection */}
+              <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[440px] relative self-center">
+                {/* Glow behind image */}
+                <div className="absolute -inset-4 rounded-2xl opacity-30 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, hsl(40 56% 41% / 0.4), transparent 70%)' }} />
+                {/* Main sharp image */}
+                <div className="relative rounded-xl overflow-hidden shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] border border-white/10">
+                  <img
+                    src={heroImage}
+                    alt={post.title}
+                    className="w-full h-[200px] sm:h-[240px] md:h-[300px] lg:h-[340px] object-cover"
+                    style={{ imageRendering: 'auto', filter: 'contrast(1.02) saturate(1.05)' }}
+                  />
+                  {/* Subtle inner border glow */}
+                  <div className="absolute inset-0 rounded-xl border border-white/5 pointer-events-none" />
+                  {/* Bottom gold accent on image */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+                </div>
+                {/* Mirror reflection below image */}
+                <div className="relative h-16 mt-px overflow-hidden rounded-b-xl opacity-25 pointer-events-none" aria-hidden="true">
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="w-full h-[340px] object-cover scale-y-[-1] origin-top blur-[6px]"
+                    style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' }}
+                  />
+                </div>
               </div>
             </div>
           </section>

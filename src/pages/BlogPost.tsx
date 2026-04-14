@@ -274,8 +274,9 @@ const BlogPostPage = () => {
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-125 blur-[40px] opacity-35" />
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-125 blur-[50px] opacity-15 mix-blend-soft-light" />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.4] blur-[50px] opacity-50" />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.3] blur-[30px] opacity-20 mix-blend-soft-light" />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-[1.3] blur-[60px] opacity-15 mix-blend-overlay" />
                 </>
               )}
             </div>

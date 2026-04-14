@@ -269,17 +269,24 @@ const BlogPostPage = () => {
           <section className="relative w-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] overflow-hidden bg-[#080808]">
             {/* ── Layer 1: Mirrored blurred background (large, fills entire hero) ── */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-              <img
-                src={heroImage}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
-              />
-              {/* Mirrored reflection — flipped & extra blur */}
-              <img
-                src={heroImage}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
-              />
+              {isLogo ? (
+                /* For logo: skip the blurred bg images (they'd show white rectangles) */
+                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
+              ) : (
+                <>
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-[28px] opacity-40"
+                  />
+                  {/* Mirrored reflection — flipped & extra blur */}
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover scale-y-[-1] scale-x-110 blur-[40px] opacity-20 mix-blend-soft-light"
+                  />
+                </>
+              )}
             </div>
 
             {/* ── Layer 2: Multi-stop gradient overlays for depth ── */}

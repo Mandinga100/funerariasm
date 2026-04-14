@@ -318,26 +318,33 @@ const BlogPostPage = () => {
                 {post.excerpt && (
                   <p className="text-white/55 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-sm">{post.excerpt}</p>
                 )}
-                <div className="w-full max-w-xs h-px bg-gradient-to-r from-gold/40 via-gold/20 to-transparent mt-6 mb-3" />
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45 tracking-wide">
+                {/* Gold separator with glow */}
+                <div className="relative mt-8 mb-5">
+                  <div className="absolute -top-px left-0 w-full max-w-xs h-[3px] rounded-full bg-gradient-to-r from-gold/60 via-gold/30 to-transparent blur-[2px]" />
+                  <div className="w-full max-w-xs h-px bg-gradient-to-r from-gold/50 via-gold/20 to-transparent" />
+                </div>
+
+                {/* Metadata row — refined spacing & styling */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-white/50 tracking-wide">
                   {post.category && (
-                    <span className="flex items-center gap-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1">
-                      <Tag className="w-3 h-3 text-gold" />
+                    <span className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-full px-3.5 py-1.5 text-white/60 hover:border-gold/30 hover:text-gold/80 transition-all duration-300">
+                      <Tag className="w-3.5 h-3.5 text-gold/70" />
                       {post.category}
                     </span>
                   )}
                   {post.published_at && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-white/30" />
                       {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
+                  <span className="w-px h-3.5 bg-white/15" />
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-white/30" />
                     {post.author_name}
                   </span>
-                  <span className="text-white/25">·</span>
-                  <span>{readingTime} min de lectura</span>
+                  <span className="w-px h-3.5 bg-white/15" />
+                  <span className="text-white/40">{readingTime} min de lectura</span>
                 </div>
               </div>
 

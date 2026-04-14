@@ -383,6 +383,7 @@ export default function AdminCasos() {
               </div>
               );
             })}
+          </div>
         </>
       )}
 

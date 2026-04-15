@@ -91,7 +91,7 @@ const CarouselRow = forwardRef<HTMLDivElement, { items: Obituary[]; direction: "
             >
               <div className="w-16 h-16 rounded-full bg-muted border-2 border-gold/20 mx-auto mb-3 flex items-center justify-center overflow-hidden">
                 {obit.photo_url ? (
-                  <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover pointer-events-none" draggable={false} />
+                  <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover pointer-events-none" draggable={false} loading="lazy" decoding="async" />
                 ) : (
                   <span className="text-lg font-playfair text-gold/60">
                     {obit.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}

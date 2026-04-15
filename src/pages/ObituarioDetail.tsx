@@ -144,7 +144,7 @@ const ObituarioDetail = () => {
             {/* Photo */}
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-muted/20 border-3 border-gold/30 mx-auto mb-6 flex items-center justify-center overflow-hidden">
               {obit.photo_url ? (
-                <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover" />
+                <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <span className="text-4xl font-playfair text-gold/50">
                   {obit.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}

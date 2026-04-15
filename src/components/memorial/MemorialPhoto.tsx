@@ -86,7 +86,7 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
       {/* Layer 2: Portrait */}
       <div className="relative z-[2] w-full h-full rounded-full overflow-hidden bg-primary-foreground/5">
         {photoUrl ? (
-          <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
+          <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-5xl font-playfair text-gold/40">{initials}</span>

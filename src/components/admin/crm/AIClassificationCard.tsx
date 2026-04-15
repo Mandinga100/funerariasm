@@ -130,7 +130,7 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
       <div className="p-3 space-y-3">
         {/* Plan — highlighted first when available */}
         {resolvedPlan && (
-          <div className="flex items-start gap-2 bg-amber-50 rounded-md p-2.5 border border-amber-200">
+          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2.5 border border-amber-200 dark:border-amber-800">
             <span className="text-lg leading-none mt-0.5">🌟</span>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-amber-700/70 font-medium">Plan contratado</p>

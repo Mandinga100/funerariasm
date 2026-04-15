@@ -32,9 +32,9 @@ interface AdminUser {
 }
 
 const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; icon: string }> = {
-  ceo: { label: "CEO", color: "bg-amber-100 text-amber-800 border-amber-300", desc: "Control total del sistema, gestión de administradores y configuración global", icon: "👑" },
-  admin: { label: "Administrador", color: "bg-blue-100 text-blue-800 border-blue-300", desc: "Acceso completo a leads, pagos, obituarios, memoriales y tracking", icon: "🔧" },
-  moderator: { label: "Moderador", color: "bg-green-100 text-green-800 border-green-300", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración", icon: "📝" },
+  ceo: { label: "CEO", color: "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800", desc: "Control total del sistema, gestión de administradores y configuración global", icon: "👑" },
+  admin: { label: "Administrador", color: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800", desc: "Acceso completo a leads, pagos, obituarios, memoriales y tracking", icon: "🔧" },
+  moderator: { label: "Moderador", color: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración", icon: "📝" },
 };
 
 const CEO_EMAIL = "mandinga_atim@hotmail.com";
@@ -549,7 +549,7 @@ export default function AdminSettings() {
               )}
 
               {!isCeo && (
-                <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-2">
+                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <Lock className="w-4 h-4 mt-0.5 shrink-0" />
                   <p>Solo el CEO puede agregar, editar o eliminar miembros del equipo. Contacte al CEO para solicitar cambios.</p>
                 </div>
@@ -738,7 +738,7 @@ export default function AdminSettings() {
               <Separator />
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Último acceso</span><span className="text-xs">{user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString("es-CL") : "—"}</span></div>
               <Separator />
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Nivel de acceso</span><Badge className={isCeo ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"} variant="secondary">{isCeo ? "👑 CEO" : "🔧 Admin"}</Badge></div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Nivel de acceso</span><Badge className={isCeo ? "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300" : "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300"} variant="secondary">{isCeo ? "👑 CEO" : "🔧 Admin"}</Badge></div>
             </CardContent>
           </Card>
 
@@ -845,16 +845,16 @@ export default function AdminSettings() {
                 <div className="space-y-1">
                   {auditLogs.map(log => {
                     const actionColors: Record<string, string> = {
-                      add_member: "bg-green-100 text-green-800",
-                      remove_member: "bg-red-100 text-red-800",
-                      update_role: "bg-blue-100 text-blue-800",
-                      change_password: "bg-amber-100 text-amber-800",
-                      update_lead: "bg-purple-100 text-purple-800",
-                      delete: "bg-red-100 text-red-800",
-                      create: "bg-green-100 text-green-800",
-                      update: "bg-blue-100 text-blue-800",
-                      export: "bg-gray-100 text-gray-800",
-                      login: "bg-emerald-100 text-emerald-800",
+                      add_member: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300",
+                      remove_member: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300",
+                      update_role: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300",
+                      change_password: "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300",
+                      update_lead: "bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300",
+                      delete: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300",
+                      create: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300",
+                      update: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300",
+                      export: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+                      login: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300",
                     };
                     const badgeClass = actionColors[log.action] ?? "bg-muted text-muted-foreground";
                     const date = new Date(log.created_at);
@@ -1060,7 +1060,7 @@ export default function AdminSettings() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800 flex items-start gap-2">
+              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" />
                 <p>Se enviará un correo de verificación. El usuario deberá confirmar su email antes de poder acceder al CRM. El token es temporal y expira automáticamente.</p>
               </div>
@@ -1094,7 +1094,7 @@ export default function AdminSettings() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
                 <Lock className="w-4 h-4 mt-0.5 shrink-0" />
                 <p>El usuario deberá verificar su email antes de acceder. La contraseña asignada es temporal, se recomienda cambiarla en el primer acceso.</p>
               </div>

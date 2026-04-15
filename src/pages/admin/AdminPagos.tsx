@@ -44,13 +44,13 @@ interface Transaction {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  initiated: { label: "Iniciado", className: "bg-gray-100 text-gray-800" },
-  transfer_reported: { label: "Informado", className: "bg-blue-100 text-blue-800" },
-  proof_uploaded: { label: "Con comprobante", className: "bg-indigo-100 text-indigo-800" },
-  pending_review: { label: "En revisión", className: "bg-yellow-100 text-yellow-800" },
-  confirmed: { label: "Confirmado", className: "bg-green-100 text-green-800" },
-  rejected: { label: "Rechazado", className: "bg-red-100 text-red-800" },
-  suspicious: { label: "Sospechoso", className: "bg-orange-100 text-orange-800" },
+  initiated: { label: "Iniciado", className: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200" },
+  transfer_reported: { label: "Informado", className: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300" },
+  proof_uploaded: { label: "Con comprobante", className: "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300" },
+  pending_review: { label: "En revisión", className: "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-800 dark:text-yellow-300" },
+  confirmed: { label: "Confirmado", className: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300" },
+  rejected: { label: "Rechazado", className: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300" },
+  suspicious: { label: "Sospechoso", className: "bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300" },
 };
 
 const typeLabels: Record<string, string> = {
@@ -302,7 +302,7 @@ export default function AdminPagos() {
                   const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
                   const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
                   return (
-                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
+                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50 dark:bg-orange-950/20" : ""}>
                       <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
                       <TableCell className="font-medium">
                         {tx.full_name}
@@ -335,7 +335,7 @@ export default function AdminPagos() {
               const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
               const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
               return (
-                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 bg-orange-50/30")} onClick={() => setSelected(tx)}>
+                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/20")} onClick={() => setSelected(tx)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -427,7 +427,7 @@ export default function AdminPagos() {
               )}
 
               {selected.fraud_flags && selected.fraud_flags.length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded p-3">
+                <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded p-3">
                   <p className="font-medium text-orange-800 text-xs mb-1 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" /> Alertas de fraude
                   </p>

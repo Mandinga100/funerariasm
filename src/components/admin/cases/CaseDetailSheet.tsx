@@ -213,7 +213,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           {serviceCase.ai_summary && (
             <div>
               <label className="text-xs font-medium text-muted-foreground">Resumen IA</label>
-              <div className="mt-1 p-3 rounded-md bg-blue-50/50 text-sm">{serviceCase.ai_summary}</div>
+              <div className="mt-1 p-3 rounded-md bg-blue-50/50 dark:bg-blue-950/30 text-sm">{serviceCase.ai_summary}</div>
             </div>
           )}
 

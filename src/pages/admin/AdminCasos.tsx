@@ -53,18 +53,18 @@ interface ServiceCase {
 }
 
 const PIPELINE_STAGES = [
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-100 text-amber-800" },
-  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-100 text-orange-800" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-100 text-green-800" },
-  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-100 text-gray-800" },
+  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300" },
+  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300" },
+  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300" },
+  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200" },
 ];
 
 const PAYMENT_STATUSES = [
-  { id: "pendiente", label: "Pendiente", color: "bg-yellow-100 text-yellow-800" },
-  { id: "cotizado", label: "Cotizado", color: "bg-blue-100 text-blue-800" },
-  { id: "aprobado", label: "Aprobado", color: "bg-indigo-100 text-indigo-800" },
-  { id: "pagado", label: "Pagado", color: "bg-green-100 text-green-800" },
-  { id: "cancelado", label: "Cancelado", color: "bg-red-100 text-red-800" },
+  { id: "pendiente", label: "Pendiente", color: "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-800 dark:text-yellow-300" },
+  { id: "cotizado", label: "Cotizado", color: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300" },
+  { id: "aprobado", label: "Aprobado", color: "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300" },
+  { id: "pagado", label: "Pagado", color: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300" },
+  { id: "cancelado", label: "Cancelado", color: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300" },
 ];
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);

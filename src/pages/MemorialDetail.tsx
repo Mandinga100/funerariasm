@@ -89,7 +89,7 @@ const MemorialDetail = () => {
         setMemorial(mem);
         const title = `${mem.full_name} — Legado Eterno`;
         const desc = mem.biography?.slice(0, 155) || `Memorial en honor a ${mem.full_name}. Funeraria Santa Margarita, Chile.`;
-        const url = `https://funerariasantamargarita.cl/memoriales/${mem.slug}`;
+        const url = `https://funerariasantamargarita.cl/legados-eternos/${mem.slug}`;
         document.title = `${title} | Funeraria Santa Margarita`;
 
         const setMeta = (attr: string, key: string, content: string) => {
@@ -277,7 +277,7 @@ const MemorialDetail = () => {
         <section className="pt-28 pb-16 bg-primary text-primary-foreground">
           <div className="container text-center">
             <h1 className="text-section font-playfair italic mb-4">Legado no encontrado</h1>
-            <Link to="/memoriales" className="text-gold hover:text-gold-light transition-brand">← Volver a Legados Eternos</Link>
+            <Link to="/legados-eternos" className="text-gold hover:text-gold-light transition-brand">← Volver a Legados Eternos</Link>
           </div>
         </section>
       </Layout>
@@ -302,8 +302,8 @@ const MemorialDetail = () => {
 
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">
-          <Breadcrumbs items={[{ label: "Legados Eternos", href: "/memoriales" }, { label: memorial.full_name }]} />
-          <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
+          <Breadcrumbs items={[{ label: "Legados Eternos", href: "/legados-eternos" }, { label: memorial.full_name }]} />
+          <Link to="/legados-eternos" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
             <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
             Volver a Legados Eternos
           </Link>
@@ -419,7 +419,7 @@ const MemorialDetail = () => {
           </div>
 
           <div className="text-center pt-8">
-            <Link to="/memoriales" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm px-6 py-3 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300">
+            <Link to="/legados-eternos" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm px-6 py-3 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300">
               <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
               Volver a Legados Eternos
             </Link>

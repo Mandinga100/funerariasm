@@ -60,7 +60,7 @@ const MemorialesSection = () => {
             : memorials.map((mem) => (
                 <Link
                   key={mem.id}
-                  to={`/memoriales/${mem.slug}`}
+                  to={`/legados-eternos/${mem.slug}`}
                   className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-primary-foreground/5"
                 >
                   {mem.photo_url ? (
@@ -90,7 +90,7 @@ const MemorialesSection = () => {
 
         <div className="text-center">
           <Link
-            to="/memoriales"
+            to="/legados-eternos"
             className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm tracking-[0.2em] uppercase transition-all duration-300"
           >
             Ver todos los legados{" "}

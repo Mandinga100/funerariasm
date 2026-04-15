@@ -26,7 +26,7 @@ const FooterPremium = forwardRef<HTMLElement>((_props, ref) => (
               ["Servicios", "/servicios"],
               ["Planes Funerarios", "/planes"],
               ["Obituarios", "/obituarios"],
-              ["Memoriales", "/memoriales"],
+              ["Legados Eternos", "/legados-eternos"],
               ["Blog", "/blog"],
               ["Preguntas Frecuentes", "/preguntas-frecuentes"],
             ].map(([label, href]) => (

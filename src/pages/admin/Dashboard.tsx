@@ -427,8 +427,8 @@ export default function Dashboard() {
   const secondaryKpis = [
     { label: "Ingresos Verificados", value: `$${stats.totalRevenue.toLocaleString("es-CL")}`, icon: Banknote, color: "text-green-600", bg: "bg-green-50", link: "/admin/pagos" },
     { label: "Obituarios", value: stats.obituaries, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50", link: "/admin/obituarios" },
-    { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/memoriales" },
-    { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/memoriales" },
+    { label: "Legados", value: stats.memorials, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", link: "/admin/legados-eternos" },
+    { label: "Condolencias", value: stats.condolences, icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50", link: "/admin/legados-eternos" },
   ];
 
   return (

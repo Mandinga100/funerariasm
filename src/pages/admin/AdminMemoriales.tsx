@@ -187,7 +187,7 @@ export default function AdminMemoriales() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(item)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <a href={`/memoriales/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                            <a href={`/legados-eternos/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item.id, item.full_name)}>
                             <Trash2 className="w-4 h-4 mr-2" />Eliminar
@@ -216,7 +216,7 @@ export default function AdminMemoriales() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(item)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <a href={`/memoriales/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                        <a href={`/legados-eternos/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item.id, item.full_name)}>
                         <Trash2 className="w-4 h-4 mr-2" />Eliminar

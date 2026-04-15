@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,8 +49,10 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/obituarios" element={<Obituarios />} />
             <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
-            <Route path="/memoriales" element={<Memoriales />} />
-            <Route path="/memoriales/:slug" element={<MemorialDetail />} />
+            <Route path="/legados-eternos" element={<Memoriales />} />
+            <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
+            <Route path="/memoriales" element={<Navigate to="/legados-eternos" replace />} />
+            <Route path="/memoriales/:slug" element={<Navigate to="/legados-eternos" replace />} />
             <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
             <Route path="/pagos" element={<Pagos />} />

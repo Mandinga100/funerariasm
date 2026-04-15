@@ -17,7 +17,7 @@ const navItems = [
   { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" as const },
   { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
   { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false },
-  { to: "/admin/legados-eternos", label: "Legados", icon: Heart, end: false },
+  { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false },
   { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },

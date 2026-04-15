@@ -592,9 +592,9 @@ export default function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={monthlyData} margin={{ left: 0, right: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
                 <Tooltip
                   formatter={(value: number, name: string) => [
                     value,
@@ -632,10 +632,10 @@ export default function Dashboard() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
                 <YAxis
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fill: "hsl(var(--foreground))" }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
@@ -677,10 +677,10 @@ export default function Dashboard() {
                 }}
                 style={{ cursor: "pointer" }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="stage" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
                 <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Casos" />
               </BarChart>
             </ResponsiveContainer>
@@ -706,13 +706,13 @@ export default function Dashboard() {
                   innerRadius={50}
                   outerRadius={85}
                   paddingAngle={4}
-                  label={({ name, value }: any) => `${name}: ${value}`}
+                  label={{ fill: "hsl(var(--foreground))", fontSize: 11 }}
                 >
                   {casesPaymentData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -731,9 +731,9 @@ export default function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={conversionTrend} margin={{ left: 0, right: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} domain={[0, 'auto']} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} tickFormatter={(v) => `${v}%`} domain={[0, 'auto']} />
                 <Tooltip formatter={(value: number) => [`${value}%`, "Conversión"]} />
                 <Line type="monotone" dataKey="rate" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4, fill: "#8b5cf6" }} activeDot={{ r: 6 }} />
               </LineChart>
@@ -759,10 +759,10 @@ export default function Dashboard() {
                 }}
                 style={{ cursor: "pointer" }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" />
-                <YAxis dataKey="stage" type="category" width={80} tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <YAxis dataKey="stage" type="category" width={80} tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -779,10 +779,10 @@ export default function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={leadsTimeline}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fill: "hsl(var(--foreground))" }} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
                 <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -805,7 +805,7 @@ export default function Dashboard() {
                   innerRadius={50}
                   outerRadius={80}
                   paddingAngle={4}
-                  label={({ name, value }) => `${URGENCY_LABELS[name] ?? name}: ${value}`}
+                  label={{ fill: "hsl(var(--foreground))", fontSize: 11 }}
                   onClick={(data) => {
                     if (data?.name) {
                       navigate(`/admin/leads?urgency=${data.name}`);
@@ -817,7 +817,7 @@ export default function Dashboard() {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

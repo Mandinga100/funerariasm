@@ -285,9 +285,9 @@ const BlogPostPage = () => {
               ) : (
                 <>
                   {/* Primary: full-bleed image at real size with slight blur for depth */}
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }} />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" decoding="async" fetchPriority="high" style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }} />
                   {/* Secondary: scaled soft glow layer for cinematic atmosphere */}
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light" />
+                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light" loading="lazy" decoding="async" />
                 </>
               )}
             </div>
@@ -362,7 +362,7 @@ const BlogPostPage = () => {
                       style={{ filter: 'drop-shadow(0 0 30px rgba(197,160,89,0.30)) drop-shadow(0 0 60px rgba(197,160,89,0.15)) drop-shadow(0 0 120px rgba(197,160,89,0.08)) brightness(1.08)' }}
                     />
                     <div className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 w-[55%] h-20 overflow-hidden opacity-[0.12] pointer-events-none" aria-hidden="true">
-                      <img src={logoSrc} alt="" className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]" style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }} />
+                      <img src={logoSrc} alt="" className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]" loading="lazy" decoding="async" style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }} />
                     </div>
                   </div>
                 </div>

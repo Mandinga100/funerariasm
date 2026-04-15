@@ -167,7 +167,7 @@ const Obituarios = () => {
                     <div className="flex flex-col sm:flex-row gap-5 items-start">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted border-2 border-gold/20 shrink-0 flex items-center justify-center overflow-hidden mx-auto sm:mx-0">
                         {obit.photo_url ? (
-                          <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover" />
+                          <img src={obit.photo_url} alt={obit.full_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <span className="text-2xl font-playfair text-gold/60">
                             {obit.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}

@@ -11,7 +11,7 @@ const FooterPremium = forwardRef<HTMLElement>((_props, ref) => (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="space-y-4">
-          <img src="/assets/images/brand/logo-white.webp" alt="Funeraria Santa Margarita" className="h-10 w-auto" />
+          <img src="/assets/images/brand/logo-white.webp" alt="Funeraria Santa Margarita" className="h-10 w-auto" loading="lazy" decoding="async" />
           <p className="text-primary-foreground/60 text-sm leading-relaxed">
             Acompañamos a las familias con respeto, calidez y profesionalismo en los momentos más difíciles.
           </p>

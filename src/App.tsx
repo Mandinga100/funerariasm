@@ -51,6 +51,8 @@ const App = () => (
             <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
             <Route path="/legados-eternos" element={<Memoriales />} />
             <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
+            <Route path="/memoriales" element={<Navigate to="/legados-eternos" replace />} />
+            <Route path="/memoriales/:slug" element={<Navigate to="/legados-eternos" replace />} />
             <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
             <Route path="/pagos" element={<Pagos />} />

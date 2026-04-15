@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
 import { toast } from "sonner";
 import MemorialPhoto from "@/components/memorial/MemorialPhoto";
 import OfferingButtons from "@/components/memorial/OfferingButtons";
@@ -299,6 +300,7 @@ const MemorialDetail = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([{ name: "Legados Eternos", path: "/legados-eternos" }, { name: memorial.full_name, path: `/legados-eternos/${memorial.slug}` }])) }} />
 
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">

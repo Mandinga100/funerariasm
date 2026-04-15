@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Calendar, MapPin, ArrowLeft, Heart } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
 
 interface Obituary {
   id: string;
@@ -127,6 +128,7 @@ const ObituarioDetail = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([{ name: "Obituarios", path: "/obituarios" }, { name: obit.full_name, path: `/obituarios/${obit.slug}` }])) }} />
 
       {/* Header */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground relative">

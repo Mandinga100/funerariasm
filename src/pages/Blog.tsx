@@ -8,6 +8,9 @@ import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import BlogCategoryFilter from "@/components/BlogCategoryFilter";
 import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, ArrowRight } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Blog", path: "/blog" }]);
 
 interface BlogPost {
   id: string;
@@ -125,6 +128,7 @@ const Blog = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container">

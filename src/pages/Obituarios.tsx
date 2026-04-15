@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Calendar, Search, MapPin } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Obituarios", path: "/obituarios" }]);
 
 interface Obituary {
   id: string;
@@ -111,6 +114,7 @@ const Obituarios = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container text-center">

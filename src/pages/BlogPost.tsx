@@ -245,10 +245,20 @@ const BlogPostPage = () => {
   };
 
   const renderInline = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*)/g);
+    // Split by markdown links [text](url) and bold **text**
+    const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return <strong key={i} className="text-foreground font-medium">{part.slice(2, -2)}</strong>;
+      }
+      const linkMatch = part.match(/^\[(.+?)\]\((.+?)\)$/);
+      if (linkMatch) {
+        const [, linkText, href] = linkMatch;
+        const cleanText = linkText.replace(/\s*→\s*$/, "");
+        if (href.startsWith("/")) {
+          return <Link key={i} to={href} className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">{cleanText}</Link>;
+        }
+        return <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">{cleanText}</a>;
       }
       return part;
     });

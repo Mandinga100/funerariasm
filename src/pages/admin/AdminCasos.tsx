@@ -275,7 +275,7 @@ export default function AdminCasos() {
                 {paginatedRows.map(c => {
                   const stale = isStale(c);
                   return (
-                  <TableRow key={c.id} className={cn("cursor-pointer hover:bg-muted/30", stale && "bg-red-50 dark:bg-red-950/20 border-l-2 border-l-red-500")} onClick={() => setSelected(c)}>
+                  <TableRow key={c.id} className={cn("cursor-pointer hover:bg-muted/30", stale && "bg-red-50 dark:bg-red-950/40 border-l-2 border-l-red-500")} onClick={() => setSelected(c)}>
                     <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-1.5">
                         {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
@@ -336,7 +336,7 @@ export default function AdminCasos() {
             {paginatedRows.map(c => {
               const stale = isStale(c);
               return (
-              <div key={c.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", stale && "border-red-400 bg-red-50 dark:bg-red-950/20")} onClick={() => setSelected(c)}>
+              <div key={c.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", stale && "border-red-400 dark:border-red-800 bg-red-50 dark:bg-red-950/40")} onClick={() => setSelected(c)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">

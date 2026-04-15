@@ -105,6 +105,7 @@ const Planes = () => {
 
   return (
     <Layout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {/* Hero */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container text-center">

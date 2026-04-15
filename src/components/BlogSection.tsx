@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import OptimizedImage from "@/components/ui/optimized-image";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,7 +139,7 @@ const BlogSection = () => {
                   className={`group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)] ${mobileHidden}`}
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-muted">
-                    <img src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow" loading="lazy" />
+                    <OptimizedImage src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow" />
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3 text-xs text-muted-foreground">

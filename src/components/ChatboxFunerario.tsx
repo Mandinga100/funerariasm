@@ -422,7 +422,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
               <div className={`flex items-start gap-2 ${msg.role === "user" ? "max-w-[80%]" : "max-w-[88%]"}`}>
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1">
-                    <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                    <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} loading="lazy" decoding="async" />
                   </div>
                 )}
                 <div className="flex-1">
@@ -481,7 +481,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
             <div className="flex justify-start">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0">
-                  <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                  <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} loading="lazy" decoding="async" />
                 </div>
                 <div className="bg-background border border-border rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                   <div className="flex gap-1.5">

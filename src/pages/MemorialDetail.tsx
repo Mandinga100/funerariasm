@@ -300,6 +300,7 @@ const MemorialDetail = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([{ name: "Legados Eternos", path: "/legados-eternos" }, { name: memorial.full_name, path: `/legados-eternos/${memorial.slug}` }])) }} />
 
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-3xl">

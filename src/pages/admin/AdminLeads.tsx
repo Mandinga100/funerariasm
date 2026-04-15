@@ -48,7 +48,7 @@ function PriorityBadge({ score }: { score: number | null }) {
     score >= 60 ? "bg-orange-500 text-white" :
     score >= 40 ? "bg-amber-400 text-amber-950" :
     score >= 20 ? "bg-blue-400 text-white" :
-    "bg-gray-300 text-gray-700";
+    "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-100";
   return (
     <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
       {score}
@@ -463,7 +463,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
           </SelectContent>
         </Select>
         {lead.estimated_value ? (
-          <span className="text-xs font-semibold text-green-700">${lead.estimated_value.toLocaleString("es-CL")}</span>
+          <span className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</span>
         ) : (
           <span className="text-[10px] text-muted-foreground">{lead.source ?? ""}</span>
         )}
@@ -509,7 +509,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         </span>
       </div>
       {lead.estimated_value ? (
-        <p className="text-xs font-semibold text-green-700">${lead.estimated_value.toLocaleString("es-CL")}</p>
+        <p className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</p>
       ) : null}
     </div>
   );

@@ -224,9 +224,9 @@ export default function NotificationCenter() {
                 key={n.id}
                 className={cn(
                   "px-3 py-2.5 border-b last:border-b-0 cursor-pointer transition-colors",
-                  urgent && !n.read && "bg-red-50 border-l-[3px] border-l-red-500 hover:bg-red-100/70",
+                  urgent && !n.read && "bg-red-50 dark:bg-red-950/30 border-l-[3px] border-l-red-500 hover:bg-red-100/70 dark:hover:bg-red-950/50",
                   urgent && n.read && "border-l-[3px] border-l-red-200 hover:bg-muted/50",
-                  !urgent && !n.read && "bg-blue-50/50 hover:bg-blue-50/80",
+                  !urgent && !n.read && "bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-50/80 dark:hover:bg-blue-950/50",
                   !urgent && n.read && "hover:bg-muted/50"
                 )}
                 onClick={() => handleNotificationClick(n)}

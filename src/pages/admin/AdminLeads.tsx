@@ -442,7 +442,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
       </div>
 
       {lead.ai_summary && (
-        <p className="text-[10px] text-muted-foreground bg-violet-50 rounded px-2 py-1 line-clamp-2 mb-1.5">
+        <p className="text-[10px] text-muted-foreground bg-violet-50 dark:bg-violet-950/30 rounded px-2 py-1 line-clamp-2 mb-1.5">
           🤖 {lead.ai_summary}
         </p>
       )}
@@ -497,7 +497,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         </div>
       )}
       {lead.ai_summary && (
-        <p className="text-[9px] lg:text-[10px] text-muted-foreground bg-violet-50 rounded px-1.5 py-1 line-clamp-2">
+        <p className="text-[9px] lg:text-[10px] text-muted-foreground bg-violet-50 dark:bg-violet-950/30 rounded px-1.5 py-1 line-clamp-2">
           🤖 {lead.ai_summary}
         </p>
       )}

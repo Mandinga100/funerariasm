@@ -302,7 +302,7 @@ export default function AdminPagos() {
                   const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
                   const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
                   return (
-                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50" : ""}>
+                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50 dark:bg-orange-950/20" : ""}>
                       <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
                       <TableCell className="font-medium">
                         {tx.full_name}
@@ -335,7 +335,7 @@ export default function AdminPagos() {
               const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
               const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
               return (
-                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 bg-orange-50/30")} onClick={() => setSelected(tx)}>
+                <div key={tx.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", hasFraud && "border-orange-300 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/20")} onClick={() => setSelected(tx)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -427,7 +427,7 @@ export default function AdminPagos() {
               )}
 
               {selected.fraud_flags && selected.fraud_flags.length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded p-3">
+                <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded p-3">
                   <p className="font-medium text-orange-800 text-xs mb-1 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" /> Alertas de fraude
                   </p>

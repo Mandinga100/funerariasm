@@ -186,6 +186,18 @@ const BlogPostPage = () => {
     wordCount: post.content.split(/\s+/).length,
   };
 
+  // BreadcrumbList schema
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      ...(post.category ? [{ "@type": "ListItem", position: 3, name: post.category, item: `${SITE_URL}/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}` }] : []),
+      { "@type": "ListItem", position: post.category ? 4 : 3, name: post.title, item: `${SITE_URL}/blog/${post.slug}` },
+    ],
+  };
+
   const faqJsonLd = faqItems.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -292,6 +304,7 @@ const BlogPostPage = () => {
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
 
       {/* Hero */}

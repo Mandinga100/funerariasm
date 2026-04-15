@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";

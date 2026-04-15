@@ -428,10 +428,10 @@ export default function AdminPagos() {
 
               {selected.fraud_flags && selected.fraud_flags.length > 0 && (
                 <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded p-3">
-                  <p className="font-medium text-orange-800 text-xs mb-1 flex items-center gap-1">
+                  <p className="font-medium text-orange-800 dark:text-orange-300 text-xs mb-1 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" /> Alertas de fraude
                   </p>
-                  <ul className="text-xs text-orange-700 list-disc list-inside">
+                  <ul className="text-xs text-orange-700 dark:text-orange-400 list-disc list-inside">
                     {selected.fraud_flags.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
                 </div>
@@ -459,7 +459,7 @@ export default function AdminPagos() {
                   <Button size="sm" variant="destructive" className="flex-1" disabled={updating} onClick={() => updateStatus(selected.id, "rejected")}>
                     <X className="w-4 h-4 mr-1" /> Rechazar
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1 border-orange-300 text-orange-700" disabled={updating} onClick={() => updateStatus(selected.id, "suspicious")}>
+                  <Button size="sm" variant="outline" className="flex-1 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400" disabled={updating} onClick={() => updateStatus(selected.id, "suspicious")}>
                     <AlertTriangle className="w-4 h-4 mr-1" /> Sospechoso
                   </Button>
                 </div>

@@ -48,7 +48,7 @@ function PriorityBadge({ score }: { score: number | null }) {
     score >= 60 ? "bg-orange-500 text-white" :
     score >= 40 ? "bg-amber-400 text-amber-950" :
     score >= 20 ? "bg-blue-400 text-white" :
-    "bg-gray-300 text-gray-700";
+    "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-100";
   return (
     <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
       {score}
@@ -57,11 +57,11 @@ function PriorityBadge({ score }: { score: number | null }) {
 }
 
 const PIPELINE_STAGES = [
-  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
-  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
-  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
+  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
+  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
+  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
+  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
+  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
 ];
 
 const urgencyColor: Record<string, string> = {
@@ -463,7 +463,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
           </SelectContent>
         </Select>
         {lead.estimated_value ? (
-          <span className="text-xs font-semibold text-green-700">${lead.estimated_value.toLocaleString("es-CL")}</span>
+          <span className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</span>
         ) : (
           <span className="text-[10px] text-muted-foreground">{lead.source ?? ""}</span>
         )}
@@ -509,7 +509,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         </span>
       </div>
       {lead.estimated_value ? (
-        <p className="text-xs font-semibold text-green-700">${lead.estimated_value.toLocaleString("es-CL")}</p>
+        <p className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</p>
       ) : null}
     </div>
   );

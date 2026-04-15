@@ -718,7 +718,7 @@ export default function AdminSettings() {
                 <p className="text-xs text-destructive flex items-center gap-1"><X className="w-3 h-3" />Las contraseñas no coinciden</p>
               )}
               {newPass && confirmPass && newPass === confirmPass && newPass.length >= 8 && (
-                <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" />Las contraseñas coinciden</p>
+                <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1"><Check className="w-3 h-3" />Las contraseñas coinciden</p>
               )}
               <Button onClick={handleChangePassword} disabled={changingPass || !newPass || newPass !== confirmPass || newPass.length < 8}>
                 {changingPass ? "Actualizando..." : "Cambiar contraseña"}
@@ -747,12 +747,12 @@ export default function AdminSettings() {
               <CardTitle className="text-base sm:text-lg flex items-center gap-2"><Shield className="w-4 h-4 text-[#C5A059]" />Políticas de Seguridad</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Contraseñas mínimas de 8 caracteres</span></div>
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Verificación de email obligatoria para nuevos usuarios</span></div>
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Solo el CEO puede asignar roles de CEO y Admin</span></div>
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Row Level Security (RLS) en todas las tablas</span></div>
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Sesiones con token JWT y refresco automático</span></div>
-              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" /><span>Registro de actividad en leads y pagos</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Contraseñas mínimas de 8 caracteres</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Verificación de email obligatoria para nuevos usuarios</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Solo el CEO puede asignar roles de CEO y Admin</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Row Level Security (RLS) en todas las tablas</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Sesiones con token JWT y refresco automático</span></div>
+              <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" /><span>Registro de actividad en leads y pagos</span></div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -767,14 +767,14 @@ export default function AdminSettings() {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { fn: () => exportData("contact_leads", "leads"), icon: Users, color: "blue", title: "Exportar Leads", desc: "Contactos y clasificación" },
-                  { fn: () => exportData("payment_transactions", "pagos"), icon: FileText, color: "green", title: "Exportar Pagos", desc: "Historial de transacciones" },
-                  { fn: () => exportData("family_tracking", "tracking"), icon: Globe, color: "purple", title: "Exportar Tracking", desc: "Seguimiento de servicios" },
-                  { fn: () => exportData("obituaries", "obituarios"), icon: FileText, color: "gray", title: "Exportar Obituarios", desc: "Registros de obituarios" },
+                  { fn: () => exportData("contact_leads", "leads"), icon: Users, bgColor: "bg-blue-100 dark:bg-blue-950/40", iconColor: "text-blue-600 dark:text-blue-400", title: "Exportar Leads", desc: "Contactos y clasificación" },
+                  { fn: () => exportData("payment_transactions", "pagos"), icon: FileText, bgColor: "bg-green-100 dark:bg-green-950/40", iconColor: "text-green-600 dark:text-green-400", title: "Exportar Pagos", desc: "Historial de transacciones" },
+                  { fn: () => exportData("family_tracking", "tracking"), icon: Globe, bgColor: "bg-purple-100 dark:bg-purple-950/40", iconColor: "text-purple-600 dark:text-purple-400", title: "Exportar Tracking", desc: "Seguimiento de servicios" },
+                  { fn: () => exportData("obituaries", "obituarios"), icon: FileText, bgColor: "bg-gray-100 dark:bg-gray-800", iconColor: "text-gray-600 dark:text-gray-400", title: "Exportar Obituarios", desc: "Registros de obituarios" },
                 ].map((item, idx) => (
                   <button key={idx} onClick={item.fn} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
-                    <div className={`w-10 h-10 rounded-lg bg-${item.color}-50 flex items-center justify-center shrink-0`}>
-                      <item.icon className={`w-5 h-5 text-${item.color}-600`} />
+                    <div className={`w-10 h-10 rounded-lg ${item.bgColor} flex items-center justify-center shrink-0`}>
+                      <item.icon className={`w-5 h-5 ${item.iconColor}`} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{item.title}</p>

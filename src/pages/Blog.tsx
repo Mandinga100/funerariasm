@@ -23,6 +23,7 @@ interface BlogPost {
 const SITE_URL = "https://funerariasantamargarita.cl";
 
 const Blog = () => {
+  const isMobile = useIsMobile();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();

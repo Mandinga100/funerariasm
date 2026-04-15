@@ -2,9 +2,13 @@ import Layout from "@/components/Layout";
 import ContactForm from "@/components/ContactForm";
 import { Phone, MessageCircle, MapPin, Clock, Mail } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Contacto", path: "/contacto" }]);
 
 const Contacto = () => (
   <Layout>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
     {/* Hero */}
     <section className="pt-28 pb-16 bg-primary text-primary-foreground">
       <div className="container text-center">

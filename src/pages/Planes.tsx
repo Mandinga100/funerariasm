@@ -7,6 +7,9 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 import FaqAccordion from "@/components/faq/FaqAccordion";
 import type { FaqItem } from "@/lib/faq-data";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Planes Funerarios", path: "/planes" }]);
 
 const PLANS = [
   {
@@ -102,6 +105,7 @@ const Planes = () => {
 
   return (
     <Layout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {/* Hero */}
       <section className="pt-28 pb-16 bg-primary text-primary-foreground">
         <div className="container text-center">

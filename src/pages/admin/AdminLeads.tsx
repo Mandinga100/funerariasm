@@ -57,11 +57,11 @@ function PriorityBadge({ score }: { score: number | null }) {
 }
 
 const PIPELINE_STAGES = [
-  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
-  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950/60 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
-  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
+  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
+  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
+  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
+  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
+  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
 ];
 
 const urgencyColor: Record<string, string> = {

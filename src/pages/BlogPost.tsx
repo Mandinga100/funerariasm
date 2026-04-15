@@ -5,6 +5,8 @@ import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import TableOfContents, { extractHeadings } from "@/components/blog/TableOfContents";
 import RelatedPosts from "@/components/blog/RelatedPosts";
+import BlogCTA from "@/components/blog/BlogCTA";
+import BlogFAQ from "@/components/blog/BlogFAQ";
 import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, User, Share2 } from "lucide-react";
 
@@ -24,6 +26,17 @@ interface BlogPost {
 }
 
 const SITE_URL = "https://funerariasantamargarita.cl";
+
+/** Map category to CTA variants */
+function getCTAVariants(category: string | null): Array<"contact" | "plans" | "legados" | "prevision" | "whatsapp"> {
+  const cat = (category || "").toLowerCase();
+  if (cat.includes("previsión") || cat.includes("prevision")) return ["prevision", "plans", "contact"];
+  if (cat.includes("servicio")) return ["plans", "contact", "legados"];
+  if (cat.includes("duelo") || cat.includes("contención") || cat.includes("salud") || cat.includes("apoyo")) return ["contact", "legados", "whatsapp"];
+  if (cat.includes("guía") || cat.includes("guias")) return ["plans", "contact", "prevision"];
+  if (cat.includes("novedad")) return ["legados", "plans", "contact"];
+  return ["contact", "plans", "legados"];
+}
 
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -69,7 +82,6 @@ const BlogPostPage = () => {
     };
 
     setMeta("name", "description", description);
-    // Open Graph
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", description);
     setMeta("property", "og:type", "article");
@@ -77,13 +89,11 @@ const BlogPostPage = () => {
     if (post.cover_image) setMeta("property", "og:image", post.cover_image);
     if (post.published_at) setMeta("property", "article:published_time", post.published_at);
     if (post.category) setMeta("property", "article:section", post.category);
-    // Twitter
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:title", title);
     setMeta("name", "twitter:description", description);
     if (post.cover_image) setMeta("name", "twitter:image", post.cover_image);
 
-    // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) {
       canonical = document.createElement("link");
@@ -93,13 +103,11 @@ const BlogPostPage = () => {
     canonical.setAttribute("href", url);
 
     return () => {
-      // Restore defaults on unmount
       document.title = "Funeraria Santa Margarita — Servicio Funerario Profesional 24/7";
       if (canonical) canonical.setAttribute("href", SITE_URL);
     };
   }, [post]);
 
-  // Estimate reading time
   const readingTime = useMemo(() => {
     if (!post) return 0;
     const words = post.content.split(/\s+/).length;
@@ -143,6 +151,15 @@ const BlogPostPage = () => {
     );
   }
 
+  // Extract FAQ items from content
+  const faqItems = extractFAQ(post.content);
+
+  // Remove FAQ section from main content to render it separately
+  const contentWithoutFAQ = removeFAQSection(post.content);
+
+  // CTA variants based on category
+  const ctaVariants = getCTAVariants(post.category);
+
   // Enhanced Article schema
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -169,8 +186,6 @@ const BlogPostPage = () => {
     wordCount: post.content.split(/\s+/).length,
   };
 
-  // Extract FAQ from content (## Preguntas Frecuentes pattern)
-  const faqItems = extractFAQ(post.content);
   const faqJsonLd = faqItems.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -183,12 +198,13 @@ const BlogPostPage = () => {
 
   const headings = extractHeadings(post.content);
 
-  // Render content with heading IDs for TOC anchoring
+  // Render content with heading IDs, inline CTAs
   const renderContent = (md: string) => {
     const lines = md.split("\n");
     const elements: React.ReactNode[] = [];
     let headingIdx = 0;
     let listBuffer: React.ReactNode[] = [];
+    let h2Count = 0;
 
     const flushList = () => {
       if (listBuffer.length > 0) {
@@ -213,7 +229,15 @@ const BlogPostPage = () => {
         flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
+        h2Count++;
+
         elements.push(<h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">{line.slice(3)}</h2>);
+
+        // Insert contextual CTA after every 2nd h2 section
+        if (h2Count > 0 && h2Count % 2 === 0 && ctaVariants.length > 0) {
+          const ctaIdx = Math.floor((h2Count / 2 - 1) % ctaVariants.length);
+          elements.push(<BlogCTA key={`cta-${h2Count}`} variant={ctaVariants[ctaIdx]} />);
+        }
       } else if (line.startsWith("- ") || line.startsWith("* ")) {
         const content = line.slice(2);
         listBuffer.push(
@@ -245,7 +269,6 @@ const BlogPostPage = () => {
   };
 
   const renderInline = (text: string) => {
-    // Split by markdown links [text](url) and bold **text**
     const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
@@ -271,40 +294,30 @@ const BlogPostPage = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
 
-      {/* Hero — Senior UI/UX split layout */}
+      {/* Hero */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
         const isLogo = heroImage.includes("logo-oficial");
         const logoSrc = isLogo ? "/assets/images/brand/logo-white.webp" : heroImage;
         return (
           <section className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] overflow-hidden bg-[#080808]">
-            {/* ── Layer 1: Full cinematic background image or logo ambient ── */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               {isLogo ? (
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  {/* Primary: full-bleed image at real size with slight blur for depth */}
                   <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" decoding="async" fetchPriority="high" style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }} />
-                  {/* Secondary: scaled soft glow layer for cinematic atmosphere */}
                   <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light" loading="lazy" decoding="async" />
                 </>
               )}
             </div>
 
-            {/* ── Layer 2: Cinematic gradient overlays — ensure text legibility ── */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/30 pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/60 pointer-events-none" />
-            {/* Vignette */}
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
-
-            {/* ── Layer 3: Gold accent line ── */}
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />
 
-            {/* ── Layer 4: Content ── */}
             <div className="relative z-10 h-full container max-w-6xl flex flex-col md:flex-row items-end md:items-center gap-6 md:gap-12 pt-28 pb-12 md:pt-24 md:pb-16 min-h-[480px] sm:min-h-[540px] md:min-h-[600px]">
-              
-              {/* Left: Text content */}
               <div className="flex-1 flex flex-col justify-center md:pr-8 order-2 md:order-1">
                 <Breadcrumbs
                   items={[
@@ -319,13 +332,10 @@ const BlogPostPage = () => {
                 {post.excerpt && (
                   <p className="text-white/60 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">{post.excerpt}</p>
                 )}
-                {/* Gold separator with glow */}
                 <div className="relative mt-8 mb-5">
                   <div className="absolute -top-px left-0 w-full max-w-xs h-[3px] rounded-full bg-gradient-to-r from-gold/60 via-gold/30 to-transparent blur-[2px]" />
                   <div className="w-full max-w-xs h-px bg-gradient-to-r from-gold/50 via-gold/20 to-transparent" />
                 </div>
-
-                {/* Metadata row */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-white/55 tracking-wide">
                   {post.category && (
                     <span className="flex items-center gap-1.5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-full px-3.5 py-1.5 text-white/65 hover:border-gold/30 hover:text-gold/80 transition-all duration-300">
@@ -348,7 +358,6 @@ const BlogPostPage = () => {
                 </div>
               </div>
 
-              {/* Right: Logo showcase OR empty (photo is now full background) */}
               {isLogo && (
                 <div className="flex-shrink-0 order-1 md:order-2 w-full md:w-[380px] lg:w-[420px] xl:w-[460px] relative self-center">
                   <div className="relative flex items-center justify-center py-10">
@@ -378,8 +387,14 @@ const BlogPostPage = () => {
           <TableOfContents content={post.content} />
 
           <div className="prose-funeraria">
-            {renderContent(post.content)}
+            {renderContent(contentWithoutFAQ)}
           </div>
+
+          {/* Interactive FAQ Section */}
+          <BlogFAQ items={faqItems} blogTitle={post.title} />
+
+          {/* Final CTA */}
+          <BlogCTA variant={ctaVariants[0]} />
 
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
@@ -400,18 +415,6 @@ const BlogPostPage = () => {
             <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">Facebook</a>
             <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">X</a>
             <a href={`https://wa.me/?text=${encodeURIComponent(post.title + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">WhatsApp</a>
-          </div>
-
-          {/* CTA */}
-          <div className="mt-12 p-8 bg-card rounded-lg border border-border/50 text-center">
-            <p className="font-playfair text-lg text-foreground mb-2">¿Necesita orientación?</p>
-            <p className="text-sm text-muted-foreground mb-4">Nuestro equipo está disponible 24/7 para acompañarle.</p>
-            <a
-              href="tel:+56964333760"
-              className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-accent-foreground px-6 py-3 rounded-full text-sm tracking-wide-brand uppercase transition-brand"
-            >
-              Contactar ahora
-            </a>
           </div>
 
           {/* Related Posts */}
@@ -436,7 +439,7 @@ function extractFAQ(content: string): { question: string; answer: string }[] {
       continue;
     }
     if (inFaqSection) {
-      if (line.startsWith("## ")) break; // next h2 ends FAQ section
+      if (line.startsWith("## ")) break;
       if (line.startsWith("### ")) {
         if (currentQ && currentA.trim()) {
           faqs.push({ question: currentQ, answer: currentA.trim() });
@@ -452,6 +455,29 @@ function extractFAQ(content: string): { question: string; answer: string }[] {
     faqs.push({ question: currentQ, answer: currentA.trim() });
   }
   return faqs;
+}
+
+/** Remove FAQ section from markdown so it can be rendered separately */
+function removeFAQSection(content: string): string {
+  const lines = content.split("\n");
+  const result: string[] = [];
+  let inFaqSection = false;
+
+  for (const line of lines) {
+    if (line.match(/^##\s*(preguntas?\s*frecuentes|faq)/i)) {
+      inFaqSection = true;
+      continue;
+    }
+    if (inFaqSection) {
+      if (line.startsWith("## ")) {
+        inFaqSection = false;
+        result.push(line);
+      }
+      continue;
+    }
+    result.push(line);
+  }
+  return result.join("\n");
 }
 
 export default BlogPostPage;

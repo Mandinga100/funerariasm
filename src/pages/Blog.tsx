@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
@@ -22,6 +23,7 @@ interface BlogPost {
 const SITE_URL = "https://funerariasantamargarita.cl";
 
 const Blog = () => {
+  const isMobile = useIsMobile();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,6 +71,8 @@ const Blog = () => {
     fetchPosts();
   }, []);
 
+  const maxCards = activeFilter ? (isMobile ? 3 : 6) : undefined;
+
   const filteredPosts = useMemo(() => {
     const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
     const categoryOrder = ["novedades", "guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
@@ -76,16 +80,25 @@ const Blog = () => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     if (activeFilter) {
+      let result: BlogPost[];
       if (activeFilter === "novedades") {
-        return posts.filter((p) => p.published_at && new Date(p.published_at) >= thirtyDaysAgo);
+        result = posts.filter((p) => p.published_at && new Date(p.published_at) >= thirtyDaysAgo);
+      } else {
+        result = posts.filter((p) => {
+          const cat = p.category ? normalize(p.category) : "";
+          return cat === activeFilter;
+        });
       }
-      return posts.filter((p) => {
-        const cat = p.category ? normalize(p.category) : "";
-        return cat === activeFilter;
+      // Sort by trending: most recent first (proxy for relevance)
+      result.sort((a, b) => {
+        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return dateB - dateA;
       });
+      return result.slice(0, maxCards);
     }
 
-    // Default: novedades first, then by category priority order
+    // Default "Todos": novedades first, then by category priority order
     return [...posts].sort((a, b) => {
       const catA = a.category ? normalize(a.category) : "";
       const catB = b.category ? normalize(b.category) : "";
@@ -97,7 +110,7 @@ const Blog = () => {
       const orderB = categoryOrder.indexOf(catB);
       return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
     });
-  }, [posts, activeFilter]);
+  }, [posts, activeFilter, maxCards]);
 
   const jsonLd = {
     "@context": "https://schema.org",

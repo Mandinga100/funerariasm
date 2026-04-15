@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Search } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Legados Eternos", path: "/legados-eternos" }]);
 
 interface Memorial {
   id: string;

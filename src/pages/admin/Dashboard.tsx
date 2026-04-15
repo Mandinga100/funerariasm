@@ -635,7 +635,7 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fill: "hsl(var(--foreground))" }}
+                  tick={{ fontSize: 10, fill: "hsl(var(--foreground))" }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
@@ -780,7 +780,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={leadsTimeline}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fill: "hsl(var(--foreground))" }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} />
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} />
                 <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />

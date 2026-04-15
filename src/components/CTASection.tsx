@@ -56,7 +56,7 @@ const CTASection = () => {
             <span className="text-sm tracking-wide-brand uppercase">Ver planes disponibles</span>
           </Link>
           <Link
-            to="/memoriales"
+            to="/legados-eternos"
             className="group flex flex-col items-center gap-3 bg-primary-foreground/10 hover:bg-gold/20 border border-primary-foreground/10 hover:border-gold/30 rounded-lg p-6 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.2)]"
           >
             <Heart className="w-8 h-8 text-gold transition-transform duration-300 group-hover:scale-110" />

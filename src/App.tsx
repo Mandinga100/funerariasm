@@ -49,8 +49,8 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/obituarios" element={<Obituarios />} />
             <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
-            <Route path="/memoriales" element={<Memoriales />} />
-            <Route path="/memoriales/:slug" element={<MemorialDetail />} />
+            <Route path="/legados-eternos" element={<Memoriales />} />
+            <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
             <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
             <Route path="/pagos" element={<Pagos />} />

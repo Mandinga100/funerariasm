@@ -38,11 +38,11 @@ const Memoriales = () => {
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", desc);
     setMeta("property", "og:type", "website");
-    setMeta("property", "og:url", "https://funerariasantamargarita.cl/memoriales");
+    setMeta("property", "og:url", "https://funerariasantamargarita.cl/legados-eternos");
 
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
-    canonical.setAttribute("href", "https://funerariasantamargarita.cl/memoriales");
+    canonical.setAttribute("href", "https://funerariasantamargarita.cl/legados-eternos");
 
     const fetchData = async () => {
       const { data } = await supabase
@@ -90,7 +90,7 @@ const Memoriales = () => {
     "@type": "WebPage",
     name: "Legados Eternos - Funeraria Santa Margarita",
     description: "Legados eternos para honrar la memoria de quienes partieron.",
-    url: "https://funerariasantamargarita.cl/memoriales",
+    url: "https://funerariasantamargarita.cl/legados-eternos",
     publisher: { "@type": "Organization", name: "Funeraria Santa Margarita" },
   };
 
@@ -155,7 +155,7 @@ const Memoriales = () => {
                   return (
                     <Link
                       key={mem.id}
-                      to={`/memoriales/${mem.slug}`}
+                      to={`/legados-eternos/${mem.slug}`}
                       className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-primary-foreground/5"
                     >
                       {/* Photo */}

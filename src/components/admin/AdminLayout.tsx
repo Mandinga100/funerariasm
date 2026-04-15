@@ -179,7 +179,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen flex bg-muted/20">
+    <div className="min-h-screen flex bg-muted/20 dark">
       <aside className="hidden md:flex w-64 border-r bg-background flex-col">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="min-w-0">

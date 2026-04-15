@@ -1,4 +1,5 @@
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
+import OptimizedImage from "@/components/ui/optimized-image";
 import { Phone, MessageCircle } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
@@ -50,7 +51,7 @@ const AboutSection = () => {
                 { img: "/assets/images/otros/profesional.webp", label: "Profesionalismo" },
               ].map((v) => (
                 <div key={v.label} className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border/50 hover:border-gold/30 transition-brand">
-                  <img src={v.img} alt={v.label} className="w-10 h-10 rounded object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                  <OptimizedImage src={v.img} alt={v.label} className="w-10 h-10 rounded object-cover transition-transform duration-300 group-hover:scale-105" />
                   <span className="text-sm font-medium text-foreground">{v.label}</span>
                 </div>
               ))}

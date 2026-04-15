@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import OptimizedImage from "@/components/ui/optimized-image";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoryImage } from "@/lib/blog-categories";
@@ -63,7 +64,7 @@ const RelatedPosts = ({ currentId, category, tags }: RelatedPostsProps) => {
               className="group bg-card rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-all duration-300"
             >
               <div className="aspect-[16/10] overflow-hidden bg-muted">
-                <img src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <OptimizedImage src={image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4">
                 {post.published_at && (

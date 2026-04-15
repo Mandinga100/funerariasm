@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
 import { toast } from "sonner";
 import MemorialPhoto from "@/components/memorial/MemorialPhoto";
 import OfferingButtons from "@/components/memorial/OfferingButtons";

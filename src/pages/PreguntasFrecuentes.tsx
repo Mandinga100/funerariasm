@@ -6,6 +6,9 @@ import FaqAccordion from "@/components/faq/FaqAccordion";
 import { FAQ_CATEGORIES, getAllFaqItems } from "@/lib/faq-data";
 import { Phone, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Preguntas Frecuentes", path: "/preguntas-frecuentes" }]);
 
 const SITE_URL = "https://funerariasantamargarita.cl";
 

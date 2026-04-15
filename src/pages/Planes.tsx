@@ -7,6 +7,9 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 import FaqAccordion from "@/components/faq/FaqAccordion";
 import type { FaqItem } from "@/lib/faq-data";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Planes Funerarios", path: "/planes" }]);
 
 const PLANS = [
   {

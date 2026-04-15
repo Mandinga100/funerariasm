@@ -44,13 +44,13 @@ interface Transaction {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  initiated: { label: "Iniciado", className: "bg-gray-100 text-gray-800" },
-  transfer_reported: { label: "Informado", className: "bg-blue-100 text-blue-800" },
-  proof_uploaded: { label: "Con comprobante", className: "bg-indigo-100 text-indigo-800" },
-  pending_review: { label: "En revisión", className: "bg-yellow-100 text-yellow-800" },
-  confirmed: { label: "Confirmado", className: "bg-green-100 text-green-800" },
-  rejected: { label: "Rechazado", className: "bg-red-100 text-red-800" },
-  suspicious: { label: "Sospechoso", className: "bg-orange-100 text-orange-800" },
+  initiated: { label: "Iniciado", className: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200" },
+  transfer_reported: { label: "Informado", className: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300" },
+  proof_uploaded: { label: "Con comprobante", className: "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300" },
+  pending_review: { label: "En revisión", className: "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-800 dark:text-yellow-300" },
+  confirmed: { label: "Confirmado", className: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300" },
+  rejected: { label: "Rechazado", className: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300" },
+  suspicious: { label: "Sospechoso", className: "bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300" },
 };
 
 const typeLabels: Record<string, string> = {

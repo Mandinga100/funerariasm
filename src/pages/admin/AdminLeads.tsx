@@ -57,18 +57,18 @@ function PriorityBadge({ score }: { score: number | null }) {
 }
 
 const PIPELINE_STAGES = [
-  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 border-blue-200", dotColor: "bg-blue-500" },
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 border-amber-200", dotColor: "bg-amber-500" },
-  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 border-orange-200", dotColor: "bg-orange-500" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 border-green-200", dotColor: "bg-green-500" },
-  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 border-gray-200", dotColor: "bg-gray-500" },
+  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
+  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
+  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
+  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
+  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
 ];
 
 const urgencyColor: Record<string, string> = {
-  inmediata: "bg-red-100 text-red-800 border-red-300",
-  immediate: "bg-red-100 text-red-800 border-red-300",
-  normal: "bg-blue-100 text-blue-800 border-blue-300",
-  "previsión": "bg-green-100 text-green-800 border-green-300",
+  inmediata: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800",
+  immediate: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800",
+  normal: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800",
+  "previsión": "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800",
 };
 
 const URGENCY_LABELS: Record<string, string> = {

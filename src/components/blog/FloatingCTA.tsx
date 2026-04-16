@@ -40,7 +40,8 @@ const FloatingCTA = ({
       role="complementary"
       aria-hidden={!visible}
       className={cn(
-        "fixed z-40 left-4 right-4 sm:left-auto sm:right-6 bottom-24 sm:bottom-6 sm:max-w-sm",
+        // Mobile: leave room for the global WhatsApp button (right side, bottom-20)
+        "fixed z-40 left-3 right-20 sm:left-auto sm:right-24 bottom-20 sm:bottom-6 sm:max-w-sm",
         "transition-all duration-500 ease-out",
         visible
           ? "opacity-100 translate-y-0 pointer-events-auto"

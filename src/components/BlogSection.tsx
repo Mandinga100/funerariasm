@@ -73,18 +73,11 @@ const BlogSection = () => {
   const filteredPosts = useMemo(() => {
     let result = allPosts;
     if (activeFilter) {
-      if (activeFilter === "novedades") {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        result = allPosts.filter((p) => p.published_at && new Date(p.published_at) >= thirtyDaysAgo);
-      } else {
-        const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-        result = allPosts.filter((p) => {
-          const cat = p.category ? normalize(p.category) : "";
-          const tags = (p.tags || []).map((t) => normalize(t));
-          return cat === activeFilter || tags.includes(activeFilter);
-        });
-      }
+      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
+      result = allPosts.filter((p) => {
+        const cat = p.category ? normalize(p.category) : "";
+        return cat === activeFilter;
+      });
     } else {
       // Default "Todos": pick the most relevant (most recent) post from each category in filter order
       const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");

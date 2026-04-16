@@ -52,7 +52,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
 // Map category name → image path for article cover fallback
 const CATEGORY_IMAGES: Record<string, string> = {
   novedades: "/assets/images/blog/novedades-hero.jpg",
-  guias: "/assets/images/blog/guias.jpg",
+  guias: "/assets/images/brand/logo-oficial.webp",
   duelo: "/assets/images/blog/duelo-hero.jpg",
   servicios: "/assets/images/blog/servicios-hero.jpg",
   prevision: "/assets/images/blog/prevision-hero.jpg",

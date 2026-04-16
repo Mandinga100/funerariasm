@@ -8,7 +8,14 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   placeholderColor?: string;
   /** Enable fade-in animation on load */
   fadeIn?: boolean;
+  /** Disable automatic <picture> + WebP source generation (for .jpg/.jpeg srcs) */
+  disableWebp?: boolean;
 }
+
+const isJpegSrc = (src?: string) =>
+  !!src && /\.(jpe?g)(\?.*)?$/i.test(src) && !src.startsWith("data:");
+
+const toWebp = (src: string) => src.replace(/\.(jpe?g)(\?.*)?$/i, ".webp$2");
 
 /**
  * OptimizedImage — drop-in <img> replacement with:
@@ -17,15 +24,18 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
  * - `fetchpriority` hint for LCP images
  * - Fade-in transition on load
  * - Placeholder background while loading
+ * - Automatic <picture> + WebP source for .jpg/.jpeg srcs (modern format fallback)
  */
 const OptimizedImage = ({
   priority = false,
   placeholderColor = "hsl(var(--muted))",
   fadeIn = true,
+  disableWebp = false,
   className,
   alt = "",
   style,
   onLoad,
+  src,
   ...props
 }: OptimizedImageProps) => {
   const [loaded, setLoaded] = useState(false);
@@ -38,9 +48,10 @@ const OptimizedImage = ({
     }
   }, []);
 
-  return (
+  const img = (
     <img
       ref={imgRef}
+      src={src}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
@@ -62,6 +73,17 @@ const OptimizedImage = ({
       {...props}
     />
   );
+
+  if (!disableWebp && typeof src === "string" && isJpegSrc(src)) {
+    return (
+      <picture>
+        <source type="image/webp" srcSet={toWebp(src)} />
+        {img}
+      </picture>
+    );
+  }
+
+  return img;
 };
 
 export default OptimizedImage;

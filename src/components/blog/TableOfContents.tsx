@@ -146,7 +146,8 @@ const TableOfContents = ({ content, sticky = false }: TableOfContentsProps) => {
           isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <ol className="space-y-0.5 px-5 pb-5">
+        <ol className={cn("space-y-0.5 px-5 pb-5", sticky && "max-h-[60vh] overflow-y-auto")}>
+
           {headings.map((h, i) => {
             const isActive = h.id === activeId;
             const isPast = activeIndex >= 0 && i < activeIndex;

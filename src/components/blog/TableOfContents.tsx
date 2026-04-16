@@ -11,6 +11,8 @@ interface TocItem {
 
 interface TableOfContentsProps {
   content: string;
+  /** When true, render as sticky sidebar (desktop). */
+  sticky?: boolean;
 }
 
 export function extractHeadings(content: string): TocItem[] {
@@ -33,7 +35,7 @@ export function extractHeadings(content: string): TocItem[] {
   return headings;
 }
 
-const TableOfContents = ({ content }: TableOfContentsProps) => {
+const TableOfContents = ({ content, sticky = false }: TableOfContentsProps) => {
   const headings = useMemo(() => extractHeadings(content), [content]);
   const isMobile = useIsMobile();
   const [activeId, setActiveId] = useState<string>("");
@@ -97,7 +99,10 @@ const TableOfContents = ({ content }: TableOfContentsProps) => {
   return (
     <nav
       aria-label="Tabla de contenidos"
-      className="relative bg-card border border-border/50 rounded-xl p-0 mb-10 overflow-hidden"
+      className={cn(
+        "relative bg-card border border-border/50 rounded-xl p-0 overflow-hidden",
+        sticky ? "lg:sticky lg:top-24" : "mb-10"
+      )}
     >
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-border/20">

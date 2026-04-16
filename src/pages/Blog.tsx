@@ -102,18 +102,41 @@ const Blog = () => {
       return result.slice(0, maxCards);
     }
 
-    // Default "Todos": novedades first, then by category priority order
-    return [...posts].sort((a, b) => {
-      const catA = a.category ? normalize(a.category) : "";
-      const catB = b.category ? normalize(b.category) : "";
-      const aIsNew = a.published_at && new Date(a.published_at) >= thirtyDaysAgo;
-      const bIsNew = b.published_at && new Date(b.published_at) >= thirtyDaysAgo;
-      if (aIsNew && !bIsNew) return -1;
-      if (!aIsNew && bIsNew) return 1;
-      const orderA = categoryOrder.indexOf(catA);
-      const orderB = categoryOrder.indexOf(catB);
-      return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
-    });
+    // Default "Todos": round-robin picking the most relevant post from each category in filter order
+    const byCategory = new Map<string, BlogPost[]>();
+    for (const p of posts) {
+      const cat = p.category ? normalize(p.category) : "other";
+      if (!byCategory.has(cat)) byCategory.set(cat, []);
+      byCategory.get(cat)!.push(p);
+    }
+    for (const group of byCategory.values()) {
+      group.sort((a, b) => {
+        const da = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const db = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return db - da;
+      });
+    }
+    const ordered: BlogPost[] = [];
+    const usedIds = new Set<string>();
+    let round = 0;
+    const maxRounds = Math.max(...Array.from(byCategory.values()).map(v => v.length), 0);
+    while (ordered.length < posts.length && round < maxRounds) {
+      for (const cat of categoryOrder) {
+        const catPosts = byCategory.get(cat);
+        if (catPosts && catPosts[round] && !usedIds.has(catPosts[round].id)) {
+          ordered.push(catPosts[round]);
+          usedIds.add(catPosts[round].id);
+        }
+      }
+      for (const [cat, catPosts] of byCategory) {
+        if (!categoryOrder.includes(cat) && catPosts[round] && !usedIds.has(catPosts[round].id)) {
+          ordered.push(catPosts[round]);
+          usedIds.add(catPosts[round].id);
+        }
+      }
+      round++;
+    }
+    return ordered;
   }, [posts, activeFilter, maxCards]);
 
   const jsonLd = {

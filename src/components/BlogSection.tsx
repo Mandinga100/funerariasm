@@ -86,24 +86,48 @@ const BlogSection = () => {
         });
       }
     } else {
-      // Default: sort by category priority matching filter order
+      // Default "Todos": pick the most relevant (most recent) post from each category in filter order
       const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-      const categoryOrder = ["novedades", "guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      result = [...allPosts].sort((a, b) => {
-        const catA = a.category ? normalize(a.category) : "";
-        const catB = b.category ? normalize(b.category) : "";
-        const aIsNew = a.published_at && new Date(a.published_at) >= thirtyDaysAgo;
-        const bIsNew = b.published_at && new Date(b.published_at) >= thirtyDaysAgo;
-        // Novedades (recent posts) always first
-        if (aIsNew && !bIsNew) return -1;
-        if (!aIsNew && bIsNew) return 1;
-        // Then sort by category priority
-        const orderA = categoryOrder.indexOf(catA);
-        const orderB = categoryOrder.indexOf(catB);
-        return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
-      });
+      const categoryOrder = ["guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
+      
+      // Group posts by normalized category
+      const byCategory = new Map<string, BlogPost[]>();
+      for (const p of allPosts) {
+        const cat = p.category ? normalize(p.category) : "other";
+        if (!byCategory.has(cat)) byCategory.set(cat, []);
+        byCategory.get(cat)!.push(p);
+      }
+      // Sort each group by date descending (most recent = most relevant)
+      for (const posts of byCategory.values()) {
+        posts.sort((a, b) => {
+          const da = a.published_at ? new Date(a.published_at).getTime() : 0;
+          const db = b.published_at ? new Date(b.published_at).getTime() : 0;
+          return db - da;
+        });
+      }
+      // Round-robin: pick top post from each category in order, then second, etc.
+      const ordered: BlogPost[] = [];
+      const usedIds = new Set<string>();
+      let round = 0;
+      const maxRounds = Math.max(...Array.from(byCategory.values()).map(v => v.length), 0);
+      while (ordered.length < allPosts.length && round < maxRounds) {
+        for (const cat of categoryOrder) {
+          const catPosts = byCategory.get(cat);
+          if (catPosts && catPosts[round] && !usedIds.has(catPosts[round].id)) {
+            ordered.push(catPosts[round]);
+            usedIds.add(catPosts[round].id);
+          }
+        }
+        // Also include "other" categories not in the predefined order
+        for (const [cat, catPosts] of byCategory) {
+          if (!categoryOrder.includes(cat) && catPosts[round] && !usedIds.has(catPosts[round].id)) {
+            ordered.push(catPosts[round]);
+            usedIds.add(catPosts[round].id);
+          }
+        }
+        round++;
+      }
+      result = ordered;
     }
     return result.slice(0, 6);
   }, [allPosts, activeFilter]);

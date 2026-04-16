@@ -1,0 +1,9 @@
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/guia-defuncion-chile-pasos-a-seguir.jpg' WHERE slug = 'guia-defuncion-chile-pasos-a-seguir';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/guia-cuota-mortuoria-chile-requisitos.jpg' WHERE slug = 'guia-cuota-mortuoria-chile-requisitos';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/derechos-consumidor-servicios-funerarios-chile.jpg' WHERE slug = 'derechos-consumidor-servicios-funerarios-chile';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/que-hacer-ante-fallecimiento-guia-tramites-chile.jpg' WHERE slug = 'que-hacer-ante-fallecimiento-guia-tramites-chile';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/como-acompanar-a-un-familiar-en-duelo.jpg' WHERE slug = 'como-acompanar-a-un-familiar-en-duelo';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/guia-flores-arreglos-florales-funerales-chile.jpg' WHERE slug = 'guia-flores-arreglos-florales-funerales-chile';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/importancia-prevision-funeraria-acto-de-amor.jpg' WHERE slug = 'importancia-prevision-funeraria-acto-de-amor';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/ceremonias-funerarias-personalizadas-guia-completa.jpg' WHERE slug = 'ceremonias-funerarias-personalizadas-guia-completa';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/cremacion-en-chile-guia-completa.jpg' WHERE slug = 'cremacion-en-chile-guia-completa';

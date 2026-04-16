@@ -88,9 +88,10 @@ const Blog = () => {
       if (activeFilter === "novedades") {
         result = posts.filter((p) => p.published_at && new Date(p.published_at) >= thirtyDaysAgo);
       } else {
-        result = posts.filter((p) => {
+      result = posts.filter((p) => {
           const cat = p.category ? normalize(p.category) : "";
-          return cat === activeFilter;
+          const tags = (p.tags || []).map((t) => normalize(t));
+          return cat === activeFilter || tags.includes(activeFilter);
         });
       }
       // Sort by trending: most recent first (proxy for relevance)

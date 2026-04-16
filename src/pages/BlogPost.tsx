@@ -7,7 +7,18 @@ import TableOfContents, { extractHeadings } from "@/components/blog/TableOfConte
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import BlogCTA from "@/components/blog/BlogCTA";
 import BlogFAQ from "@/components/blog/BlogFAQ";
+import QuickAnswer from "@/components/blog/QuickAnswer";
+import NextSteps, { type NextStep } from "@/components/blog/NextSteps";
+import AuthorMeta from "@/components/blog/AuthorMeta";
+import LegalDisclaimer from "@/components/blog/LegalDisclaimer";
+import FloatingCTA from "@/components/blog/FloatingCTA";
 import { getCategoryImage } from "@/lib/blog-categories";
+import {
+  buildBlogPostingJsonLd,
+  buildFuneralHomeJsonLd,
+  buildOrganizationJsonLd,
+  buildPersonJsonLd,
+} from "@/lib/blog-schemas";
 import { Calendar, Tag, User, Share2 } from "lucide-react";
 
 interface BlogPost {
@@ -22,20 +33,98 @@ interface BlogPost {
   meta_title: string | null;
   meta_description: string | null;
   published_at: string | null;
+  updated_at?: string | null;
   author_name: string | null;
 }
 
 const SITE_URL = "https://funerariasantamargarita.cl";
 
+/** Editorial defaults — used when DB does not provide explicit values. */
+const DEFAULT_AUTHOR = "Equipo Editorial Funeraria Santa Margarita";
+const DEFAULT_REVIEWER = "Equipo Profesional Funeraria Santa Margarita";
+
 /** Map category to CTA variants */
-function getCTAVariants(category: string | null): Array<"contact" | "plans" | "legados" | "prevision" | "whatsapp"> {
+function getCTAVariants(
+  category: string | null
+): Array<"contact" | "plans" | "legados" | "prevision" | "whatsapp"> {
   const cat = (category || "").toLowerCase();
-  if (cat.includes("previsión") || cat.includes("prevision")) return ["prevision", "plans", "contact"];
+  if (cat.includes("previsión") || cat.includes("prevision"))
+    return ["prevision", "plans", "contact"];
   if (cat.includes("servicio")) return ["plans", "contact", "legados"];
-  if (cat.includes("duelo") || cat.includes("contención") || cat.includes("salud") || cat.includes("apoyo")) return ["contact", "legados", "whatsapp"];
-  if (cat.includes("guía") || cat.includes("guias")) return ["plans", "contact", "prevision"];
+  if (
+    cat.includes("duelo") ||
+    cat.includes("contención") ||
+    cat.includes("salud") ||
+    cat.includes("apoyo")
+  )
+    return ["contact", "legados", "whatsapp"];
+  if (cat.includes("guía") || cat.includes("guias"))
+    return ["plans", "contact", "prevision"];
   if (cat.includes("novedad")) return ["legados", "plans", "contact"];
   return ["contact", "plans", "legados"];
+}
+
+/** Default contextual "next steps" by category — concrete, actionable, no fabricated data. */
+function getDefaultNextSteps(category: string | null): NextStep[] {
+  const cat = (category || "").toLowerCase();
+  const base: NextStep[] = [
+    {
+      title: "Hable con un asesor funerario 24/7",
+      description:
+        "Atendemos consultas urgentes y orientación inicial todos los días del año, incluyendo madrugadas y festivos.",
+      href: "tel:+56964333760",
+      cta: "Llamar al +56 9 6433 3760",
+      external: true,
+    },
+    {
+      title: "Compare planes y coberturas",
+      description:
+        "Revise nuestras opciones funerarias con cobertura completa, gestión de trámites incluida y precios transparentes.",
+      href: "/planes",
+      cta: "Ver planes y precios",
+    },
+    {
+      title: "Solicite una cotización personalizada",
+      description:
+        "Cuéntenos su situación y le respondemos con una propuesta clara, sin compromiso, en menos de 24 horas.",
+      href: "/contacto",
+      cta: "Ir al formulario de contacto",
+    },
+  ];
+
+  if (cat.includes("duelo") || cat.includes("salud") || cat.includes("contención") || cat.includes("apoyo")) {
+    return [
+      {
+        title: "Permítase pedir acompañamiento",
+        description:
+          "Hablar con alguien de confianza, un profesional o un grupo de apoyo es un primer paso válido y necesario.",
+      },
+      {
+        title: "Cree un Legado Eterno para honrar la memoria",
+        description:
+          "Un espacio digital permanente donde familiares y amigos pueden dejar mensajes, fotografías y homenajes.",
+        href: "/legados-eternos",
+        cta: "Conocer Legados Eternos",
+      },
+      base[0],
+    ];
+  }
+
+  if (cat.includes("previsión") || cat.includes("prevision")) {
+    return [
+      {
+        title: "Conozca las opciones de previsión funeraria",
+        description:
+          "La planificación anticipada permite congelar precios actuales y liberar a su familia de gestiones futuras.",
+        href: "/planes",
+        cta: "Ver opciones de previsión",
+      },
+      base[2],
+      base[0],
+    ];
+  }
+
+  return base;
 }
 
 const BlogPostPage = () => {
@@ -65,8 +154,11 @@ const BlogPostPage = () => {
   // Set meta tags dynamically
   useEffect(() => {
     if (!post) return;
-    const title = post.meta_title || post.title;
-    const description = post.meta_description || post.excerpt || "";
+    const rawTitle = post.meta_title || post.title;
+    // Keep <60 chars when possible
+    const title = rawTitle.length > 60 ? rawTitle.slice(0, 57) + "…" : rawTitle;
+    const rawDesc = post.meta_description || post.excerpt || "";
+    const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
     const url = `${SITE_URL}/blog/${post.slug}`;
 
     document.title = `${title} | Funeraria Santa Margarita`;
@@ -82,12 +174,16 @@ const BlogPostPage = () => {
     };
 
     setMeta("name", "description", description);
+    setMeta("name", "robots", "index, follow, max-image-preview:large");
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", description);
     setMeta("property", "og:type", "article");
     setMeta("property", "og:url", url);
+    setMeta("property", "og:site_name", "Funeraria Santa Margarita");
+    setMeta("property", "og:locale", "es_CL");
     if (post.cover_image) setMeta("property", "og:image", post.cover_image);
     if (post.published_at) setMeta("property", "article:published_time", post.published_at);
+    if (post.updated_at) setMeta("property", "article:modified_time", post.updated_at);
     if (post.category) setMeta("property", "article:section", post.category);
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:title", title);
@@ -154,61 +250,73 @@ const BlogPostPage = () => {
   // Extract FAQ items from content
   const faqItems = extractFAQ(post.content);
 
+  // Extract a quick "short answer" from the content — first non-heading paragraph after the first H2 (or the excerpt fallback).
+  const quickAnswer = extractQuickAnswer(post.content) || post.excerpt;
+
   // Remove FAQ section from main content to render it separately
   const contentWithoutFAQ = removeFAQSection(post.content);
 
   // CTA variants based on category
   const ctaVariants = getCTAVariants(post.category);
 
-  // Enhanced Article schema
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description: post.meta_description || post.excerpt,
-    datePublished: post.published_at,
-    dateModified: post.published_at,
-    author: {
-      "@type": "Organization",
-      name: post.author_name || "Funeraria Santa Margarita",
-      url: SITE_URL,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Funeraria Santa Margarita",
-      url: SITE_URL,
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/assets/images/ui/og-image.webp` },
-    },
-    mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/blog/${post.slug}` },
-    ...(post.cover_image && { image: post.cover_image }),
-    articleSection: post.category || "General",
-    keywords: post.tags?.join(", "),
-    wordCount: post.content.split(/\s+/).length,
-  };
+  // Editorial metadata
+  const authorName = post.author_name || DEFAULT_AUTHOR;
+  const reviewerName = DEFAULT_REVIEWER;
+  const wordCount = post.content.split(/\s+/).length;
 
-  // BreadcrumbList schema
+  // JSON-LD: BlogPosting + Breadcrumb + FAQPage + Organization + FuneralHome + Person (author)
+  const articleJsonLd = buildBlogPostingJsonLd({
+    title: post.title,
+    description: post.meta_description || post.excerpt,
+    slug: post.slug,
+    category: post.category,
+    tags: post.tags,
+    publishedAt: post.published_at,
+    updatedAt: post.updated_at,
+    coverImage: post.cover_image,
+    authorName,
+    reviewerName,
+    wordCount,
+    readingTimeMin: readingTime,
+  });
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
-      ...(post.category ? [{ "@type": "ListItem", position: 3, name: post.category, item: `${SITE_URL}/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}` }] : []),
+      ...(post.category
+        ? [{
+            "@type": "ListItem",
+            position: 3,
+            name: post.category,
+            item: `${SITE_URL}/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}`,
+          }]
+        : []),
       { "@type": "ListItem", position: post.category ? 4 : 3, name: post.title, item: `${SITE_URL}/blog/${post.slug}` },
     ],
   };
 
-  const faqJsonLd = faqItems.length > 0 ? {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
-    })),
-  } : null;
+  const faqJsonLd =
+    faqItems.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqItems.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: { "@type": "Answer", text: faq.answer },
+          })),
+        }
+      : null;
+
+  const organizationJsonLd = buildOrganizationJsonLd();
+  const funeralHomeJsonLd = buildFuneralHomeJsonLd();
+  const personJsonLd = post.author_name ? buildPersonJsonLd(post.author_name, "Editor") : null;
 
   const headings = extractHeadings(post.content);
+  const nextSteps = getDefaultNextSteps(post.category);
 
   // Render content with heading IDs, inline CTAs
   const renderContent = (md: string) => {
@@ -236,14 +344,22 @@ const BlogPostPage = () => {
         flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
-        elements.push(<h3 key={i} id={id} className="font-playfair text-xl text-foreground mt-8 mb-3 scroll-mt-24">{line.slice(4)}</h3>);
+        elements.push(
+          <h3 key={i} id={id} className="font-playfair text-xl text-foreground mt-8 mb-3 scroll-mt-24">
+            {line.slice(4)}
+          </h3>
+        );
       } else if (line.startsWith("## ")) {
         flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
         h2Count++;
 
-        elements.push(<h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">{line.slice(3)}</h2>);
+        elements.push(
+          <h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">
+            {line.slice(3)}
+          </h2>
+        );
 
         // Insert contextual CTA after every 2nd h2 section
         if (h2Count > 0 && h2Count % 2 === 0 && ctaVariants.length > 0) {
@@ -272,7 +388,11 @@ const BlogPostPage = () => {
         if (line.trim() === "") {
           elements.push(<br key={i} />);
         } else {
-          elements.push(<p key={i} className="text-muted-foreground leading-relaxed mb-4">{renderInline(line)}</p>);
+          elements.push(
+            <p key={i} className="text-muted-foreground leading-relaxed mb-4">
+              {renderInline(line)}
+            </p>
+          );
         }
       }
     }
@@ -290,10 +410,25 @@ const BlogPostPage = () => {
       if (linkMatch) {
         const [, linkText, href] = linkMatch;
         const cleanText = linkText.replace(/\s*→\s*$/, "");
+        const isExternal = /^https?:\/\//.test(href);
         if (href.startsWith("/")) {
-          return <Link key={i} to={href} className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">{cleanText}</Link>;
+          return (
+            <Link key={i} to={href} className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">
+              {cleanText}
+            </Link>
+          );
         }
-        return <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">{cleanText}</a>;
+        return (
+          <a
+            key={i}
+            href={href}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
+            className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors"
+          >
+            {cleanText}
+          </a>
+        );
       }
       return part;
     });
@@ -303,24 +438,53 @@ const BlogPostPage = () => {
 
   return (
     <Layout>
+      {/* Skip link for keyboard users */}
+      <a
+        href="#articulo-principal"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md focus:text-sm"
+      >
+        Saltar al contenido principal
+      </a>
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
+      {faqJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(funeralHomeJsonLd) }} />
+      {personJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
+      )}
 
-      {/* Hero */}
+      {/* Hero — semantic <header> */}
       {(() => {
         const heroImage = post.cover_image || getCategoryImage(post.category);
         const isLogo = heroImage.includes("logo-oficial");
         const logoSrc = isLogo ? "/assets/images/brand/logo-white.webp" : heroImage;
         return (
-          <section className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] overflow-hidden bg-[#080808]">
+          <header className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] overflow-hidden bg-[#080808]">
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               {isLogo ? (
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" decoding="async" fetchPriority="high" style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }} />
-                  <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light" loading="lazy" decoding="async" />
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }}
+                  />
+                  <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover scale-[1.15] blur-[40px] opacity-30 mix-blend-soft-light"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </>
               )}
             </div>
@@ -335,7 +499,12 @@ const BlogPostPage = () => {
                 <Breadcrumbs
                   items={[
                     { label: "Blog", href: "/blog" },
-                    ...(post.category ? [{ label: post.category, href: `/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}` }] : []),
+                    ...(post.category
+                      ? [{
+                          label: post.category,
+                          href: `/blog?cat=${post.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}`,
+                        }]
+                      : []),
                     { label: post.title },
                   ]}
                 />
@@ -343,7 +512,9 @@ const BlogPostPage = () => {
                   {post.title}
                 </h1>
                 {post.excerpt && (
-                  <p className="text-white/60 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">{post.excerpt}</p>
+                  <p className="text-white/60 mt-4 text-base sm:text-lg max-w-xl leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                    {post.excerpt}
+                  </p>
                 )}
                 <div className="relative mt-8 mb-5">
                   <div className="absolute -top-px left-0 w-full max-w-xs h-[3px] rounded-full bg-gradient-to-r from-gold/60 via-gold/30 to-transparent blur-[2px]" />
@@ -352,21 +523,28 @@ const BlogPostPage = () => {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-white/55 tracking-wide">
                   {post.category && (
                     <span className="flex items-center gap-1.5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-full px-3.5 py-1.5 text-white/65 hover:border-gold/30 hover:text-gold/80 transition-all duration-300">
-                      <Tag className="w-3.5 h-3.5 text-gold/70" />
+                      <Tag className="w-3.5 h-3.5 text-gold/70" aria-hidden="true" />
                       {post.category}
                     </span>
                   )}
                   {post.published_at && (
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-white/35" />
-                      {new Date(post.published_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
-                    </span>
+                    <time
+                      dateTime={post.published_at}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-white/35" aria-hidden="true" />
+                      {new Date(post.published_at).toLocaleDateString("es-CL", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </time>
                   )}
                   <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-white/35" />
-                    {post.author_name}
+                    <User className="w-3.5 h-3.5 text-white/35" aria-hidden="true" />
+                    {authorName}
                   </span>
-                  <span className="text-white/25">·</span>
+                  <span className="text-white/25" aria-hidden="true">·</span>
                   <span className="text-white/45 whitespace-nowrap">{readingTime} min de lectura</span>
                 </div>
               </div>
@@ -379,61 +557,148 @@ const BlogPostPage = () => {
                     <div className="absolute inset-[15%] rounded-full pointer-events-none blur-[50px]" style={{ background: 'radial-gradient(circle, hsl(40 56% 55% / 0.22), transparent 50%)' }} />
                     <img
                       src={logoSrc}
-                      alt={post.title}
+                      alt={`Imagen destacada: ${post.title}`}
                       className="relative z-10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] object-contain"
                       style={{ filter: 'drop-shadow(0 0 30px rgba(197,160,89,0.30)) drop-shadow(0 0 60px rgba(197,160,89,0.15)) drop-shadow(0 0 120px rgba(197,160,89,0.08)) brightness(1.08)' }}
                     />
                     <div className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 w-[55%] h-20 overflow-hidden opacity-[0.12] pointer-events-none" aria-hidden="true">
-                      <img src={logoSrc} alt="" className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]" loading="lazy" decoding="async" style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }} />
+                      <img
+                        src={logoSrc}
+                        alt=""
+                        className="w-full h-[320px] object-contain scale-y-[-1] origin-top blur-[12px]"
+                        loading="lazy"
+                        decoding="async"
+                        style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)', WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 75%)' }}
+                      />
                     </div>
                   </div>
                 </div>
               )}
             </div>
-          </section>
+          </header>
         );
       })()}
 
-      {/* Content */}
-      <section className="py-16 bg-background">
-        <article className="container max-w-3xl">
-          <TableOfContents content={post.content} />
+      {/* Main content — semantic <main> with sticky TOC sidebar on desktop */}
+      <main id="articulo-principal" className="py-16 bg-background">
+        <div className="container max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10 lg:gap-12">
+            {/* Article column */}
+            <article
+              itemScope
+              itemType="https://schema.org/BlogPosting"
+              className="min-w-0 max-w-3xl"
+            >
+              <meta itemProp="headline" content={post.title} />
+              {post.published_at && <meta itemProp="datePublished" content={post.published_at} />}
+              {post.updated_at && <meta itemProp="dateModified" content={post.updated_at} />}
 
-          <div className="prose-funeraria">
-            {renderContent(contentWithoutFAQ)}
+              {/* Mobile TOC (compact, collapsible by default) */}
+              <div className="lg:hidden">
+                <TableOfContents content={post.content} />
+              </div>
+
+              {/* Author / reviewer / dates block (E-E-A-T) */}
+              <AuthorMeta
+                author={authorName}
+                reviewer={reviewerName}
+                publishedAt={post.published_at}
+                updatedAt={post.updated_at}
+                readingTime={readingTime}
+              />
+
+              {/* Quick answer (AEO/LLMO extractable) */}
+              {quickAnswer && (
+                <QuickAnswer>
+                  {quickAnswer}
+                </QuickAnswer>
+              )}
+
+              {/* Next steps — concrete actions */}
+              <NextSteps steps={nextSteps} />
+
+              {/* Article body */}
+              <div className="prose-funeraria" itemProp="articleBody">
+                {renderContent(contentWithoutFAQ)}
+              </div>
+
+              {/* Interactive FAQ Section */}
+              <BlogFAQ items={faqItems} blogTitle={post.title} />
+
+              {/* Final CTA */}
+              <BlogCTA variant={ctaVariants[0]} />
+
+              {/* Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <section
+                  aria-label="Etiquetas del artículo"
+                  className="mt-12 pt-8 border-t border-border/50 flex flex-wrap items-center gap-2"
+                >
+                  <Tag className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-card border border-border/50 text-muted-foreground px-3 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </section>
+              )}
+
+              {/* Share */}
+              <section aria-label="Compartir artículo" className="mt-8 flex items-center gap-3">
+                <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                <span className="text-xs text-muted-foreground">Compartir:</span>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Compartir en Facebook"
+                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
+                >
+                  Facebook
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(post.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Compartir en X"
+                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
+                >
+                  X
+                </a>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(post.title + " " + shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Compartir por WhatsApp"
+                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
+                >
+                  WhatsApp
+                </a>
+              </section>
+
+              {/* Legal disclaimer */}
+              <LegalDisclaimer />
+
+              {/* Related Posts */}
+              <RelatedPosts currentId={post.id} category={post.category} tags={post.tags || []} />
+            </article>
+
+            {/* Sticky desktop sidebar */}
+            <aside
+              aria-label="Navegación del artículo"
+              className="hidden lg:block"
+            >
+              <TableOfContents content={post.content} sticky />
+            </aside>
           </div>
+        </div>
+      </main>
 
-          {/* Interactive FAQ Section */}
-          <BlogFAQ items={faqItems} blogTitle={post.title} />
-
-          {/* Final CTA */}
-          <BlogCTA variant={ctaVariants[0]} />
-
-          {/* Tags */}
-          {post.tags && post.tags.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-border/50 flex flex-wrap items-center gap-2">
-              <Tag className="w-4 h-4 text-muted-foreground" />
-              {post.tags.map((tag) => (
-                <span key={tag} className="text-xs bg-card border border-border/50 text-muted-foreground px-3 py-1 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Share */}
-          <div className="mt-8 flex items-center gap-3">
-            <Share2 className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Compartir:</span>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">Facebook</a>
-            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">X</a>
-            <a href={`https://wa.me/?text=${encodeURIComponent(post.title + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-gold transition-colors">WhatsApp</a>
-          </div>
-
-          {/* Related Posts */}
-          <RelatedPosts currentId={post.id} category={post.category} tags={post.tags || []} />
-        </article>
-      </section>
+      {/* Floating contextual CTA — discreet, dismissible */}
+      <FloatingCTA />
     </Layout>
   );
 };
@@ -491,6 +756,31 @@ function removeFAQSection(content: string): string {
     result.push(line);
   }
   return result.join("\n");
+}
+
+/** Extract a short answer (~280 chars) — first non-empty paragraph after the first H2. */
+function extractQuickAnswer(content: string): string | null {
+  const lines = content.split("\n");
+  let pastFirstH2 = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!pastFirstH2) {
+      if (line.startsWith("## ")) pastFirstH2 = true;
+      continue;
+    }
+    if (!line) continue;
+    if (line.startsWith("#") || line.startsWith("-") || line.startsWith("*") || /^\d+\.\s/.test(line)) {
+      continue;
+    }
+    // Strip markdown emphasis/links
+    const clean = line
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .trim();
+    if (clean.length < 40) continue;
+    return clean.length > 280 ? clean.slice(0, 277) + "…" : clean;
+  }
+  return null;
 }
 
 export default BlogPostPage;

@@ -1,0 +1,16 @@
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/duelo-en-pareja-perdida-de-un-hijo.jpg' WHERE slug = 'duelo-en-pareja-perdida-de-un-hijo';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/como-explicar-muerte-a-ninos-guia-familias.jpg' WHERE slug = 'como-explicar-muerte-a-ninos-guia-familias';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/roles-familiares-duelo-organizarse-tras-perdida.jpg' WHERE slug = 'roles-familiares-duelo-organizarse-tras-perdida';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/primeras-horas-shock-emocional-perdida.jpg' WHERE slug = 'primeras-horas-shock-emocional-perdida';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/contencion-emocional-momentos-de-perdida.jpg' WHERE slug = 'contencion-emocional-momentos-de-perdida';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/rituales-despedida-ayudan-proceso-duelo.jpg' WHERE slug = 'rituales-despedida-ayudan-proceso-duelo';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/cinco-etapas-duelo-proceso-sanacion.jpg' WHERE slug = 'cinco-etapas-duelo-proceso-sanacion';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/comparativa-planes-funerarios-chile-2026.jpg' WHERE slug = 'comparativa-planes-funerarios-chile-2026';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/seguro-funerario-vs-plan-prevision-diferencias.jpg' WHERE slug = 'seguro-funerario-vs-plan-prevision-diferencias';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/como-elegir-funeraria-confianza-chile.jpg' WHERE slug = 'como-elegir-funeraria-confianza-chile';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/herencia-sucesion-chile-tramites-fallecimiento.jpg' WHERE slug = 'herencia-sucesion-chile-tramites-fallecimiento';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/duelo-salud-mental-cuando-buscar-ayuda.jpg' WHERE slug = 'duelo-salud-mental-cuando-buscar-ayuda';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/duelo-adultos-mayores-salud-mental.jpg' WHERE slug = 'duelo-adultos-mayores-salud-mental';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/ansiedad-muerte-miedo-perder-seres-queridos.jpg' WHERE slug = 'ansiedad-muerte-miedo-perder-seres-queridos';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/velatorio-ceremonias-opciones-despedida-digna.jpg' WHERE slug = 'velatorio-ceremonias-opciones-despedida-digna';
+UPDATE public.blog_posts SET cover_image = '/assets/images/blog/posts/traslado-funerario-chile-requisitos-opciones.jpg' WHERE slug = 'traslado-funerario-chile-requisitos-opciones';

@@ -171,8 +171,11 @@ export default function AdminSubscribers() {
         </Card>
       </div>
 
-      {/* Trend chart */}
-      <SubscribersTrendChart subscribedDates={subscribers.map((s) => s.subscribed_at)} days={30} />
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <SubscribersTrendChart subscribedDates={subscribers.map((s) => s.subscribed_at)} days={30} />
+        <SubscribersSourceChart sources={subscribers.map((s) => s.source)} />
+      </div>
 
       {/* Filters */}
       <Card>

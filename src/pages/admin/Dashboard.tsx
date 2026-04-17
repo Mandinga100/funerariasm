@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw, Sparkles, RefreshCw, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 
 // Lazy-load all charts so the recharts bundle (~165 kB gzip) is fetched only
@@ -512,21 +513,23 @@ export default function Dashboard() {
             <Sparkles className="w-4 h-4 text-primary" />
             Resumen Ejecutivo IA
           </CardTitle>
-          <Button
-            size="sm"
-            variant={aiSummary ? "ghost" : "default"}
-            onClick={generateAiSummary}
-            disabled={aiLoading}
-            className="text-xs"
-          >
-            {aiLoading ? (
-              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Analizando...</>
-            ) : aiSummary ? (
-              <><RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerar</>
-            ) : (
-              <><Sparkles className="w-3.5 h-3.5 mr-1" /> Generar Insights</>
-            )}
-          </Button>
+          <AIActionTooltip description="Analiza con IA los KPIs del rango seleccionado (leads, casos, ingresos, conversión) y entrega un resumen ejecutivo en lenguaje natural con tendencias, alertas y recomendaciones priorizadas.">
+            <Button
+              size="sm"
+              variant={aiSummary ? "ghost" : "default"}
+              onClick={generateAiSummary}
+              disabled={aiLoading}
+              className="text-xs"
+            >
+              {aiLoading ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Analizando...</>
+              ) : aiSummary ? (
+                <><RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerar</>
+              ) : (
+                <><Sparkles className="w-3.5 h-3.5 mr-1" /> Generar Insights</>
+              )}
+            </Button>
+          </AIActionTooltip>
         </CardHeader>
         <CardContent>
           {aiSummary ? (

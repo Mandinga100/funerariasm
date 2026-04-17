@@ -12,6 +12,7 @@ import NextSteps, { type NextStep } from "@/components/blog/NextSteps";
 import AuthorMeta from "@/components/blog/AuthorMeta";
 import LegalDisclaimer from "@/components/blog/LegalDisclaimer";
 import FloatingCTA from "@/components/blog/FloatingCTA";
+import ArticleTitle from "@/components/blog/ArticleTitle";
 import { getCategoryImage } from "@/lib/blog-categories";
 import {
   buildBlogPostingJsonLd,
@@ -260,8 +261,11 @@ const BlogPostPage = () => {
   // Extract a quick "short answer" from the content — first non-heading paragraph after the first H2 (or the excerpt fallback).
   const quickAnswer = extractQuickAnswer(post.content) || post.excerpt;
 
-  // Remove FAQ section from main content to render it separately
-  const contentWithoutFAQ = removeFAQSection(post.content);
+  // Extract the leading H1 title from markdown so we can render it with a premium component
+  const leadingTitle = extractLeadingH1(post.content);
+
+  // Remove FAQ section AND the leading H1 from main content to render them separately
+  const contentWithoutFAQ = removeLeadingH1(removeFAQSection(post.content));
 
   // CTA variants based on category
   const ctaVariants = getCTAVariants(post.category);
@@ -325,13 +329,12 @@ const BlogPostPage = () => {
   const headings = extractHeadings(post.content);
   const nextSteps = getDefaultNextSteps(post.category);
 
-  // Render content with heading IDs, inline CTAs
+  // Render content with heading IDs (no inline CTAs — only the final CTA before FAQ remains).
   const renderContent = (md: string) => {
     const lines = md.split("\n");
     const elements: React.ReactNode[] = [];
     let headingIdx = 0;
     let listBuffer: React.ReactNode[] = [];
-    let h2Count = 0;
 
     const flushList = () => {
       if (listBuffer.length > 0) {
@@ -360,19 +363,12 @@ const BlogPostPage = () => {
         flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
-        h2Count++;
 
         elements.push(
           <h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">
             {line.slice(3)}
           </h2>
         );
-
-        // Insert contextual CTA after every 2nd h2 section
-        if (h2Count > 0 && h2Count % 2 === 0 && ctaVariants.length > 0) {
-          const ctaIdx = Math.floor((h2Count / 2 - 1) % ctaVariants.length);
-          elements.push(<BlogCTA key={`cta-${h2Count}`} variant={ctaVariants[ctaIdx]} />);
-        }
       } else if (line.startsWith("- ") || line.startsWith("* ")) {
         const content = line.slice(2);
         listBuffer.push(

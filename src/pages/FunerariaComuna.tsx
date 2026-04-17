@@ -17,6 +17,7 @@ import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import ComunaMapaEmbed from "@/components/comuna/ComunaMapaEmbed";
 import { applySeoMeta } from "@/lib/seo-meta";
 import { getComunaBySlug, COMUNAS_RM } from "@/lib/comunas-rm";
+import { trackComunaPageView, trackComunaConversion } from "@/lib/comuna-tracking";
 import { Phone, MessageCircle, MapPin, Clock, ShieldCheck, Heart, Flower2 } from "lucide-react";
 import NotFound from "@/pages/NotFound";
 
@@ -50,6 +51,8 @@ const FunerariaComuna = () => {
       url: `${SITE_URL}/funeraria/${comuna.slug}`,
       type: "website",
     });
+    // Tracking propio: registra pageview (deduplicado por sesión)
+    void trackComunaPageView(comuna.slug, comuna.nombre);
   }, [comuna]);
 
   if (!comuna) return <NotFound />;
@@ -137,6 +140,7 @@ const FunerariaComuna = () => {
           <div className="flex flex-wrap gap-3">
             <a
               href={`tel:${PHONE}`}
+              onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_call", "hero")}
               className="inline-flex items-center gap-2 bg-gold text-accent-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase transition-colors hover:bg-gold-light"
             >
               <Phone className="w-4 h-4" /> Llamar 24/7
@@ -145,6 +149,7 @@ const FunerariaComuna = () => {
               href={WHATSAPP}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_whatsapp", "hero")}
               className="inline-flex items-center gap-2 border border-primary-foreground/30 text-primary-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase transition-colors hover:bg-primary-foreground/10"
             >
               <MessageCircle className="w-4 h-4" /> WhatsApp
@@ -231,12 +236,14 @@ const FunerariaComuna = () => {
             <div className="flex flex-wrap gap-3 justify-center">
               <a
                 href={`tel:${PHONE}`}
+                onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_call", "footer_cta")}
                 className="inline-flex items-center gap-2 bg-gold text-accent-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase hover:bg-gold-light transition-colors"
               >
                 <Phone className="w-4 h-4" /> Llamar al {PHONE_DISPLAY}
               </a>
               <Link
                 to="/planes"
+                onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "view_planes")}
                 className="inline-flex items-center gap-2 border border-foreground/20 text-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase hover:border-gold hover:text-gold transition-colors"
               >
                 Ver planes y precios
@@ -255,6 +262,7 @@ const FunerariaComuna = () => {
                   <li key={v.slug}>
                     <Link
                       to={`/funeraria/${v.slug}`}
+                      onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "navigate_vecina", v.slug)}
                       className="inline-block text-xs px-3 py-1.5 rounded-full border border-gold/40 bg-gold/10 text-gold font-medium hover:bg-gold hover:text-accent-foreground transition-colors"
                       title={`Funeraria en ${v.nombre}`}
                     >

@@ -185,6 +185,78 @@ export type Database = {
         }
         Relationships: []
       }
+      comuna_conversion_events: {
+        Row: {
+          comuna_nombre: string | null
+          comuna_slug: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          pathname: string | null
+          session_id: string | null
+          target: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          comuna_nombre?: string | null
+          comuna_slug: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          pathname?: string | null
+          session_id?: string | null
+          target?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          comuna_nombre?: string | null
+          comuna_slug?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          pathname?: string | null
+          session_id?: string | null
+          target?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      comuna_page_views: {
+        Row: {
+          comuna_nombre: string | null
+          comuna_slug: string
+          created_at: string
+          id: string
+          pathname: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          comuna_nombre?: string | null
+          comuna_slug: string
+          created_at?: string
+          id?: string
+          pathname: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          comuna_nombre?: string | null
+          comuna_slug?: string
+          created_at?: string
+          id?: string
+          pathname?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       condolences: {
         Row: {
           approved: boolean

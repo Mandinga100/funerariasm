@@ -50,6 +50,13 @@ const AdminFallback = () => (
   </div>
 );
 
+/** Public-page fallback — minimal, full-height to prevent CLS while a lazy chunk loads */
+const PageFallback = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" aria-label="Cargando" />
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

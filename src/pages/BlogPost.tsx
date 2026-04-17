@@ -507,15 +507,30 @@ const BlogPostPage = () => {
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 70% 50%, hsl(40 56% 41% / 0.08), transparent 70%)' }} />
               ) : (
                 <>
-                  <img
-                    src={heroImage}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                    style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }}
-                  />
+                  <picture>
+                    <source
+                      type="image/webp"
+                      srcSet={(() => {
+                        const isHero = /\/assets\/images\/blog\/[a-z-]+-hero\.(jpe?g|webp)$/i.test(heroImage);
+                        const webp = heroImage.replace(/\.(jpe?g)$/i, ".webp");
+                        return isHero
+                          ? `${webp.replace(/\.webp$/, "-400w.webp")} 400w, ${webp.replace(/\.webp$/, "-800w.webp")} 800w, ${webp} 1024w`
+                          : webp;
+                      })()}
+                      sizes="100vw"
+                    />
+                    <img
+                      src={heroImage}
+                      alt=""
+                      width={1024}
+                      height={1024}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="eager"
+                      decoding="async"
+                      fetchPriority="high"
+                      style={{ filter: 'blur(2px) saturate(1.15) brightness(0.55) contrast(1.08)' }}
+                    />
+                  </picture>
                   <img
                     src={heroImage}
                     alt=""

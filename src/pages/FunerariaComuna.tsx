@@ -15,6 +15,7 @@ import { Link, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import ComunaMapaEmbed from "@/components/comuna/ComunaMapaEmbed";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { applySeoMeta } from "@/lib/seo-meta";
 import { getComunaBySlug, COMUNAS_RM } from "@/lib/comunas-rm";
 import { trackComunaPageView, trackComunaConversion } from "@/lib/comuna-tracking";
@@ -283,6 +284,14 @@ const FunerariaComuna = () => {
           )}
         </div>
       </main>
+      <ExitIntentPopup
+        source="popup-salida-comuna"
+        storageKey={`exit-intent-comuna-${comuna.slug}`}
+        extraMetadata={{
+          comuna_slug: comuna.slug,
+          comuna_nombre: comuna.nombre,
+        }}
+      />
     </Layout>
   );
 };

@@ -29,7 +29,7 @@ const nameSchema = z
   .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
   .optional();
 
-const SubscribeModal = ({ open, onOpenChange, source }: SubscribeModalProps) => {
+const SubscribeModal = ({ open, onOpenChange, source, extraMetadata }: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,6 +62,7 @@ const SubscribeModal = ({ open, onOpenChange, source }: SubscribeModalProps) => 
           metadata: {
             ...(cleanName ? { name: cleanName } : {}),
             captured_at_path: typeof window !== "undefined" ? window.location.pathname : null,
+            ...(extraMetadata ?? {}),
           },
         });
       if (insertError) {

@@ -51,7 +51,7 @@ export const submitContact = async (data: ContactData) => {
     status: "new",
     ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
   };
-  const { error: dbError } = await supabase.from("contact_leads").insert(insertPayload);
+  const { error: dbError } = await (supabase.from("contact_leads").insert as any)(insertPayload);
 
   if (dbError) {
     console.error("Error saving contact lead:", dbError);

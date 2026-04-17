@@ -63,10 +63,31 @@ const OptimizedImage = ({
     }
   }, []);
 
+  // Auto-detect responsive widths for known hero images if not explicitly provided
+  const isHero =
+    typeof src === "string" && HERO_RESPONSIVE_PATTERN.test(src);
+  const widths =
+    responsiveWidths && responsiveWidths.length > 0
+      ? responsiveWidths
+      : isHero
+      ? DEFAULT_HERO_WIDTHS
+      : undefined;
+  const resolvedSizes =
+    sizes ?? (isHero ? "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" : undefined);
+
+  const jpegSrcSet =
+    typeof src === "string" && isJpegSrc(src) && widths
+      ? buildSrcSet(src, widths)
+      : undefined;
+  const webpSrc = typeof src === "string" && isJpegSrc(src) ? toWebp(src) : undefined;
+  const webpSrcSet = webpSrc && widths ? buildSrcSet(webpSrc, widths) : undefined;
+
   const img = (
     <img
       ref={imgRef}
       src={src}
+      srcSet={jpegSrcSet}
+      sizes={resolvedSizes}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
@@ -89,10 +110,14 @@ const OptimizedImage = ({
     />
   );
 
-  if (!disableWebp && typeof src === "string" && isJpegSrc(src)) {
+  if (!disableWebp && webpSrc) {
     return (
       <picture>
-        <source type="image/webp" srcSet={toWebp(src)} />
+        <source
+          type="image/webp"
+          srcSet={webpSrcSet ?? webpSrc}
+          sizes={resolvedSizes}
+        />
         {img}
       </picture>
     );

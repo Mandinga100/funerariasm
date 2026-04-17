@@ -236,12 +236,14 @@ const FunerariaComuna = () => {
             <div className="flex flex-wrap gap-3 justify-center">
               <a
                 href={`tel:${PHONE}`}
+                onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_call", "footer_cta")}
                 className="inline-flex items-center gap-2 bg-gold text-accent-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase hover:bg-gold-light transition-colors"
               >
                 <Phone className="w-4 h-4" /> Llamar al {PHONE_DISPLAY}
               </a>
               <Link
                 to="/planes"
+                onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "view_planes")}
                 className="inline-flex items-center gap-2 border border-foreground/20 text-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase hover:border-gold hover:text-gold transition-colors"
               >
                 Ver planes y precios
@@ -260,6 +262,7 @@ const FunerariaComuna = () => {
                   <li key={v.slug}>
                     <Link
                       to={`/funeraria/${v.slug}`}
+                      onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "navigate_vecina", v.slug)}
                       className="inline-block text-xs px-3 py-1.5 rounded-full border border-gold/40 bg-gold/10 text-gold font-medium hover:bg-gold hover:text-accent-foreground transition-colors"
                       title={`Funeraria en ${v.nombre}`}
                     >

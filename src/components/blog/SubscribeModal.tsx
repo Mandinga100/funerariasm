@@ -19,6 +19,12 @@ interface SubscribeModalProps {
    * (ej: { comuna_slug: "macul", comuna_nombre: "Macul" }).
    */
   extraMetadata?: Record<string, unknown>;
+  /** Título personalizado del modal (anula el default). */
+  title?: string;
+  /** Descripción personalizada del modal (anula el default). */
+  description?: string;
+  /** Texto del botón de submit (anula el default). */
+  ctaLabel?: string;
 }
 
 const emailSchema = z.string().trim().email({ message: "Ingrese un correo válido" }).max(255);
@@ -29,7 +35,15 @@ const nameSchema = z
   .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
   .optional();
 
-const SubscribeModal = ({ open, onOpenChange, source, extraMetadata }: SubscribeModalProps) => {
+const SubscribeModal = ({
+  open,
+  onOpenChange,
+  source,
+  extraMetadata,
+  title,
+  description,
+  ctaLabel,
+}: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);

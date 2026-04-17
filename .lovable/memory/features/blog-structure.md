@@ -23,7 +23,10 @@ Estructura estándar OBLIGATORIA para cada blog en `blog_posts.content` (markdow
 ### CTAs en blog post
 - **Eliminadas** todas las CTAs intermedias cada 2 H2 (lectura limpia).
 - Solo queda **una CTA final** después de Preguntas Frecuentes (`<BlogCTA variant={ctaVariants[0]} />`).
-- `<FloatingCTA>` levantado a `bottom-44` (mobile) / `bottom-28` (desktop) para no chocar con la barra "ayuda inmediata". Un solo botón "Orientación Personalizada" → `/contacto`, estilo gold con hover lift.
+- **`<LegalDisclaimer>` ELIMINADO globalmente** — nunca renderizar "Aviso legal" en ningún blog.
+- `<FloatingCTA>` flotante: bottom-56 (mobile) / bottom-28 (desktop) para no chocar con la barra "ayuda inmediata". Texto: "Suscríbete para apoyo y atención personalizada 24/7 en tu correo." Un solo botón centrado **"Suscribirse Ahora"** que abre `<SubscribeModal>` → guarda email en tabla `blog_subscribers` (RLS: anon insert; admin/ceo select).
+- `<ShareButtons>`: badges premium con colores oficiales de cada plataforma. Orden: WhatsApp → Facebook → Instagram → X → Threads → Copiar enlace. Hover con lift + shadow brand-color.
+- Tags virales: helper `getViralTags()` añade 2-3 tags de alto engagement por categoría además de los originales. Hover con lift + glow dorado.
 
 ### Cómo se aplica
 - Render: `src/pages/BlogPost.tsx` extrae H1 → `<ArticleTitle>`, extrae quick answer sin elipsis, no inyecta CTAs intermedias.

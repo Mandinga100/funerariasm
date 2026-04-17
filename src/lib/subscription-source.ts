@@ -36,6 +36,8 @@ export const SOURCE_LABELS: Record<string, string> = {
   // Mantener compatibilidad con datos legacy
   blog_floating_cta: "Blog",
   "blog-floating-cta": "Blog",
+  "popup-salida-inicio": "Popup Salida (Inicio)",
+  "popup-salida-blog": "Popup Salida (Blog)",
 };
 
 /** Detecta automáticamente la sección desde una ruta (pathname). */

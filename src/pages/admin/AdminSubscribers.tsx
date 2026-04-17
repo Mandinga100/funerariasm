@@ -11,6 +11,7 @@ import { Download, Mail, Search, Users, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
+import { SubscribersSourceChart } from "@/components/admin/SubscribersSourceChart";
 
 interface Subscriber {
   id: string;

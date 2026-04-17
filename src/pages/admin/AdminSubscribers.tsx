@@ -170,6 +170,9 @@ export default function AdminSubscribers() {
         </Card>
       </div>
 
+      {/* Trend chart */}
+      <SubscribersTrendChart subscribedDates={subscribers.map((s) => s.subscribed_at)} days={30} />
+
       {/* Filters */}
       <Card>
         <CardHeader className="pb-3">

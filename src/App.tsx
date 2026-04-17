@@ -42,6 +42,7 @@ const AdminPagos = lazy(() => import("./pages/admin/AdminPagos.tsx"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.tsx"));
 const AdminAnalyticsComunas = lazy(() => import("./pages/admin/AdminAnalyticsComunas.tsx"));
 const AdminRevenueComunas = lazy(() => import("./pages/admin/AdminRevenueComunas.tsx"));
+const AdminAjustesIA = lazy(() => import("./pages/admin/AdminAjustesIA.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="configuracion" element={<Suspense fallback={<AdminFallback />}><AdminSettings /></Suspense>} />
               <Route path="analytics-comunas" element={<Suspense fallback={<AdminFallback />}><AdminAnalyticsComunas /></Suspense>} />
               <Route path="roi-comunas" element={<Suspense fallback={<AdminFallback />}><AdminRevenueComunas /></Suspense>} />
+              <Route path="ajustes/ia" element={<Suspense fallback={<AdminFallback />}><AdminAjustesIA /></Suspense>} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

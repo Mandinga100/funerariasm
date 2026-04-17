@@ -326,7 +326,11 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Análisis IA</label>
-              <AIActionTooltip description="Analiza este lead con IA: clasifica intención (compra, consulta, urgencia), detecta plan probable, valor estimado, prioridad y sugiere la próxima acción comercial." side="left">
+              <AIActionTooltip
+                actionKey="crm.classify_lead"
+                description="Analiza este lead con IA: clasifica intención (compra, consulta, urgencia), detecta plan probable, valor estimado, prioridad y sugiere la próxima acción comercial."
+                side="left"
+              >
                 <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={classifyWithAI} disabled={classifying}>
                   <Sparkles className="w-3 h-3 mr-1" />{classifying ? "Analizando..." : localClassification ? "Re-analizar" : "Analizar"}
                 </Button>

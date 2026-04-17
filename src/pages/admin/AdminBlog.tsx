@@ -174,13 +174,19 @@ export default function AdminBlog() {
           <p className="text-xs sm:text-sm text-muted-foreground">{posts.length} artículos</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <AIActionTooltip description="Recorre todos los artículos publicados y reformatea su HTML/Markdown con IA: limpia estructura, normaliza encabezados, listas y citas, y aplica el estilo editorial de Funeraria Santa Margarita sin modificar el contenido.">
+          <AIActionTooltip
+            actionKey="blog.standardize_all"
+            description="Recorre todos los artículos publicados y reformatea su HTML/Markdown con IA: limpia estructura, normaliza encabezados, listas y citas, y aplica el estilo editorial de Funeraria Santa Margarita sin modificar el contenido."
+          >
             <Button variant="outline" size="sm" onClick={handleSanitizeAll} disabled={sanitizing}>
               <Wand2 className="w-4 h-4 mr-1" />
               {sanitizing ? "Saneando…" : "Estandarizar todos"}
             </Button>
           </AIActionTooltip>
-          <AIActionTooltip description="Abre el asistente de IA para generar un artículo completo (título, extracto, contenido y meta SEO) a partir de un tema y categoría que tú indiques.">
+          <AIActionTooltip
+            actionKey="blog.generate_article"
+            description="Abre el asistente de IA para generar un artículo completo (título, extracto, contenido y meta SEO) a partir de un tema y categoría que tú indiques."
+          >
             <Button variant="outline" size="sm" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
               <Sparkles className="w-4 h-4 mr-1" />IA
             </Button>
@@ -309,7 +315,10 @@ export default function AdminBlog() {
                 </SelectContent>
               </Select>
             </div>
-            <AIActionTooltip description="Usa IA para crear un artículo completo (~800-1200 palabras) sobre el tema indicado, optimizado para SEO/AEO y con el tono empático y profesional de la funeraria.">
+            <AIActionTooltip
+              actionKey="blog.generate_article"
+              description="Usa IA para crear un artículo completo (~800-1200 palabras) sobre el tema indicado, optimizado para SEO/AEO y con el tono empático y profesional de la funeraria."
+            >
               <Button onClick={handleGenerateAI} disabled={generating} className="w-full">
                 {generating ? (
                   <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />Generando...</>
@@ -351,7 +360,10 @@ export default function AdminBlog() {
             <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium text-muted-foreground">Contenido (HTML/Markdown) *</Label>
-                <AIActionTooltip description="Genera el cuerpo del artículo con IA a partir del título y categoría actuales. Reemplaza el campo Contenido — revísalo antes de publicar.">
+                <AIActionTooltip
+                  actionKey="blog.generate_content_field"
+                  description="Genera el cuerpo del artículo con IA a partir del título y categoría actuales. Reemplaza el campo Contenido — revísalo antes de publicar."
+                >
                   <Button
                     type="button" variant="ghost" size="sm"
                     onClick={() => { setAiDialogOpen(true); setAiTopic(""); }}

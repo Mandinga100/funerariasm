@@ -513,7 +513,10 @@ export default function Dashboard() {
             <Sparkles className="w-4 h-4 text-primary" />
             Resumen Ejecutivo IA
           </CardTitle>
-          <AIActionTooltip description="Analiza con IA los KPIs del rango seleccionado (leads, casos, ingresos, conversión) y entrega un resumen ejecutivo en lenguaje natural con tendencias, alertas y recomendaciones priorizadas.">
+          <AIActionTooltip
+            actionKey="dashboard.executive_summary"
+            description="Analiza con IA los KPIs del rango seleccionado (leads, casos, ingresos, conversión) y entrega un resumen ejecutivo en lenguaje natural con tendencias, alertas y recomendaciones priorizadas."
+          >
             <Button
               size="sm"
               variant={aiSummary ? "ghost" : "default"}

@@ -17,6 +17,7 @@ import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import ComunaMapaEmbed from "@/components/comuna/ComunaMapaEmbed";
 import { applySeoMeta } from "@/lib/seo-meta";
 import { getComunaBySlug, COMUNAS_RM } from "@/lib/comunas-rm";
+import { trackComunaPageView, trackComunaConversion } from "@/lib/comuna-tracking";
 import { Phone, MessageCircle, MapPin, Clock, ShieldCheck, Heart, Flower2 } from "lucide-react";
 import NotFound from "@/pages/NotFound";
 
@@ -50,6 +51,8 @@ const FunerariaComuna = () => {
       url: `${SITE_URL}/funeraria/${comuna.slug}`,
       type: "website",
     });
+    // Tracking propio: registra pageview (deduplicado por sesión)
+    void trackComunaPageView(comuna.slug, comuna.nombre);
   }, [comuna]);
 
   if (!comuna) return <NotFound />;

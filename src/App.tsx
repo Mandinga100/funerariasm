@@ -77,9 +77,9 @@ const App = () => (
             <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
             <Route path="/memoriales" element={<Navigate to="/legados-eternos" replace />} />
             <Route path="/memoriales/:slug" element={<Navigate to="/legados-eternos" replace />} />
-            <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
-            <Route path="/seguimiento" element={<Seguimiento />} />
-            <Route path="/pagos" element={<Pagos />} />
+            <Route path="/preguntas-frecuentes" element={<Suspense fallback={<PageFallback />}><PreguntasFrecuentes /></Suspense>} />
+            <Route path="/seguimiento" element={<Suspense fallback={<PageFallback />}><Seguimiento /></Suspense>} />
+            <Route path="/pagos" element={<Suspense fallback={<PageFallback />}><Pagos /></Suspense>} />
             <Route path="/login" element={<Login />} />
 
             {/* Admin — wrapped in Suspense; chunks load on demand only when /admin is visited */}

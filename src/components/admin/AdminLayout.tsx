@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, MapPin } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, MapPin, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ const navItems = [
   { to: "/admin/suscriptores", label: "Suscriptores", icon: Mail, end: false },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
   { to: "/admin/analytics-comunas", label: "Analítica Comunas", icon: MapPin, end: false },
+  { to: "/admin/roi-comunas", label: "ROI por Comuna", icon: Trophy, end: false },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings, end: false },
 ];

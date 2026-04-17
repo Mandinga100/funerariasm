@@ -228,7 +228,7 @@ const Blog = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post) => {
+              {filteredPosts.map((post, index) => {
                 const image = post.cover_image || getCategoryImage(post.category);
                 return (
                   <Link
@@ -242,6 +242,7 @@ const Blog = () => {
                         alt={post.title}
                         width={800}
                         height={500}
+                        priority={index === 0}
                         className="w-full h-full object-cover group-hover:scale-105 transition-brand-slow"
                       />
                     </div>

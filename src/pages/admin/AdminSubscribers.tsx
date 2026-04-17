@@ -17,7 +17,11 @@ interface Subscriber {
   id: string;
   email: string;
   source: string | null;
-  metadata: { name?: string } | null;
+  metadata: {
+    name?: string;
+    last_campaign_at?: string;
+    last_campaign_subject?: string;
+  } | null;
   subscribed_at: string;
   unsubscribed_at: string | null;
 }
@@ -85,7 +89,7 @@ export default function AdminSubscribers() {
       toast({ title: "Sin datos", description: "No hay suscriptores para exportar con los filtros actuales." });
       return;
     }
-    const headers = ["Email", "Nombre", "Origen", "Fecha de suscripción", "Estado"];
+    const headers = ["Email", "Nombre", "Origen", "Fecha de suscripción", "Estado", "Última campaña", "Fecha última campaña"];
     const escape = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
     const rows = filtered.map((s) =>
       [
@@ -94,6 +98,8 @@ export default function AdminSubscribers() {
         escape(s.source ?? ""),
         escape(format(new Date(s.subscribed_at), "yyyy-MM-dd HH:mm")),
         escape(s.unsubscribed_at ? "Desuscrito" : "Activo"),
+        escape(s.metadata?.last_campaign_subject ?? ""),
+        escape(s.metadata?.last_campaign_at ? format(new Date(s.metadata.last_campaign_at), "yyyy-MM-dd HH:mm") : ""),
       ].join(",")
     );
     const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows].join("\n");
@@ -247,18 +253,19 @@ export default function AdminSubscribers() {
                   <TableHead>Origen</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Última campaña enviada</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       Cargando suscriptores…
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       No hay suscriptores con los filtros actuales.
                     </TableCell>
                   </TableRow>
@@ -284,6 +291,20 @@ export default function AdminSubscribers() {
                           <Badge className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
                             Activo
                           </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {s.metadata?.last_campaign_at ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[220px]" title={s.metadata.last_campaign_subject}>
+                              {s.metadata.last_campaign_subject || "Sin asunto"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(s.metadata.last_campaign_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">Nunca</span>
                         )}
                       </TableCell>
                     </TableRow>

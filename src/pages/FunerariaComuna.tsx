@@ -107,21 +107,10 @@ const FunerariaComuna = () => {
     })),
   };
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Cobertura RM", item: `${SITE_URL}/cobertura-region-metropolitana` },
-      { "@type": "ListItem", position: 3, name: `Funeraria en ${comuna.nombre}`, item: `${SITE_URL}/funeraria/${comuna.slug}` },
-    ],
-  };
-
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       {/* Hero */}
       <header className="relative w-full pt-28 pb-16 bg-primary text-primary-foreground overflow-hidden">

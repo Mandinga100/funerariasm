@@ -64,19 +64,9 @@ const CoberturaRM = () => {
     })),
   };
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Cobertura RM", item: `${SITE_URL}/cobertura-region-metropolitana` },
-    ],
-  };
-
   return (
     <Layout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <header className="relative w-full pt-28 pb-12 bg-primary text-primary-foreground">
         <div className="container max-w-4xl">

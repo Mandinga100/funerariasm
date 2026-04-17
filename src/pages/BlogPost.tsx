@@ -13,6 +13,7 @@ import AuthorMeta from "@/components/blog/AuthorMeta";
 import FloatingCTA from "@/components/blog/FloatingCTA";
 import ArticleTitle from "@/components/blog/ArticleTitle";
 import ShareButtons from "@/components/blog/ShareButtons";
+import AtendemosTuComuna from "@/components/blog/AtendemosTuComuna";
 import { getCategoryImage } from "@/lib/blog-categories";
 import { getViralTags } from "@/lib/blog-viral-tags";
 import {

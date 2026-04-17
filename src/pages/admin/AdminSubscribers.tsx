@@ -89,7 +89,7 @@ export default function AdminSubscribers() {
       toast({ title: "Sin datos", description: "No hay suscriptores para exportar con los filtros actuales." });
       return;
     }
-    const headers = ["Email", "Nombre", "Origen", "Fecha de suscripción", "Estado"];
+    const headers = ["Email", "Nombre", "Origen", "Fecha de suscripción", "Estado", "Última campaña", "Fecha última campaña"];
     const escape = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
     const rows = filtered.map((s) =>
       [
@@ -98,6 +98,8 @@ export default function AdminSubscribers() {
         escape(s.source ?? ""),
         escape(format(new Date(s.subscribed_at), "yyyy-MM-dd HH:mm")),
         escape(s.unsubscribed_at ? "Desuscrito" : "Activo"),
+        escape(s.metadata?.last_campaign_subject ?? ""),
+        escape(s.metadata?.last_campaign_at ? format(new Date(s.metadata.last_campaign_at), "yyyy-MM-dd HH:mm") : ""),
       ].join(",")
     );
     const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows].join("\n");

@@ -30,6 +30,7 @@ export default function AdminSubscribers() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const [rangeDays, setRangeDays] = useState<number>(30);
 
   const fetchSubscribers = async () => {
     setLoading(true);

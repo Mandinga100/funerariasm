@@ -92,6 +92,16 @@ Deno.serve(async (req) => {
   </url>`);
     }
 
+    // Hyperlocal landing pages — 52 comunas de la Región Metropolitana
+    for (const slug of COMUNAS_RM_SLUGS) {
+      urls.push(`  <url>
+    <loc>${SITE_URL}/funeraria/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`);
+    }
+
     // Blog posts
     for (const post of blogRes.data ?? []) {
       const lastmod = formatLastmod(post.updated_at ?? post.published_at);

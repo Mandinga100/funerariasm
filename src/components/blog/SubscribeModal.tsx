@@ -14,6 +14,11 @@ interface SubscribeModalProps {
    * Si se omite, se detecta automáticamente desde la ruta actual.
    */
   source?: string;
+  /**
+   * Metadata adicional a fusionar en blog_subscribers.metadata
+   * (ej: { comuna_slug: "macul", comuna_nombre: "Macul" }).
+   */
+  extraMetadata?: Record<string, unknown>;
 }
 
 const emailSchema = z.string().trim().email({ message: "Ingrese un correo válido" }).max(255);

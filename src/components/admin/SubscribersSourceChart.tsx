@@ -49,7 +49,7 @@ const CustomTooltip = ({
   );
 };
 
-export function SubscribersSourceChart({ sources }: Props) {
+export function SubscribersSourceChart({ sources, rangeDays }: Props) {
   const data = useMemo<Slice[]>(() => {
     const counts = new Map<string, number>();
     sources.forEach((s) => {

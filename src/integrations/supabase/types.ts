@@ -807,6 +807,60 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_attribution: {
+        Row: {
+          amount: number
+          attribution_first_visit: string | null
+          attribution_referrer: string | null
+          comuna_nombre: string | null
+          comuna_slug: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          pipeline_stage: string
+          recorded_at: string
+          selected_plan: string | null
+          service_case_id: string
+          service_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          attribution_first_visit?: string | null
+          attribution_referrer?: string | null
+          comuna_nombre?: string | null
+          comuna_slug: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          pipeline_stage: string
+          recorded_at?: string
+          selected_plan?: string | null
+          service_case_id: string
+          service_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          attribution_first_visit?: string | null
+          attribution_referrer?: string | null
+          comuna_nombre?: string | null
+          comuna_slug?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          pipeline_stage?: string
+          recorded_at?: string
+          selected_plan?: string | null
+          service_case_id?: string
+          service_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_cases: {
         Row: {
           ai_classification: Json | null

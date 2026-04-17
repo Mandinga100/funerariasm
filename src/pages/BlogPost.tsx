@@ -697,6 +697,9 @@ const BlogPostPage = () => {
 
               {/* Related Posts */}
               <RelatedPosts currentId={post.id} category={post.category} tags={post.tags || []} />
+
+              {/* Hyperlocal widget — boosts geo SEO + internal linking to comuna pages */}
+              <AtendemosTuComuna />
             </article>
 
             {/* Sticky desktop sidebar */}

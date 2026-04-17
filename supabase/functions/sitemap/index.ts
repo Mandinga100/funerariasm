@@ -20,6 +20,19 @@ const STATIC_ROUTES: Array<{ path: string; priority: string; changefreq: string 
   { path: "/preguntas-frecuentes", priority: "0.7", changefreq: "monthly" },
   { path: "/seguimiento", priority: "0.5", changefreq: "monthly" },
   { path: "/pagos", priority: "0.5", changefreq: "monthly" },
+  { path: "/cobertura-region-metropolitana", priority: "0.9", changefreq: "monthly" },
+];
+
+// 52 comunas de la Región Metropolitana — landing pages hiperlocales SEO/GEO/LLMO
+const COMUNAS_RM_SLUGS = [
+  "santiago", "providencia", "las-condes", "vitacura", "lo-barnechea", "nunoa", "la-reina",
+  "macul", "penalolen", "la-florida", "san-joaquin", "san-miguel", "la-cisterna", "el-bosque",
+  "la-pintana", "san-ramon", "la-granja", "pedro-aguirre-cerda", "lo-espejo", "cerrillos",
+  "estacion-central", "quinta-normal", "lo-prado", "cerro-navia", "pudahuel", "renca",
+  "quilicura", "huechuraba", "conchali", "independencia", "recoleta", "puente-alto", "pirque",
+  "san-jose-de-maipo", "maipu", "san-bernardo", "buin", "paine", "calera-de-tango", "colina",
+  "lampa", "tiltil", "talagante", "el-monte", "isla-de-maipo", "padre-hurtado", "penaflor",
+  "melipilla", "curacavi", "maria-pinto", "san-pedro", "alhue",
 ];
 
 const escapeXml = (s: string) =>

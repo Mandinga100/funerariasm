@@ -650,22 +650,21 @@ const BlogPostPage = () => {
               {/* Final CTA — single, contextual, after FAQ */}
               <BlogCTA variant={ctaVariants[0]} />
 
-              {/* Tags — unified styling, SEO/AEO/LLMO optimized with semantic list + rel="tag" */}
+              {/* Tags — unified styling, SEO/AEO/GEO/LLMO optimized with semantic list + rel="tag" + microdata */}
               {(() => {
                 const allTags = getViralTags(post.category, post.tags || []);
                 if (allTags.length === 0) return null;
-                const originalCount = post.tags?.length || 0;
                 return (
                   <section
                     aria-label="Etiquetas del artículo"
                     className="mt-12 pt-8 border-t border-border/50"
                   >
+                    <meta itemProp="keywords" content={allTags.join(", ")} />
                     <div className="flex flex-wrap items-center gap-2">
                       <Tag className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                      <h2 className="sr-only">Temas relacionados</h2>
+                      <h2 className="sr-only">Temas relacionados — Sector funerario en Chile</h2>
                       <ul className="flex flex-wrap items-center gap-2 list-none p-0 m-0">
                         {allTags.map((tag, idx) => {
-                          const isViral = idx >= originalCount;
                           const slug = tag
                             .toLowerCase()
                             .normalize("NFD")
@@ -677,13 +676,9 @@ const BlogPostPage = () => {
                               <a
                                 href={`/blog?tag=${slug}`}
                                 rel="tag"
-                                title={`Ver más artículos sobre ${tag}`}
+                                title={`Ver más artículos sobre ${tag} — Funeraria Santa Margarita`}
                                 aria-label={`Etiqueta: ${tag}`}
-                                className={
-                                  isViral
-                                    ? "inline-block text-xs px-3 py-1 rounded-full border border-gold/40 bg-gold/10 text-gold font-medium transition-colors duration-300 hover:bg-gold hover:text-accent-foreground hover:border-gold hover:shadow-[0_6px_18px_-6px_hsl(var(--gold)/0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
-                                    : "inline-block text-xs px-3 py-1 rounded-full bg-card border border-border/50 text-muted-foreground font-medium transition-colors duration-300 hover:border-gold hover:bg-gold hover:text-accent-foreground hover:shadow-[0_6px_18px_-6px_hsl(var(--gold)/0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
-                                }
+                                className="inline-block text-xs px-3 py-1 rounded-full border border-gold/40 bg-gold/10 text-gold font-medium transition-colors duration-300 hover:bg-gold hover:text-accent-foreground hover:border-gold hover:shadow-[0_6px_18px_-6px_hsl(var(--gold)/0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
                               >
                                 {tag}
                               </a>

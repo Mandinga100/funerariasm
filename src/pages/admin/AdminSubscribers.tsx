@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
 import { SubscribersSourceChart } from "@/components/admin/SubscribersSourceChart";
+import { getSourceLabel } from "@/lib/subscription-source";
 
 interface Subscriber {
   id: string;
@@ -221,7 +222,7 @@ export default function AdminSubscribers() {
                 <SelectItem value="all">Todos los orígenes</SelectItem>
                 {sources.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {s}
+                    {getSourceLabel(s)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -277,8 +278,8 @@ export default function AdminSubscribers() {
                       </TableCell>
                       <TableCell className="font-mono text-xs">{s.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {s.source || "—"}
+                        <Badge variant="outline" className="text-xs border-gold/40 text-foreground bg-gold/5">
+                          {getSourceLabel(s.source)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { PieChart as PieIcon } from "lucide-react";
+import { getSourceLabel } from "@/lib/subscription-source";
 
 interface Props {
   sources: (string | null)[];
@@ -23,11 +24,6 @@ const COLORS = [
   "hsl(var(--destructive))",
   "hsl(var(--ring))",
 ];
-
-const prettify = (s: string) =>
-  s
-    .replace(/[_-]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 
 const CustomTooltip = ({
   active,
@@ -53,7 +49,7 @@ export function SubscribersSourceChart({ sources, rangeDays }: Props) {
   const data = useMemo<Slice[]>(() => {
     const counts = new Map<string, number>();
     sources.forEach((s) => {
-      const key = s && s.trim() ? prettify(s) : "Sin origen";
+      const key = getSourceLabel(s);
       counts.set(key, (counts.get(key) ?? 0) + 1);
     });
     const total = sources.length || 1;

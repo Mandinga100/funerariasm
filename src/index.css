@@ -48,9 +48,8 @@
     --medium-gray: 0 0% 49%;
     --dark-gray: 0 0% 20%;
 
-    /* Gradients */
+    /* Gradients (only those actually used in components) */
     --gradient-gold: linear-gradient(90deg, #b8960c, #d4af37, #b8960c);
-    --gradient-dark: linear-gradient(180deg, #000000, #191919);
     --gradient-hero-overlay: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
 
     /* Motion */
@@ -123,12 +122,6 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-  .border-gold-gradient {
-    border-image: var(--gradient-gold) 1;
-  }
-  .bg-gold-gradient {
-    background: var(--gradient-gold);
   }
   .hero-overlay {
     background: var(--gradient-hero-overlay);

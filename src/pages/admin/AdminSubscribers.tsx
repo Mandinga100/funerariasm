@@ -253,18 +253,19 @@ export default function AdminSubscribers() {
                   <TableHead>Origen</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Última campaña enviada</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       Cargando suscriptores…
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                       No hay suscriptores con los filtros actuales.
                     </TableCell>
                   </TableRow>
@@ -290,6 +291,20 @@ export default function AdminSubscribers() {
                           <Badge className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
                             Activo
                           </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {s.metadata?.last_campaign_at ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[220px]" title={s.metadata.last_campaign_subject}>
+                              {s.metadata.last_campaign_subject || "Sin asunto"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(s.metadata.last_campaign_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">Nunca</span>
                         )}
                       </TableCell>
                     </TableRow>

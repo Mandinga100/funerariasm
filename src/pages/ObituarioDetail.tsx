@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Calendar, MapPin, ArrowLeft, Heart } from "lucide-react";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import { applySeoMeta } from "@/lib/seo-meta";
 
 interface Obituary {
   id: string;
@@ -41,26 +42,16 @@ const ObituarioDetail = () => {
         .maybeSingle();
       if (data) {
         setObit(data as Obituary);
-        const title = data.meta_title || `${data.full_name} — Obituario`;
-        const desc = data.meta_description || data.family_message || `Obituario de ${data.full_name}. Funeraria Santa Margarita, Santiago, Chile.`;
-        const url = `https://funerariasantamargarita.cl/obituarios/${data.slug}`;
-        document.title = `${title} | Funeraria Santa Margarita`;
-
-        const setMeta = (attr: string, key: string, content: string) => {
-          let el = document.querySelector(`meta[${attr}="${key}"]`);
-          if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
-          el.setAttribute("content", content);
-        };
-        setMeta("name", "description", desc);
-        setMeta("property", "og:title", title);
-        setMeta("property", "og:description", desc);
-        setMeta("property", "og:type", "article");
-        setMeta("property", "og:url", url);
-        if (data.photo_url) setMeta("property", "og:image", data.photo_url);
-
-        let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-        if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
-        canonical.setAttribute("href", url);
+        applySeoMeta({
+          title: data.meta_title || `${data.full_name} — Obituario`,
+          description:
+            data.meta_description ||
+            data.family_message ||
+            `Obituario de ${data.full_name}. Funeraria Santa Margarita acompaña a la familia con servicio funerario profesional 24/7 en Santiago, Chile.`,
+          url: `https://funerariasantamargarita.cl/obituarios/${data.slug}`,
+          image: data.photo_url,
+          type: "article",
+        });
       }
       setLoading(false);
     };

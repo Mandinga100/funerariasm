@@ -17,7 +17,11 @@ interface Subscriber {
   id: string;
   email: string;
   source: string | null;
-  metadata: { name?: string } | null;
+  metadata: {
+    name?: string;
+    last_campaign_at?: string;
+    last_campaign_subject?: string;
+  } | null;
   subscribed_at: string;
   unsubscribed_at: string | null;
 }

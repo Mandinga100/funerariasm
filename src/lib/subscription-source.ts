@@ -31,6 +31,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   comuna: "Landing Comuna",
   pagos: "Pagos",
   seguimiento: "Seguimiento",
+  "popup-salida": "Popup Salida",
 
   // Mantener compatibilidad con datos legacy
   blog_floating_cta: "Blog",

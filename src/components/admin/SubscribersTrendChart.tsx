@@ -41,7 +41,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
   );
 };
 
-export function SubscribersTrendChart({ subscribedDates, days = 30 }: Props) {
+export function SubscribersTrendChart({ subscribedDates, days = 30, onRangeChange, rangeOptions }: Props) {
   const data = useMemo<Point[]>(() => {
     const today = startOfDay(new Date());
     const points: Point[] = [];

@@ -15,6 +15,7 @@ const QuickAnswer = ({ children, label = "Respuesta corta" }: QuickAnswerProps) 
     <aside
       role="note"
       aria-label={label}
+      data-quick-answer
       className="not-prose my-8 relative overflow-hidden rounded-xl border border-gold/25 bg-gradient-to-br from-gold/[0.04] via-card to-card p-5 sm:p-6"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-2xl pointer-events-none" />

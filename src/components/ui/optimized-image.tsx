@@ -10,12 +10,25 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   fadeIn?: boolean;
   /** Disable automatic <picture> + WebP source generation (for .jpg/.jpeg srcs) */
   disableWebp?: boolean;
+  /** Responsive widths available as `${name}-${w}w.${ext}` siblings (e.g. [400, 800]) */
+  responsiveWidths?: number[];
+  /** Sizes attribute for responsive images. Defaults to a card-friendly value. */
+  sizes?: string;
 }
 
 const isJpegSrc = (src?: string) =>
   !!src && /\.(jpe?g)(\?.*)?$/i.test(src) && !src.startsWith("data:");
 
 const toWebp = (src: string) => src.replace(/\.(jpe?g)(\?.*)?$/i, ".webp$2");
+
+/** Hero category images that ship with -400w/-800w variants */
+const HERO_RESPONSIVE_PATTERN = /\/assets\/images\/blog\/[a-z-]+-hero\.(jpe?g|webp)(\?.*)?$/i;
+const DEFAULT_HERO_WIDTHS = [400, 800];
+
+const buildSrcSet = (src: string, widths: number[]) =>
+  widths
+    .map((w) => `${src.replace(/\.(jpe?g|webp)(\?.*)?$/i, `-${w}w.$1$2`)} ${w}w`)
+    .join(", ");
 
 /**
  * OptimizedImage — drop-in <img> replacement with:
@@ -36,6 +49,8 @@ const OptimizedImage = ({
   style,
   onLoad,
   src,
+  responsiveWidths,
+  sizes,
   ...props
 }: OptimizedImageProps) => {
   const [loaded, setLoaded] = useState(false);
@@ -48,10 +63,31 @@ const OptimizedImage = ({
     }
   }, []);
 
+  // Auto-detect responsive widths for known hero images if not explicitly provided
+  const isHero =
+    typeof src === "string" && HERO_RESPONSIVE_PATTERN.test(src);
+  const widths =
+    responsiveWidths && responsiveWidths.length > 0
+      ? responsiveWidths
+      : isHero
+      ? DEFAULT_HERO_WIDTHS
+      : undefined;
+  const resolvedSizes =
+    sizes ?? (isHero ? "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" : undefined);
+
+  const jpegSrcSet =
+    typeof src === "string" && isJpegSrc(src) && widths
+      ? buildSrcSet(src, widths)
+      : undefined;
+  const webpSrc = typeof src === "string" && isJpegSrc(src) ? toWebp(src) : undefined;
+  const webpSrcSet = webpSrc && widths ? buildSrcSet(webpSrc, widths) : undefined;
+
   const img = (
     <img
       ref={imgRef}
       src={src}
+      srcSet={jpegSrcSet}
+      sizes={resolvedSizes}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
@@ -74,10 +110,14 @@ const OptimizedImage = ({
     />
   );
 
-  if (!disableWebp && typeof src === "string" && isJpegSrc(src)) {
+  if (!disableWebp && webpSrc) {
     return (
       <picture>
-        <source type="image/webp" srcSet={toWebp(src)} />
+        <source
+          type="image/webp"
+          srcSet={webpSrcSet ?? webpSrc}
+          sizes={resolvedSizes}
+        />
         {img}
       </picture>
     );

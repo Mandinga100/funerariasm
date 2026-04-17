@@ -74,6 +74,11 @@ export function SubscribersSourceChart({ sources, rangeDays }: Props) {
             <CardTitle className="text-base">Distribución por origen</CardTitle>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {rangeDays && (
+              <span>
+                Últimos <strong className="text-foreground">{rangeDays}d</strong>
+              </span>
+            )}
             <span>
               Total: <strong className="text-foreground">{total}</strong>
             </span>

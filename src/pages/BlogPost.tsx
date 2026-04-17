@@ -251,16 +251,23 @@ const BlogPostPage = () => {
   if (loading) {
     return (
       <Layout>
-        <section className="pt-28 pb-16 bg-primary text-primary-foreground">
+        {/* Hero skeleton — matches loaded hero height to prevent CLS when content arrives */}
+        <section className="relative w-full min-h-[480px] sm:min-h-[540px] md:min-h-[600px] pt-28 pb-16 bg-primary text-primary-foreground overflow-hidden">
           <div className="container max-w-3xl">
             <div className="h-4 bg-primary-foreground/10 rounded w-1/3 mb-6 animate-pulse" />
-            <div className="h-8 bg-primary-foreground/10 rounded w-2/3 animate-pulse" />
+            <div className="h-8 bg-primary-foreground/10 rounded w-2/3 mb-4 animate-pulse" />
+            <div className="h-8 bg-primary-foreground/10 rounded w-1/2 animate-pulse" />
           </div>
         </section>
-        <section className="py-16 bg-background">
+        {/* Article body skeleton — reserves enough vertical space so the footer doesn't jump up */}
+        <section className="py-16 bg-background min-h-[1200px]">
           <div className="container max-w-3xl space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-4 bg-muted rounded animate-pulse" style={{ width: `${90 - i * 10}%` }} />
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-4 bg-muted rounded animate-pulse"
+                style={{ width: `${90 - (i % 4) * 10}%` }}
+              />
             ))}
           </div>
         </section>

@@ -25,9 +25,9 @@ interface Point {
   count: number;
 }
 
-const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: Point }> }) => {
   if (!active || !payload || payload.length === 0) return null;
-  const data = payload[0].payload as Point;
+  const data = payload[0].payload;
   return (
     <div className="rounded-md border border-border bg-background/95 backdrop-blur-sm px-3 py-2 shadow-md">
       <p className="text-xs text-muted-foreground capitalize">{data.fullLabel}</p>

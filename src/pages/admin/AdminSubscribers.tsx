@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, Mail, Search, Users, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
 
 interface Subscriber {
   id: string;
@@ -168,6 +169,9 @@ export default function AdminSubscribers() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Trend chart */}
+      <SubscribersTrendChart subscribedDates={subscribers.map((s) => s.subscribed_at)} days={30} />
 
       {/* Filters */}
       <Card>

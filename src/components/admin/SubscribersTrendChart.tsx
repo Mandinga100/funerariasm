@@ -12,10 +12,13 @@ import {
 import { format, subDays, startOfDay, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   subscribedDates: string[];
   days?: number;
+  onRangeChange?: (days: number) => void;
+  rangeOptions?: number[];
 }
 
 interface Point {

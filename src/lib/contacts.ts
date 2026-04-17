@@ -36,7 +36,7 @@ export const submitContact = async (data: ContactData) => {
   }
 
   // 1. Persist to DB — auto-rellena comuna desde la landing si el formulario no la pidió.
-  const { error: dbError } = await supabase.from("contact_leads").insert({
+  const insertPayload = {
     contact_type: data.contactType,
     name: data.name || null,
     email: data.email || null,
@@ -49,8 +49,9 @@ export const submitContact = async (data: ContactData) => {
     urgency: data.urgency || "normal",
     whatsapp_message: whatsappMessage,
     status: "new",
-    metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-  });
+    ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
+  };
+  const { error: dbError } = await supabase.from("contact_leads").insert(insertPayload);
 
   if (dbError) {
     console.error("Error saving contact lead:", dbError);

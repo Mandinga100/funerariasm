@@ -14,6 +14,19 @@ export type ComunaConversionEvent =
 
 const SESSION_KEY = "comuna_tracking_sid";
 const PV_DEDUPE_KEY = "comuna_tracking_pv";
+const ATTRIBUTION_KEY = "comuna_tracking_attr";
+
+/** Datos de atribución que viajan con cada lead nuevo. */
+export interface ComunaAttribution {
+  comuna_slug: string;
+  comuna_nombre: string;
+  landing_path: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  visit_count: number;
+  session_id: string;
+  referrer: string | null;
+}
 
 function getSessionId(): string {
   if (typeof window === "undefined") return "ssr";
@@ -45,6 +58,27 @@ function alreadyTrackedPV(slug: string): boolean {
 
 export async function trackComunaPageView(slug: string, nombre: string): Promise<void> {
   if (typeof window === "undefined") return;
+  // Persiste atribución (incluso si ya fue contado el pageview en esta sesión,
+  // queremos refrescar last_seen_at e incrementar visit_count).
+  try {
+    const raw = sessionStorage.getItem(ATTRIBUTION_KEY);
+    const prev: ComunaAttribution | null = raw ? JSON.parse(raw) : null;
+    const now = new Date().toISOString();
+    const next: ComunaAttribution = {
+      comuna_slug: slug,
+      comuna_nombre: nombre,
+      landing_path: window.location.pathname,
+      first_seen_at: prev && prev.comuna_slug === slug ? prev.first_seen_at : now,
+      last_seen_at: now,
+      visit_count: prev && prev.comuna_slug === slug ? prev.visit_count + 1 : 1,
+      session_id: getSessionId(),
+      referrer: document.referrer || prev?.referrer || null,
+    };
+    sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(next));
+  } catch {
+    // Silencioso
+  }
+
   if (alreadyTrackedPV(slug)) return;
   try {
     // Cast: tipos generados de Supabase aún no incluyen estas tablas recién creadas.
@@ -58,6 +92,20 @@ export async function trackComunaPageView(slug: string, nombre: string): Promise
     });
   } catch {
     // Silencioso por diseño: tracking nunca debe romper la experiencia.
+  }
+}
+
+/**
+ * Devuelve la atribución de comuna almacenada en la sesión actual,
+ * o null si el visitante no pasó por una landing /funeraria/:comuna.
+ */
+export function getComunaAttribution(): ComunaAttribution | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(ATTRIBUTION_KEY);
+    return raw ? (JSON.parse(raw) as ComunaAttribution) : null;
+  } catch {
+    return null;
   }
 }
 

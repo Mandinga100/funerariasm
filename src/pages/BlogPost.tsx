@@ -10,10 +10,11 @@ import BlogFAQ from "@/components/blog/BlogFAQ";
 import QuickAnswer from "@/components/blog/QuickAnswer";
 import NextSteps, { type NextStep } from "@/components/blog/NextSteps";
 import AuthorMeta from "@/components/blog/AuthorMeta";
-import LegalDisclaimer from "@/components/blog/LegalDisclaimer";
 import FloatingCTA from "@/components/blog/FloatingCTA";
 import ArticleTitle from "@/components/blog/ArticleTitle";
+import ShareButtons from "@/components/blog/ShareButtons";
 import { getCategoryImage } from "@/lib/blog-categories";
+import { getViralTags } from "@/lib/blog-viral-tags";
 import {
   buildBlogPostingJsonLd,
   buildFuneralHomeJsonLd,
@@ -21,7 +22,7 @@ import {
   buildPersonJsonLd,
 } from "@/lib/blog-schemas";
 import { applySeoMeta } from "@/lib/seo-meta";
-import { Calendar, Tag, User, Share2 } from "lucide-react";
+import { Calendar, Tag, User } from "lucide-react";
 
 interface BlogPost {
   id: string;
@@ -649,59 +650,37 @@ const BlogPostPage = () => {
               {/* Final CTA — single, contextual, after FAQ */}
               <BlogCTA variant={ctaVariants[0]} />
 
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <section
-                  aria-label="Etiquetas del artículo"
-                  className="mt-12 pt-8 border-t border-border/50 flex flex-wrap items-center gap-2"
-                >
-                  <Tag className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-card border border-border/50 text-muted-foreground px-3 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </section>
-              )}
+              {/* Tags — original + viral high-engagement additions */}
+              {(() => {
+                const allTags = getViralTags(post.category, post.tags || []);
+                if (allTags.length === 0) return null;
+                return (
+                  <section
+                    aria-label="Etiquetas del artículo"
+                    className="mt-12 pt-8 border-t border-border/50 flex flex-wrap items-center gap-2"
+                  >
+                    <Tag className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    {allTags.map((tag, idx) => {
+                      const isViral = idx >= (post.tags?.length || 0);
+                      return (
+                        <span
+                          key={`${tag}-${idx}`}
+                          className={
+                            isViral
+                              ? "group/tag text-xs px-3 py-1 rounded-full border border-gold/30 bg-gold/5 text-gold/90 font-medium transition-all duration-300 hover:bg-gold hover:text-accent-foreground hover:border-gold hover:-translate-y-0.5 hover:shadow-[0_6px_18px_-6px_hsl(var(--gold)/0.55)] cursor-default"
+                              : "group/tag text-xs bg-card border border-border/50 text-muted-foreground px-3 py-1 rounded-full transition-all duration-300 hover:border-gold/40 hover:text-gold hover:-translate-y-0.5 hover:shadow-[0_4px_12px_-4px_hsl(var(--gold)/0.3)] cursor-default"
+                          }
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </section>
+                );
+              })()}
 
-              {/* Share */}
-              <section aria-label="Compartir artículo" className="mt-8 flex items-center gap-3">
-                <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                <span className="text-xs text-muted-foreground">Compartir:</span>
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Compartir en Facebook"
-                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
-                >
-                  Facebook
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(post.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Compartir en X"
-                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
-                >
-                  X
-                </a>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(post.title + " " + shareUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Compartir por WhatsApp"
-                  className="text-xs text-muted-foreground hover:text-gold transition-colors"
-                >
-                  WhatsApp
-                </a>
-              </section>
-
-              {/* Legal disclaimer */}
-              <LegalDisclaimer />
+              {/* Share — premium social buttons with brand colors */}
+              <ShareButtons url={shareUrl} title={post.title} />
 
               {/* Related Posts */}
               <RelatedPosts currentId={post.id} category={post.category} tags={post.tags || []} />

@@ -14,6 +14,7 @@ import { differenceInHours, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LeadDetailSheet from "@/components/admin/crm/LeadDetailSheet";
+import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 
 interface Lead {
   id: string;
@@ -261,11 +262,13 @@ export default function AdminLeads() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <Button size="sm" variant="outline" className={cn("h-8 text-xs", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            <span className="hidden sm:inline">{classifyingAll ? "Clasificando..." : "Clasificar con IA"}</span>
-            <span className="sm:hidden">IA</span>
-          </Button>
+          <AIActionTooltip description="Procesa con IA todos los leads sin análisis: detecta intención, urgencia, plan estimado, valor potencial y siguiente acción recomendada. Útil tras importar muchos leads.">
+            <Button size="sm" variant="outline" className={cn("h-8 text-xs", classifyingAll && "animate-pulse")} onClick={handleClassifyAll} disabled={classifyingAll}>
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              <span className="hidden sm:inline">{classifyingAll ? "Clasificando..." : "Clasificar con IA"}</span>
+              <span className="sm:hidden">IA</span>
+            </Button>
+          </AIActionTooltip>
           {filterOverdue && (
             <Badge variant="destructive" className="h-7 text-xs cursor-pointer" onClick={() => setFilterOverdue(false)}>
               ⚠️ Vencidos ✕

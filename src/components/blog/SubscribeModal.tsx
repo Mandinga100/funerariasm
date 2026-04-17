@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Sparkles, CheckCircle2, Loader2 } from "lucide-react";
+import { Mail, Sparkles, CheckCircle2, Loader2, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,34 +12,54 @@ interface SubscribeModalProps {
 }
 
 const emailSchema = z.string().trim().email({ message: "Ingrese un correo válido" }).max(255);
+const nameSchema = z
+  .string()
+  .trim()
+  .max(80, { message: "El nombre debe tener menos de 80 caracteres" })
+  .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
+  .optional();
 
 const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successName, setSuccessName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Correo inválido");
+    const parsedEmail = emailSchema.safeParse(email);
+    if (!parsedEmail.success) {
+      setError(parsedEmail.error.issues[0]?.message ?? "Correo inválido");
       return;
     }
+    const parsedName = nameSchema.safeParse(name || undefined);
+    if (!parsedName.success) {
+      setError(parsedName.error.issues[0]?.message ?? "Nombre inválido");
+      return;
+    }
+    const cleanName = parsedName.data?.trim() || null;
     setLoading(true);
     try {
       const { error: insertError } = await supabase
         .from("blog_subscribers")
-        .insert({ email: parsed.data.toLowerCase(), source });
+        .insert({
+          email: parsedEmail.data.toLowerCase(),
+          source,
+          metadata: cleanName ? { name: cleanName } : {},
+        });
       if (insertError) {
         // Unique violation = ya suscrito → tratar como éxito amable
         if (insertError.code === "23505") {
+          setSuccessName(cleanName);
           setSuccess(true);
         } else {
           setError("No fue posible procesar la suscripción. Intente nuevamente.");
         }
       } else {
+        setSuccessName(cleanName);
         setSuccess(true);
       }
     } catch {
@@ -54,7 +74,9 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
       // Reset cuando se cierra
       setTimeout(() => {
         setEmail("");
+        setName("");
         setSuccess(false);
+        setSuccessName(null);
         setError(null);
       }, 200);
     }
@@ -73,18 +95,42 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
             )}
           </div>
           <DialogTitle className="font-playfair italic text-2xl text-foreground text-center">
-            {success ? "¡Suscripción confirmada!" : "Apoyo y atención personalizada"}
+            {success
+              ? successName
+                ? `¡Gracias, ${successName}!`
+                : "¡Suscripción confirmada!"
+              : "Apoyo y atención personalizada"}
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground leading-relaxed">
             {success
-              ? "Le enviaremos novedades, guías y orientación funeraria directamente a su correo."
+              ? successName
+                ? `Hola ${successName}, le enviaremos novedades, guías y orientación funeraria personalizada directamente a su correo.`
+                : "Le enviaremos novedades, guías y orientación funeraria directamente a su correo."
               : "Suscríbase para recibir guías personalizadas, orientación profesional y novedades 24/7 en su correo."}
           </DialogDescription>
         </DialogHeader>
 
         {!success && (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-            <div>
+          <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
+              <Input
+                type="text"
+                autoComplete="given-name"
+                placeholder="Su nombre (opcional)"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError(null);
+                }}
+                disabled={loading}
+                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20 pl-9"
+                maxLength={80}
+              />
+            </div>
+
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
               <Input
                 type="email"
                 inputMode="email"
@@ -98,7 +144,7 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
                 disabled={loading}
                 aria-invalid={!!error}
                 aria-describedby={error ? "subscribe-error" : undefined}
-                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20"
+                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20 pl-9"
                 required
                 maxLength={255}
               />

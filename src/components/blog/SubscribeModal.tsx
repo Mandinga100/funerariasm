@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Sparkles, CheckCircle2, Loader2 } from "lucide-react";
+import { Mail, Sparkles, CheckCircle2, Loader2, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,34 +12,54 @@ interface SubscribeModalProps {
 }
 
 const emailSchema = z.string().trim().email({ message: "Ingrese un correo válido" }).max(255);
+const nameSchema = z
+  .string()
+  .trim()
+  .max(80, { message: "El nombre debe tener menos de 80 caracteres" })
+  .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
+  .optional();
 
 const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successName, setSuccessName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Correo inválido");
+    const parsedEmail = emailSchema.safeParse(email);
+    if (!parsedEmail.success) {
+      setError(parsedEmail.error.issues[0]?.message ?? "Correo inválido");
       return;
     }
+    const parsedName = nameSchema.safeParse(name || undefined);
+    if (!parsedName.success) {
+      setError(parsedName.error.issues[0]?.message ?? "Nombre inválido");
+      return;
+    }
+    const cleanName = parsedName.data?.trim() || null;
     setLoading(true);
     try {
       const { error: insertError } = await supabase
         .from("blog_subscribers")
-        .insert({ email: parsed.data.toLowerCase(), source });
+        .insert({
+          email: parsedEmail.data.toLowerCase(),
+          source,
+          metadata: cleanName ? { name: cleanName } : {},
+        });
       if (insertError) {
         // Unique violation = ya suscrito → tratar como éxito amable
         if (insertError.code === "23505") {
+          setSuccessName(cleanName);
           setSuccess(true);
         } else {
           setError("No fue posible procesar la suscripción. Intente nuevamente.");
         }
       } else {
+        setSuccessName(cleanName);
         setSuccess(true);
       }
     } catch {
@@ -54,7 +74,9 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
       // Reset cuando se cierra
       setTimeout(() => {
         setEmail("");
+        setName("");
         setSuccess(false);
+        setSuccessName(null);
         setError(null);
       }, 200);
     }

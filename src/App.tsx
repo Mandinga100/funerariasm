@@ -18,10 +18,12 @@ import Memoriales from "./pages/Memoriales.tsx";
 import MemorialDetail from "./pages/MemorialDetail.tsx";
 import Planes from "./pages/Planes.tsx";
 import Login from "./pages/Login.tsx";
-import Seguimiento from "./pages/Seguimiento.tsx";
-import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
-import Pagos from "./pages/Pagos.tsx";
 import NotFound from "./pages/NotFound.tsx";
+
+// Secondary public pages — lazy-loaded (visited less often, no need in initial bundle)
+const Seguimiento = lazy(() => import("./pages/Seguimiento.tsx"));
+const PreguntasFrecuentes = lazy(() => import("./pages/PreguntasFrecuentes.tsx"));
+const Pagos = lazy(() => import("./pages/Pagos.tsx"));
 
 // Admin shell + pages — lazy-loaded so the admin bundle never ships to public visitors
 const ProtectedRoute = lazy(() => import("./components/admin/ProtectedRoute.tsx"));

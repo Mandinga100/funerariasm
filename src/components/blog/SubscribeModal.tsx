@@ -128,14 +128,15 @@ const SubscribeModal = ({
               ? successName
                 ? `¡Gracias, ${successName}!`
                 : "¡Suscripción confirmada!"
-              : "Apoyo y atención personalizada"}
+              : title ?? "Apoyo y atención personalizada"}
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground leading-relaxed">
             {success
               ? successName
                 ? `Hola ${successName}, le enviaremos novedades, guías y orientación funeraria personalizada directamente a su correo.`
                 : "Le enviaremos novedades, guías y orientación funeraria directamente a su correo."
-              : "Suscríbase para recibir guías personalizadas, orientación profesional y novedades 24/7 en su correo."}
+              : description ??
+                "Suscríbase para recibir guías personalizadas, orientación profesional y novedades 24/7 en su correo."}
           </DialogDescription>
         </DialogHeader>
 
@@ -195,7 +196,7 @@ const SubscribeModal = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5" /> Suscribirse Ahora
+                  <Sparkles className="w-3.5 h-3.5" /> {ctaLabel ?? "Suscribirse Ahora"}
                 </>
               )}
             </button>

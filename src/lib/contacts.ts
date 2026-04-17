@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ContactIntent, buildWhatsAppMessage } from "./whatsapp";
+import { getComunaAttribution } from "./comuna-tracking";
 
 interface ContactData {
   contactType: string;
@@ -25,7 +26,16 @@ export const submitContact = async (data: ContactData) => {
     details: data.message,
   });
 
-  // 1. Persist to DB
+  // Atribución de origen: si el visitante pasó por /funeraria/:comuna,
+  // se vincula automáticamente para medir conversión real desde landing hasta venta.
+  const attribution = getComunaAttribution();
+  const metadata: Record<string, unknown> = {};
+  if (attribution) {
+    metadata.comuna_attribution = attribution;
+    metadata.attribution_source = "comuna_landing";
+  }
+
+  // 1. Persist to DB — auto-rellena comuna desde la landing si el formulario no la pidió.
   const { error: dbError } = await supabase.from("contact_leads").insert({
     contact_type: data.contactType,
     name: data.name || null,
@@ -34,11 +44,12 @@ export const submitContact = async (data: ContactData) => {
     message: data.message || null,
     intent: data.intent || null,
     source: data.source || "web",
-    comuna: data.comuna || null,
+    comuna: data.comuna || attribution?.comuna_nombre || null,
     selected_plan: data.selectedPlan || null,
     urgency: data.urgency || "normal",
     whatsapp_message: whatsappMessage,
     status: "new",
+    metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
   });
 
   if (dbError) {
@@ -59,7 +70,8 @@ export const submitContact = async (data: ContactData) => {
         source: data.source,
         selectedPlan: data.selectedPlan,
         urgency: data.urgency,
-        comuna: data.comuna,
+        comuna: data.comuna || attribution?.comuna_nombre,
+        comunaAttribution: attribution,
       },
     });
   } catch (emailError) {

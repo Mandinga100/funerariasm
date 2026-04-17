@@ -29,6 +29,7 @@ const CoberturaRM = lazy(() => import("./pages/CoberturaRM.tsx"));
 
 // Admin shell + pages — lazy-loaded so the admin bundle never ships to public visitors
 const ProtectedRoute = lazy(() => import("./components/admin/ProtectedRoute.tsx"));
+const CeoOnlyRoute = lazy(() => import("./components/admin/CeoOnlyRoute.tsx"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout.tsx"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard.tsx"));
 const AdminObituarios = lazy(() => import("./pages/admin/AdminObituarios.tsx"));
@@ -102,18 +103,18 @@ const App = () => (
               }
             >
               <Route index element={<Suspense fallback={<AdminFallback />}><Dashboard /></Suspense>} />
-              <Route path="obituarios" element={<Suspense fallback={<AdminFallback />}><AdminObituarios /></Suspense>} />
-              <Route path="memoriales" element={<Suspense fallback={<AdminFallback />}><AdminMemoriales /></Suspense>} />
+              <Route path="obituarios" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminObituarios /></CeoOnlyRoute></Suspense>} />
+              <Route path="memoriales" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminMemoriales /></CeoOnlyRoute></Suspense>} />
               <Route path="tracking" element={<Suspense fallback={<AdminFallback />}><AdminTracking /></Suspense>} />
-              <Route path="blog" element={<Suspense fallback={<AdminFallback />}><AdminBlog /></Suspense>} />
-              <Route path="suscriptores" element={<Suspense fallback={<AdminFallback />}><AdminSubscribers /></Suspense>} />
+              <Route path="blog" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminBlog /></CeoOnlyRoute></Suspense>} />
+              <Route path="suscriptores" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminSubscribers /></CeoOnlyRoute></Suspense>} />
               <Route path="leads" element={<Suspense fallback={<AdminFallback />}><AdminLeads /></Suspense>} />
               <Route path="casos" element={<Suspense fallback={<AdminFallback />}><AdminCasos /></Suspense>} />
               <Route path="pagos" element={<Suspense fallback={<AdminFallback />}><AdminPagos /></Suspense>} />
               <Route path="configuracion" element={<Suspense fallback={<AdminFallback />}><AdminSettings /></Suspense>} />
               <Route path="analytics-comunas" element={<Suspense fallback={<AdminFallback />}><AdminAnalyticsComunas /></Suspense>} />
               <Route path="roi-comunas" element={<Suspense fallback={<AdminFallback />}><AdminRevenueComunas /></Suspense>} />
-              <Route path="ajustes/ia" element={<Suspense fallback={<AdminFallback />}><AdminAjustesIA /></Suspense>} />
+              <Route path="ajustes/ia" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminAjustesIA /></CeoOnlyRoute></Suspense>} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

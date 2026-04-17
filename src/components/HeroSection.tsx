@@ -10,6 +10,11 @@ const HeroSection = () => (
         src="/assets/images/ui/hero-bg.webp"
         alt="Espacio de paz y serenidad"
         className="w-full h-full object-cover"
+        fetchPriority="high"
+        loading="eager"
+        decoding="async"
+        width="1920"
+        height="1080"
       />
       <div className="hero-overlay absolute inset-0" />
     </div>

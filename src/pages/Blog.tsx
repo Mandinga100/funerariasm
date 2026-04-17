@@ -142,6 +142,40 @@ const Blog = () => {
     return ordered;
   }, [posts, activeFilter, maxCards]);
 
+  // Preload the LCP image: hero of the first visible blog card
+  useEffect(() => {
+    const firstPost = filteredPosts[0];
+    if (!firstPost) return;
+    const heroSrc = firstPost.cover_image || getCategoryImage(firstPost.category);
+    if (!heroSrc) return;
+
+    const isHero = /\/assets\/images\/blog\/[a-z-]+-hero\.(jpe?g|webp)$/i.test(heroSrc);
+    const isJpeg = /\.(jpe?g)$/i.test(heroSrc);
+    const webpSrc = isJpeg ? heroSrc.replace(/\.(jpe?g)$/i, ".webp") : heroSrc;
+
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.setAttribute("fetchpriority", "high");
+
+    if (isHero) {
+      link.setAttribute(
+        "imagesrcset",
+        `${webpSrc.replace(/\.webp$/, "-400w.webp")} 400w, ${webpSrc.replace(/\.webp$/, "-800w.webp")} 800w, ${webpSrc} 1024w`
+      );
+      link.setAttribute("imagesizes", "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw");
+      link.type = "image/webp";
+      link.href = webpSrc.replace(/\.webp$/, "-800w.webp");
+    } else {
+      link.href = heroSrc;
+    }
+
+    document.head.appendChild(link);
+    return () => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+    };
+  }, [filteredPosts]);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",

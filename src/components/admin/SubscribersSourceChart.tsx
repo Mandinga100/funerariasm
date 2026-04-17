@@ -5,6 +5,7 @@ import { PieChart as PieIcon } from "lucide-react";
 
 interface Props {
   sources: (string | null)[];
+  rangeDays?: number;
 }
 
 interface Slice {

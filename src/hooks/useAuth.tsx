@@ -2,10 +2,13 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+export const CEO_EMAIL = "mandinga_atim@hotmail.com";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isCeo: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -17,19 +20,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCeo, setIsCeo] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkAdmin = async (userId: string) => {
-    const { data, error } = await supabase
+  const checkRoles = async (userId: string, email: string | null | undefined) => {
+    const { data } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
+      .eq("user_id", userId);
 
-    const isUserAdmin = !error && !!data;
-    setIsAdmin(isUserAdmin);
-    return isUserAdmin;
+    const roles = (data ?? []).map(r => r.role);
+    const hasAdmin = roles.includes("admin");
+    const hasCeoRole = roles.includes("ceo");
+    // CEO absoluto = email designado o rol 'ceo' en BD
+    const ceo = hasCeoRole || email === CEO_EMAIL;
+    // El CEO también tiene todos los permisos de admin
+    setIsAdmin(hasAdmin || ceo);
+    setIsCeo(ceo);
   };
 
   useEffect(() => {
@@ -42,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await checkAdmin(session.user.id);
+        await checkRoles(session.user.id, session.user.email);
       } else {
         setIsAdmin(false);
+        setIsCeo(false);
       }
 
       if (!isMounted) return;
@@ -84,10 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setIsCeo(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isCeo, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

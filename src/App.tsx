@@ -18,10 +18,12 @@ import Memoriales from "./pages/Memoriales.tsx";
 import MemorialDetail from "./pages/MemorialDetail.tsx";
 import Planes from "./pages/Planes.tsx";
 import Login from "./pages/Login.tsx";
-import Seguimiento from "./pages/Seguimiento.tsx";
-import PreguntasFrecuentes from "./pages/PreguntasFrecuentes.tsx";
-import Pagos from "./pages/Pagos.tsx";
 import NotFound from "./pages/NotFound.tsx";
+
+// Secondary public pages — lazy-loaded (visited less often, no need in initial bundle)
+const Seguimiento = lazy(() => import("./pages/Seguimiento.tsx"));
+const PreguntasFrecuentes = lazy(() => import("./pages/PreguntasFrecuentes.tsx"));
+const Pagos = lazy(() => import("./pages/Pagos.tsx"));
 
 // Admin shell + pages — lazy-loaded so the admin bundle never ships to public visitors
 const ProtectedRoute = lazy(() => import("./components/admin/ProtectedRoute.tsx"));
@@ -48,6 +50,13 @@ const AdminFallback = () => (
   </div>
 );
 
+/** Public-page fallback — minimal, full-height to prevent CLS while a lazy chunk loads */
+const PageFallback = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" aria-label="Cargando" />
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -68,9 +77,9 @@ const App = () => (
             <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
             <Route path="/memoriales" element={<Navigate to="/legados-eternos" replace />} />
             <Route path="/memoriales/:slug" element={<Navigate to="/legados-eternos" replace />} />
-            <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
-            <Route path="/seguimiento" element={<Seguimiento />} />
-            <Route path="/pagos" element={<Pagos />} />
+            <Route path="/preguntas-frecuentes" element={<Suspense fallback={<PageFallback />}><PreguntasFrecuentes /></Suspense>} />
+            <Route path="/seguimiento" element={<Suspense fallback={<PageFallback />}><Seguimiento /></Suspense>} />
+            <Route path="/pagos" element={<Suspense fallback={<PageFallback />}><Pagos /></Suspense>} />
             <Route path="/login" element={<Login />} />
 
             {/* Admin — wrapped in Suspense; chunks load on demand only when /admin is visited */}

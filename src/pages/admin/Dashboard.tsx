@@ -14,6 +14,7 @@ import { format, subDays, subMonths, differenceInHours, differenceInMinutes, sta
 // Lazy-load all charts so the recharts bundle (~165 kB gzip) is fetched only
 // after the dashboard shell + KPI cards render — keeps the admin first paint fast.
 const DashboardCharts = lazy(() => import("./DashboardCharts"));
+const ComunaAnalyticsWidget = lazy(() => import("@/components/admin/ComunaAnalyticsWidget"));
 
 /** Skeleton placeholder shown while the charts chunk loads. */
 const ChartsSkeleton = () => (
@@ -606,6 +607,11 @@ export default function Dashboard() {
           leadsTimeline={leadsTimeline}
           urgencyData={urgencyData}
         />
+      </Suspense>
+
+      {/* Top comunas widget — tracking propio de landing pages /funeraria/:comuna */}
+      <Suspense fallback={<div className="h-64 rounded-lg border bg-muted/30 animate-pulse" />}>
+        <ComunaAnalyticsWidget />
       </Suspense>
 
       {/* Recent Leads */}

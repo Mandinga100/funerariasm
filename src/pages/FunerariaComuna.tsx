@@ -140,6 +140,7 @@ const FunerariaComuna = () => {
           <div className="flex flex-wrap gap-3">
             <a
               href={`tel:${PHONE}`}
+              onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_call", "hero")}
               className="inline-flex items-center gap-2 bg-gold text-accent-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase transition-colors hover:bg-gold-light"
             >
               <Phone className="w-4 h-4" /> Llamar 24/7
@@ -148,6 +149,7 @@ const FunerariaComuna = () => {
               href={WHATSAPP}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackComunaConversion(comuna.slug, comuna.nombre, "cta_whatsapp", "hero")}
               className="inline-flex items-center gap-2 border border-primary-foreground/30 text-primary-foreground px-6 py-3 rounded-full text-sm font-medium tracking-wide-brand uppercase transition-colors hover:bg-primary-foreground/10"
             >
               <MessageCircle className="w-4 h-4" /> WhatsApp

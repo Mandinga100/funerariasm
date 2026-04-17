@@ -47,7 +47,8 @@ export async function trackComunaPageView(slug: string, nombre: string): Promise
   if (typeof window === "undefined") return;
   if (alreadyTrackedPV(slug)) return;
   try {
-    await supabase.from("comuna_page_views").insert({
+    // Cast: tipos generados de Supabase aún no incluyen estas tablas recién creadas.
+    await (supabase.from as any)("comuna_page_views").insert({
       comuna_slug: slug,
       comuna_nombre: nombre,
       session_id: getSessionId(),
@@ -69,7 +70,7 @@ export async function trackComunaConversion(
 ): Promise<void> {
   if (typeof window === "undefined") return;
   try {
-    await supabase.from("comuna_conversion_events").insert({
+    await (supabase.from as any)("comuna_conversion_events").insert({
       comuna_slug: slug,
       comuna_nombre: nombre,
       event_type: eventType,

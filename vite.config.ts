@@ -33,8 +33,38 @@ export default defineConfig(({ mode }) => ({
           // Supabase SDK — used by most pages but heavy enough to isolate for caching
           if (id.includes("@supabase")) return "vendor-supabase";
 
-          // Radix UI primitives — used across shadcn components
-          if (id.includes("@radix-ui")) return "vendor-radix";
+          // Radix UI primitives — split by where they're used.
+          // Public pages only need: accordion, slot, label, checkbox, select,
+          // tabs, toast, tooltip, react-compose-refs, react-primitive (shared).
+          // Admin-only primitives (dialog, dropdown-menu, popover, separator,
+          // switch, etc.) go into a separate chunk that only loads with admin routes.
+          if (id.includes("@radix-ui")) {
+            const adminOnlyPrimitives = [
+              "react-dialog",       // also used by sheet (admin-only)
+              "react-dropdown-menu",
+              "react-popover",
+              "react-separator",
+              "react-switch",
+              "react-alert-dialog",
+              "react-context-menu",
+              "react-hover-card",
+              "react-menubar",
+              "react-navigation-menu",
+              "react-radio-group",
+              "react-scroll-area",
+              "react-slider",
+              "react-toggle",
+              "react-toggle-group",
+              "react-collapsible",
+              "react-avatar",
+              "react-aspect-ratio",
+              "react-progress",
+            ];
+            const isAdminOnly = adminOnlyPrimitives.some((p) =>
+              id.includes(`@radix-ui/${p}/`)
+            );
+            return isAdminOnly ? "vendor-radix-admin" : "vendor-radix-public";
+          }
 
           // Form stack — react-hook-form + zod, mainly admin and contact forms
           if (

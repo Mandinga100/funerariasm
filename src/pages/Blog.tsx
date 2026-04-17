@@ -9,6 +9,7 @@ import BlogCategoryFilter from "@/components/BlogCategoryFilter";
 import { getCategoryImage } from "@/lib/blog-categories";
 import { Calendar, Tag, ArrowRight } from "lucide-react";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Blog", path: "/blog" }]);
 
@@ -271,6 +272,7 @@ const Blog = () => {
           )}
         </div>
       </section>
+      <ExitIntentPopup source="popup-salida-blog" />
     </Layout>
   );
 };

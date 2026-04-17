@@ -8,6 +8,7 @@ import MemorialesSection from "@/components/MemorialesSection";
 import AboutSection from "@/components/AboutSection";
 import BlogSection from "@/components/BlogSection";
 import ContactoSection from "@/components/ContactoSection";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 
 const SITE_URL = "https://funerariasantamargarita.cl";
 
@@ -122,6 +123,7 @@ const Index = () => (
     <AboutSection />
     <BlogSection />
     <ContactoSection />
+    <ExitIntentPopup source="popup-salida-inicio" />
   </Layout>
 );
 

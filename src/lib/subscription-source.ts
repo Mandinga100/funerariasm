@@ -31,10 +31,13 @@ export const SOURCE_LABELS: Record<string, string> = {
   comuna: "Landing Comuna",
   pagos: "Pagos",
   seguimiento: "Seguimiento",
+  "popup-salida": "Popup Salida",
 
   // Mantener compatibilidad con datos legacy
   blog_floating_cta: "Blog",
   "blog-floating-cta": "Blog",
+  "popup-salida-inicio": "Popup Salida (Inicio)",
+  "popup-salida-blog": "Popup Salida (Blog)",
 };
 
 /** Detecta automáticamente la sección desde una ruta (pathname). */

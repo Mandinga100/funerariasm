@@ -95,18 +95,42 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
             )}
           </div>
           <DialogTitle className="font-playfair italic text-2xl text-foreground text-center">
-            {success ? "¡Suscripción confirmada!" : "Apoyo y atención personalizada"}
+            {success
+              ? successName
+                ? `¡Gracias, ${successName}!`
+                : "¡Suscripción confirmada!"
+              : "Apoyo y atención personalizada"}
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground leading-relaxed">
             {success
-              ? "Le enviaremos novedades, guías y orientación funeraria directamente a su correo."
+              ? successName
+                ? `Hola ${successName}, le enviaremos novedades, guías y orientación funeraria personalizada directamente a su correo.`
+                : "Le enviaremos novedades, guías y orientación funeraria directamente a su correo."
               : "Suscríbase para recibir guías personalizadas, orientación profesional y novedades 24/7 en su correo."}
           </DialogDescription>
         </DialogHeader>
 
         {!success && (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-            <div>
+          <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
+              <Input
+                type="text"
+                autoComplete="given-name"
+                placeholder="Su nombre (opcional)"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError(null);
+                }}
+                disabled={loading}
+                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20 pl-9"
+                maxLength={80}
+              />
+            </div>
+
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
               <Input
                 type="email"
                 inputMode="email"
@@ -120,7 +144,7 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
                 disabled={loading}
                 aria-invalid={!!error}
                 aria-describedby={error ? "subscribe-error" : undefined}
-                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20"
+                className="bg-background border-border/60 focus-visible:border-gold focus-visible:ring-gold/20 pl-9"
                 required
                 maxLength={255}
               />

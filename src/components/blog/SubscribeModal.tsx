@@ -14,6 +14,11 @@ interface SubscribeModalProps {
    * Si se omite, se detecta automáticamente desde la ruta actual.
    */
   source?: string;
+  /**
+   * Metadata adicional a fusionar en blog_subscribers.metadata
+   * (ej: { comuna_slug: "macul", comuna_nombre: "Macul" }).
+   */
+  extraMetadata?: Record<string, unknown>;
 }
 
 const emailSchema = z.string().trim().email({ message: "Ingrese un correo válido" }).max(255);
@@ -24,7 +29,7 @@ const nameSchema = z
   .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
   .optional();
 
-const SubscribeModal = ({ open, onOpenChange, source }: SubscribeModalProps) => {
+const SubscribeModal = ({ open, onOpenChange, source, extraMetadata }: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,6 +62,7 @@ const SubscribeModal = ({ open, onOpenChange, source }: SubscribeModalProps) => 
           metadata: {
             ...(cleanName ? { name: cleanName } : {}),
             captured_at_path: typeof window !== "undefined" ? window.location.pathname : null,
+            ...(extraMetadata ?? {}),
           },
         });
       if (insertError) {

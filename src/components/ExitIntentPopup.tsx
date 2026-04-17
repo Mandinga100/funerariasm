@@ -9,16 +9,19 @@ interface ExitIntentPopupProps {
   armDelayMs?: number;
   /** Clave única de sesión para no repetir el popup en la misma navegación. */
   storageKey?: string;
+  /** Metadata adicional para guardar junto a la suscripción (ej: comuna_slug). */
+  extraMetadata?: Record<string, unknown>;
 }
 
 /**
  * Popup de intención de salida que reutiliza <SubscribeModal /> con un `source` distintivo.
- * Se monta en Home y Blog para maximizar captura de emails antes del abandono.
+ * Se monta en Home, Blog y landings de comuna para maximizar captura de emails antes del abandono.
  */
 const ExitIntentPopup = ({
   source = "popup-salida",
   armDelayMs = 5000,
   storageKey = "exit-intent-shown",
+  extraMetadata,
 }: ExitIntentPopupProps) => {
   const { triggered } = useExitIntent({ armDelayMs, storageKey });
   const [open, setOpen] = useState(false);
@@ -27,7 +30,14 @@ const ExitIntentPopup = ({
     if (triggered) setOpen(true);
   }, [triggered]);
 
-  return <SubscribeModal open={open} onOpenChange={setOpen} source={source} />;
+  return (
+    <SubscribeModal
+      open={open}
+      onOpenChange={setOpen}
+      source={source}
+      extraMetadata={extraMetadata}
+    />
+  );
 };
 
 export default ExitIntentPopup;

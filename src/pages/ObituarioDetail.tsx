@@ -86,13 +86,27 @@ const ObituarioDetail = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="pt-28 pb-16 bg-primary">
+        {/* Hero skeleton — reserves portrait + name + dates space */}
+        <div className="pt-28 pb-12 bg-primary min-h-[520px] sm:min-h-[580px] md:min-h-[640px]">
           <div className="container text-center">
             <div className="animate-pulse space-y-4">
               <div className="w-32 h-32 rounded-full bg-muted/20 mx-auto" />
               <div className="h-6 bg-muted/20 rounded w-1/3 mx-auto" />
               <div className="h-4 bg-muted/20 rounded w-1/4 mx-auto" />
+              <div className="h-4 bg-muted/20 rounded w-1/5 mx-auto" />
             </div>
+          </div>
+        </div>
+        {/* Body skeleton — family message + ceremony details reserve */}
+        <div className="py-16 bg-background min-h-[800px]">
+          <div className="container max-w-3xl space-y-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-4 bg-muted rounded animate-pulse"
+                style={{ width: `${88 - (i % 4) * 10}%` }}
+              />
+            ))}
           </div>
         </div>
       </Layout>

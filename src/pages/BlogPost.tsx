@@ -10,10 +10,11 @@ import BlogFAQ from "@/components/blog/BlogFAQ";
 import QuickAnswer from "@/components/blog/QuickAnswer";
 import NextSteps, { type NextStep } from "@/components/blog/NextSteps";
 import AuthorMeta from "@/components/blog/AuthorMeta";
-import LegalDisclaimer from "@/components/blog/LegalDisclaimer";
 import FloatingCTA from "@/components/blog/FloatingCTA";
 import ArticleTitle from "@/components/blog/ArticleTitle";
+import ShareButtons from "@/components/blog/ShareButtons";
 import { getCategoryImage } from "@/lib/blog-categories";
+import { getViralTags } from "@/lib/blog-viral-tags";
 import {
   buildBlogPostingJsonLd,
   buildFuneralHomeJsonLd,

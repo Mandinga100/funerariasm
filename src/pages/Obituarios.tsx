@@ -139,11 +139,11 @@ const Obituarios = () => {
       <section className="py-16 bg-background">
         <div className="container max-w-5xl">
           {loading ? (
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card rounded-lg border border-border/50 p-6 animate-pulse flex gap-6">
-                  <div className="w-24 h-24 rounded-full bg-muted shrink-0" />
-                  <div className="flex-1 space-y-3">
+            <div className="space-y-6 min-h-[1400px] sm:min-h-[1200px]">
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                <div key={i} className="bg-card rounded-lg border border-border/50 p-6 md:p-8 animate-pulse flex flex-col sm:flex-row gap-5 items-start">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted shrink-0 mx-auto sm:mx-0" />
+                  <div className="flex-1 space-y-3 w-full">
                     <div className="h-5 bg-muted rounded w-1/3" />
                     <div className="h-3 bg-muted rounded w-1/4" />
                     <div className="h-3 bg-muted rounded w-full" />

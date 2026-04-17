@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles, Wand2 } from "lucide-react";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
+import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import type { Tables } from "@/integrations/supabase/types";
 
 type BlogPost = Tables<"blog_posts">;
@@ -173,13 +174,17 @@ export default function AdminBlog() {
           <p className="text-xs sm:text-sm text-muted-foreground">{posts.length} artículos</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={handleSanitizeAll} disabled={sanitizing}>
-            <Wand2 className="w-4 h-4 mr-1" />
-            {sanitizing ? "Saneando…" : "Estandarizar todos"}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
-            <Sparkles className="w-4 h-4 mr-1" />IA
-          </Button>
+          <AIActionTooltip description="Recorre todos los artículos publicados y reformatea su HTML/Markdown con IA: limpia estructura, normaliza encabezados, listas y citas, y aplica el estilo editorial de Funeraria Santa Margarita sin modificar el contenido.">
+            <Button variant="outline" size="sm" onClick={handleSanitizeAll} disabled={sanitizing}>
+              <Wand2 className="w-4 h-4 mr-1" />
+              {sanitizing ? "Saneando…" : "Estandarizar todos"}
+            </Button>
+          </AIActionTooltip>
+          <AIActionTooltip description="Abre el asistente de IA para generar un artículo completo (título, extracto, contenido y meta SEO) a partir de un tema y categoría que tú indiques.">
+            <Button variant="outline" size="sm" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
+              <Sparkles className="w-4 h-4 mr-1" />IA
+            </Button>
+          </AIActionTooltip>
           <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4 mr-1" />Nuevo</Button>
         </div>
       </div>
@@ -304,13 +309,15 @@ export default function AdminBlog() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleGenerateAI} disabled={generating} className="w-full">
-              {generating ? (
-                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />Generando...</>
-              ) : (
-                <><Sparkles className="w-4 h-4 mr-2" />Generar contenido</>
-              )}
-            </Button>
+            <AIActionTooltip description="Usa IA para crear un artículo completo (~800-1200 palabras) sobre el tema indicado, optimizado para SEO/AEO y con el tono empático y profesional de la funeraria.">
+              <Button onClick={handleGenerateAI} disabled={generating} className="w-full">
+                {generating ? (
+                  <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />Generando...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4 mr-2" />Generar contenido</>
+                )}
+              </Button>
+            </AIActionTooltip>
             <p className="text-xs text-muted-foreground text-center">
               El contenido generado se cargará en el formulario para que puedas revisarlo y editarlo antes de publicar.
             </p>
@@ -344,13 +351,15 @@ export default function AdminBlog() {
             <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium text-muted-foreground">Contenido (HTML/Markdown) *</Label>
-                <Button
-                  type="button" variant="ghost" size="sm"
-                  onClick={() => { setAiDialogOpen(true); setAiTopic(""); }}
-                  className="text-xs h-7"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />Generar con IA
-                </Button>
+                <AIActionTooltip description="Genera el cuerpo del artículo con IA a partir del título y categoría actuales. Reemplaza el campo Contenido — revísalo antes de publicar.">
+                  <Button
+                    type="button" variant="ghost" size="sm"
+                    onClick={() => { setAiDialogOpen(true); setAiTopic(""); }}
+                    className="text-xs h-7"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />Generar con IA
+                  </Button>
+                </AIActionTooltip>
               </div>
               <Textarea className="mt-1" rows={6} value={(editing.content as string) ?? ""} onChange={e => setEditing(p => ({ ...p, content: e.target.value }))} />
             </div>

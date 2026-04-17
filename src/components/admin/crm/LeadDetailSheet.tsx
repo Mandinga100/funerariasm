@@ -255,6 +255,32 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
               <Clock className="w-3 h-3" />
               {formatDistanceToNow(new Date(lead.created_at), { addSuffix: true, locale: es })}
             </div>
+            {(() => {
+              const attr = (lead.metadata as any)?.comuna_attribution;
+              if (!attr) return null;
+              return (
+                <div className="rounded-md border border-gold/40 bg-gold/5 p-2.5 mt-1 space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-gold font-semibold">
+                    <MapPin className="w-3 h-3" /> Atribución de origen
+                  </div>
+                  <div className="text-xs text-foreground">
+                    Llegó desde landing{" "}
+                    <a
+                      href={`/funeraria/${attr.comuna_slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline hover:text-gold"
+                    >
+                      {attr.comuna_nombre}
+                    </a>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {attr.visit_count} visita{attr.visit_count !== 1 ? "s" : ""} en sesión
+                    {attr.referrer ? ` · ref: ${new URL(attr.referrer).hostname}` : ""}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <Separator />

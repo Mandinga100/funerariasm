@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,23 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { BookOpen, Heart, Users, MessageSquare, DollarSign, Clock, TrendingUp, AlertTriangle, ArrowRight, CalendarDays, Percent, Timer, Banknote, FileDown, Loader2, CalendarIcon, RotateCcw, Sparkles, RefreshCw, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subDays, subMonths, differenceInHours, differenceInMinutes, startOfMonth, endOfMonth, parseISO, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
+
+// Lazy-load all charts so the recharts bundle (~165 kB gzip) is fetched only
+// after the dashboard shell + KPI cards render — keeps the admin first paint fast.
+const DashboardCharts = lazy(() => import("./DashboardCharts"));
+
+/** Skeleton placeholder shown while the charts chunk loads. */
+const ChartsSkeleton = () => (
+  <div className="space-y-6">
+    {[0, 1, 2, 3].map((row) => (
+      <div key={row} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="h-[320px] rounded-lg border bg-muted/30 animate-pulse" />
+        <div className="h-[320px] rounded-lg border bg-muted/30 animate-pulse" />
+      </div>
+    ))}
+  </div>
+);
 import { es } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
 

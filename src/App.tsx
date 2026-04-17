@@ -33,6 +33,7 @@ const AdminObituarios = lazy(() => import("./pages/admin/AdminObituarios.tsx"));
 const AdminMemoriales = lazy(() => import("./pages/admin/AdminMemoriales.tsx"));
 const AdminTracking = lazy(() => import("./pages/admin/AdminTracking.tsx"));
 const AdminBlog = lazy(() => import("./pages/admin/AdminBlog.tsx"));
+const AdminSubscribers = lazy(() => import("./pages/admin/AdminSubscribers.tsx"));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads.tsx"));
 const AdminCasos = lazy(() => import("./pages/admin/AdminCasos.tsx"));
 const AdminPagos = lazy(() => import("./pages/admin/AdminPagos.tsx"));
@@ -98,6 +99,7 @@ const App = () => (
               <Route path="memoriales" element={<Suspense fallback={<AdminFallback />}><AdminMemoriales /></Suspense>} />
               <Route path="tracking" element={<Suspense fallback={<AdminFallback />}><AdminTracking /></Suspense>} />
               <Route path="blog" element={<Suspense fallback={<AdminFallback />}><AdminBlog /></Suspense>} />
+              <Route path="suscriptores" element={<Suspense fallback={<AdminFallback />}><AdminSubscribers /></Suspense>} />
               <Route path="leads" element={<Suspense fallback={<AdminFallback />}><AdminLeads /></Suspense>} />
               <Route path="casos" element={<Suspense fallback={<AdminFallback />}><AdminCasos /></Suspense>} />
               <Route path="pagos" element={<Suspense fallback={<AdminFallback />}><AdminPagos /></Suspense>} />

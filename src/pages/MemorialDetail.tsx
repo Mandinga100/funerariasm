@@ -259,13 +259,27 @@ const MemorialDetail = () => {
   if (loading) {
     return (
       <Layout>
-        <section className="pt-28 pb-16 bg-primary">
+        {/* Hero skeleton — reserves portrait + name + dates space */}
+        <section className="pt-28 pb-12 bg-primary min-h-[560px] sm:min-h-[620px] md:min-h-[680px]">
           <div className="container max-w-3xl">
             <div className="animate-pulse space-y-6">
               <div className="w-48 h-48 rounded-full bg-primary-foreground/10 mx-auto" />
               <div className="h-8 bg-primary-foreground/10 rounded w-1/2 mx-auto" />
               <div className="h-4 bg-primary-foreground/10 rounded w-1/3 mx-auto" />
+              <div className="h-4 bg-primary-foreground/10 rounded w-1/4 mx-auto" />
             </div>
+          </div>
+        </section>
+        {/* Body skeleton — biography + tributes + offerings reserve */}
+        <section className="py-16 bg-background min-h-[1000px]">
+          <div className="container max-w-3xl space-y-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-4 bg-muted rounded animate-pulse"
+                style={{ width: `${90 - (i % 4) * 10}%` }}
+              />
+            ))}
           </div>
         </section>
       </Layout>

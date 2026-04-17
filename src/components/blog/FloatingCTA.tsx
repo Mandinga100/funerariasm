@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Phone, X } from "lucide-react";
-import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
+import { Sparkles, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface FloatingCTAProps {
@@ -11,8 +11,8 @@ interface FloatingCTAProps {
 
 /**
  * Discreet floating CTA that appears after the reader has engaged with content.
- * Dismissible, non-intrusive, mobile-first. Complements (does not replace) the
- * existing global WhatsAppFloat component — uses different position to avoid overlap.
+ * Dismissible, non-intrusive, mobile-first. Sits well above the global
+ * WhatsAppFloat / "ayuda inmediata" bar to remain fully legible.
  */
 const FloatingCTA = ({
   message = "¿Necesita orientación funeraria?",
@@ -40,15 +40,17 @@ const FloatingCTA = ({
       role="complementary"
       aria-hidden={!visible}
       className={cn(
-        // Mobile: leave room for the global WhatsApp button (right side, bottom-20)
-        "fixed z-40 left-3 right-20 sm:left-auto sm:right-24 bottom-20 sm:bottom-6 sm:max-w-sm",
+        // Raised well above the global WhatsApp bar / immediate-help footer
+        // Mobile: bottom-44 keeps it clear of the dark "ayuda inmediata" bar
+        // Desktop: bottom-28 sits above WhatsApp float
+        "fixed z-40 left-3 right-20 sm:left-auto sm:right-24 bottom-44 sm:bottom-28 sm:max-w-sm",
         "transition-all duration-500 ease-out",
         visible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-4 pointer-events-none"
       )}
     >
-      <div className="relative bg-card border border-gold/30 rounded-xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)] p-4 pr-10">
+      <div className="relative bg-card border border-gold/30 rounded-xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.35)] p-4 pr-10">
         <button
           type="button"
           onClick={() => setDismissed(true)}
@@ -57,28 +59,18 @@ const FloatingCTA = ({
         >
           <X className="w-3.5 h-3.5" />
         </button>
-        <p className="text-sm font-medium text-foreground leading-snug mb-2.5">
+        <p className="text-sm font-medium text-foreground leading-snug mb-1">
           {message}
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed mb-3">
           Atención profesional 24/7, todos los días del año.
         </p>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href="tel:+56964333760"
-            className="inline-flex items-center gap-1.5 bg-gold hover:bg-gold-dark text-accent-foreground px-3 py-1.5 rounded-full text-xs font-medium transition-brand"
-          >
-            <Phone className="w-3 h-3" /> Llamar ahora
-          </a>
-          <a
-            href={buildWhatsAppUrlDirect("Hola, leí un artículo del blog y necesito orientación.")}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 border border-border bg-background hover:border-gold/40 hover:text-gold text-foreground px-3 py-1.5 rounded-full text-xs font-medium transition-brand"
-          >
-            WhatsApp
-          </a>
-        </div>
+        <Link
+          to="/contacto"
+          className="inline-flex items-center gap-1.5 bg-gold hover:bg-gold-dark text-accent-foreground px-4 py-2 rounded-full text-xs font-medium transition-brand shadow-[0_4px_14px_-4px_rgba(197,160,89,0.5)] hover:shadow-[0_6px_18px_-4px_rgba(197,160,89,0.7)] hover:-translate-y-0.5 transition-all duration-300"
+        >
+          <Sparkles className="w-3 h-3" /> Orientación Personalizada
+        </Link>
       </div>
     </div>
   );

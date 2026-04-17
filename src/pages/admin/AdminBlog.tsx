@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
+import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles, Wand2 } from "lucide-react";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -35,9 +35,28 @@ export default function AdminBlog() {
   const [editing, setEditing] = useState<Partial<BlogPost>>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [sanitizing, setSanitizing] = useState(false);
   const [aiTopic, setAiTopic] = useState("");
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const handleSanitizeAll = async () => {
+    if (!confirm("Esto sanea TODOS los blogs publicados (limpia '…' en respuestas cortas e inyecta la sección 'Por qué elegir Funeraria Santa Margarita' donde falte). La operación es idempotente. ¿Continuar?")) return;
+    setSanitizing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sanitize-blog-structure", { body: {} });
+      if (error) throw error;
+      toast({
+        title: "Saneamiento completado",
+        description: `Actualizados: ${data?.changed ?? 0} · Sin cambios: ${data?.unchanged ?? 0} · Errores: ${data?.errors ?? 0}`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setSanitizing(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -153,7 +172,11 @@ export default function AdminBlog() {
           <h1 className="text-xl sm:text-2xl font-bold">Blog</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{posts.length} artículos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={handleSanitizeAll} disabled={sanitizing}>
+            <Wand2 className="w-4 h-4 mr-1" />
+            {sanitizing ? "Saneando…" : "Estandarizar todos"}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => { openCreate(); setAiDialogOpen(true); setAiTopic(""); }}>
             <Sparkles className="w-4 h-4 mr-1" />IA
           </Button>

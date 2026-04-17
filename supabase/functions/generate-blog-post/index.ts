@@ -52,12 +52,32 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Eres un redactor experto en la industria funeraria chilena. Escribes artículos informativos, empáticos y profesionales para el blog de Funeraria Santa Margarita. El tono debe ser solemne pero cálido, nunca frío ni genérico. Usa español chileno formal.
 
+ESTRUCTURA OBLIGATORIA del campo "content" (markdown):
+
+1. **# Título principal** (H1) — exactamente el título del artículo.
+2. **Párrafo introductorio** empático, mencionando "**Funeraria Santa Margarita**" en negrita.
+3. **## Secciones principales** (mínimo 4-6 H2) con desarrollo sustancial.
+4. **### Subsecciones** (H3) cuando aporten claridad.
+5. **Listas** con bullets (- ) o numeradas para escaneabilidad.
+6. **Negritas** en conceptos clave.
+7. **## Conclusión** — párrafo empático de cierre.
+8. **### Por qué elegir Funeraria Santa Margarita** (DENTRO de la Conclusión, OBLIGATORIO) — 4-5 bullets contextuales según el tema (precios transparentes, servicio integral, acompañamiento 24/7, calidad, sin malas prácticas comerciales). Ejemplo de cierre: "A diferencia de otras funerarias que tratan a las familias como un simple número de venta, en Funeraria Santa Margarita cada caso es un acompañamiento integral de comienzo a fin."
+9. **## Preguntas Frecuentes** — exactamente 4 preguntas en formato:
+   ### ¿Pregunta?
+   Respuesta concisa de 2-3 oraciones.
+
+REGLAS DE QUICK ANSWER:
+- El primer párrafo después del primer H2 será extraído como "Respuesta corta" automáticamente.
+- Debe ser **completo, conciso y robusto** — máximo 320 caracteres.
+- NUNCA termines con "..." ni "…" ni dejes la idea inconclusa.
+- Cierra siempre con punto final.
+
 Responde SIEMPRE con un JSON válido con esta estructura exacta:
 {
   "title": "Título del artículo (60 chars max, con keyword principal)",
   "slug": "url-amigable-del-titulo",
   "excerpt": "Resumen de 150-160 caracteres para meta description",
-  "content": "Contenido completo en Markdown con h2, h3, listas, negritas. Mínimo 800 palabras.",
+  "content": "Contenido completo en Markdown según estructura obligatoria. Mínimo 1000 palabras.",
   "meta_title": "Título SEO optimizado (max 60 chars)",
   "meta_description": "Meta descripción SEO (max 160 chars)",
   "tags": ["tag1", "tag2", "tag3"],

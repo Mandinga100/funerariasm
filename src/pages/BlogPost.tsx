@@ -12,6 +12,7 @@ import NextSteps, { type NextStep } from "@/components/blog/NextSteps";
 import AuthorMeta from "@/components/blog/AuthorMeta";
 import LegalDisclaimer from "@/components/blog/LegalDisclaimer";
 import FloatingCTA from "@/components/blog/FloatingCTA";
+import ArticleTitle from "@/components/blog/ArticleTitle";
 import { getCategoryImage } from "@/lib/blog-categories";
 import {
   buildBlogPostingJsonLd,
@@ -260,8 +261,11 @@ const BlogPostPage = () => {
   // Extract a quick "short answer" from the content — first non-heading paragraph after the first H2 (or the excerpt fallback).
   const quickAnswer = extractQuickAnswer(post.content) || post.excerpt;
 
-  // Remove FAQ section from main content to render it separately
-  const contentWithoutFAQ = removeFAQSection(post.content);
+  // Extract the leading H1 title from markdown so we can render it with a premium component
+  const leadingTitle = extractLeadingH1(post.content);
+
+  // Remove FAQ section AND the leading H1 from main content to render them separately
+  const contentWithoutFAQ = removeLeadingH1(removeFAQSection(post.content));
 
   // CTA variants based on category
   const ctaVariants = getCTAVariants(post.category);
@@ -325,13 +329,12 @@ const BlogPostPage = () => {
   const headings = extractHeadings(post.content);
   const nextSteps = getDefaultNextSteps(post.category);
 
-  // Render content with heading IDs, inline CTAs
+  // Render content with heading IDs (no inline CTAs — only the final CTA before FAQ remains).
   const renderContent = (md: string) => {
     const lines = md.split("\n");
     const elements: React.ReactNode[] = [];
     let headingIdx = 0;
     let listBuffer: React.ReactNode[] = [];
-    let h2Count = 0;
 
     const flushList = () => {
       if (listBuffer.length > 0) {
@@ -360,19 +363,12 @@ const BlogPostPage = () => {
         flushList();
         const id = headings[headingIdx]?.id || "";
         headingIdx++;
-        h2Count++;
 
         elements.push(
           <h2 key={i} id={id} className="font-playfair text-2xl text-foreground mt-10 mb-4 scroll-mt-24">
             {line.slice(3)}
           </h2>
         );
-
-        // Insert contextual CTA after every 2nd h2 section
-        if (h2Count > 0 && h2Count % 2 === 0 && ctaVariants.length > 0) {
-          const ctaIdx = Math.floor((h2Count / 2 - 1) % ctaVariants.length);
-          elements.push(<BlogCTA key={`cta-${h2Count}`} variant={ctaVariants[ctaIdx]} />);
-        }
       } else if (line.startsWith("- ") || line.startsWith("* ")) {
         const content = line.slice(2);
         listBuffer.push(
@@ -639,6 +635,9 @@ const BlogPostPage = () => {
               {/* Next steps — concrete actions */}
               <NextSteps steps={nextSteps} />
 
+              {/* Premium article opening title (replaces raw `# Title` markdown) */}
+              {leadingTitle && <ArticleTitle title={leadingTitle} />}
+
               {/* Article body */}
               <div className="prose-funeraria" itemProp="articleBody">
                 {renderContent(contentWithoutFAQ)}
@@ -647,7 +646,7 @@ const BlogPostPage = () => {
               {/* Interactive FAQ Section */}
               <BlogFAQ items={faqItems} blogTitle={post.title} />
 
-              {/* Final CTA */}
+              {/* Final CTA — single, contextual, after FAQ */}
               <BlogCTA variant={ctaVariants[0]} />
 
               {/* Tags */}
@@ -780,7 +779,7 @@ function removeFAQSection(content: string): string {
   return result.join("\n");
 }
 
-/** Extract a short answer (~280 chars) — first non-empty paragraph after the first H2. */
+/** Extract a short answer — first non-empty paragraph after the first H2. Never truncates with "…". */
 function extractQuickAnswer(content: string): string | null {
   const lines = content.split("\n");
   let pastFirstH2 = false;
@@ -795,14 +794,61 @@ function extractQuickAnswer(content: string): string | null {
       continue;
     }
     // Strip markdown emphasis/links
-    const clean = line
+    let clean = line
       .replace(/\*\*(.*?)\*\*/g, "$1")
       .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      // Strip leading "Respuesta corta:" prefix if present
+      .replace(/^respuesta\s+corta\s*[:.]\s*/i, "")
       .trim();
     if (clean.length < 40) continue;
-    return clean.length > 280 ? clean.slice(0, 277) + "…" : clean;
+
+    // If the paragraph is too long, cut at the last full sentence within ~320 chars
+    // so it remains complete and concise — NEVER append "…".
+    const MAX = 320;
+    if (clean.length > MAX) {
+      const slice = clean.slice(0, MAX);
+      const lastPeriod = Math.max(
+        slice.lastIndexOf(". "),
+        slice.lastIndexOf("? "),
+        slice.lastIndexOf("! ")
+      );
+      clean = lastPeriod > 80 ? slice.slice(0, lastPeriod + 1).trim() : slice.trim();
+      // Ensure it ends with sentence punctuation (no ellipsis)
+      if (!/[.!?]$/.test(clean)) clean += ".";
+    }
+    return clean;
   }
   return null;
+}
+
+/** Extract the leading H1 title (`# Title`) from markdown content. */
+function extractLeadingH1(content: string): string | null {
+  const lines = content.split("\n");
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith("# ") && !line.startsWith("## ")) {
+      return line.slice(2).trim();
+    }
+    // If we hit any other content first, there's no leading H1
+    return null;
+  }
+  return null;
+}
+
+/** Remove the leading H1 line from markdown so it doesn't render twice. */
+function removeLeadingH1(content: string): string {
+  const lines = content.split("\n");
+  const out: string[] = [];
+  let removed = false;
+  for (const line of lines) {
+    if (!removed && line.trim().startsWith("# ") && !line.trim().startsWith("## ")) {
+      removed = true;
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join("\n");
 }
 
 export default BlogPostPage;

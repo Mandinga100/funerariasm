@@ -19,6 +19,7 @@ import {
   buildOrganizationJsonLd,
   buildPersonJsonLd,
 } from "@/lib/blog-schemas";
+import { applySeoMeta } from "@/lib/seo-meta";
 import { Calendar, Tag, User, Share2 } from "lucide-react";
 
 interface BlogPost {
@@ -151,57 +152,18 @@ const BlogPostPage = () => {
     fetchPost();
   }, [slug]);
 
-  // Set meta tags dynamically
   useEffect(() => {
     if (!post) return;
-    const rawTitle = post.meta_title || post.title;
-    // Keep <60 chars when possible
-    const title = rawTitle.length > 60 ? rawTitle.slice(0, 57) + "…" : rawTitle;
-    const rawDesc = post.meta_description || post.excerpt || "";
-    const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
-    const url = `${SITE_URL}/blog/${post.slug}`;
-
-    document.title = `${title} | Funeraria Santa Margarita`;
-
-    const setMeta = (attr: string, key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, key);
-        document.head.appendChild(el);
-      }
-      el.setAttribute("content", content);
-    };
-
-    setMeta("name", "description", description);
-    setMeta("name", "robots", "index, follow, max-image-preview:large");
-    setMeta("property", "og:title", title);
-    setMeta("property", "og:description", description);
-    setMeta("property", "og:type", "article");
-    setMeta("property", "og:url", url);
-    setMeta("property", "og:site_name", "Funeraria Santa Margarita");
-    setMeta("property", "og:locale", "es_CL");
-    if (post.cover_image) setMeta("property", "og:image", post.cover_image);
-    if (post.published_at) setMeta("property", "article:published_time", post.published_at);
-    if (post.updated_at) setMeta("property", "article:modified_time", post.updated_at);
-    if (post.category) setMeta("property", "article:section", post.category);
-    setMeta("name", "twitter:card", "summary_large_image");
-    setMeta("name", "twitter:title", title);
-    setMeta("name", "twitter:description", description);
-    if (post.cover_image) setMeta("name", "twitter:image", post.cover_image);
-
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute("href", url);
-
-    return () => {
-      document.title = "Funeraria Santa Margarita — Servicio Funerario Profesional 24/7";
-      if (canonical) canonical.setAttribute("href", SITE_URL);
-    };
+    applySeoMeta({
+      title: post.meta_title || post.title,
+      description: post.meta_description || post.excerpt || "",
+      url: `${SITE_URL}/blog/${post.slug}`,
+      image: post.cover_image || getCategoryImage(post.category),
+      type: "article",
+      publishedAt: post.published_at,
+      updatedAt: post.updated_at,
+      section: post.category,
+    });
   }, [post]);
 
   // Preload the LCP hero image (responsive srcset for category heroes; logo handled separately)

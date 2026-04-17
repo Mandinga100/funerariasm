@@ -5,6 +5,7 @@ import { PieChart as PieIcon } from "lucide-react";
 
 interface Props {
   sources: (string | null)[];
+  rangeDays?: number;
 }
 
 interface Slice {
@@ -48,7 +49,7 @@ const CustomTooltip = ({
   );
 };
 
-export function SubscribersSourceChart({ sources }: Props) {
+export function SubscribersSourceChart({ sources, rangeDays }: Props) {
   const data = useMemo<Slice[]>(() => {
     const counts = new Map<string, number>();
     sources.forEach((s) => {
@@ -73,6 +74,11 @@ export function SubscribersSourceChart({ sources }: Props) {
             <CardTitle className="text-base">Distribución por origen</CardTitle>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {rangeDays && (
+              <span>
+                Últimos <strong className="text-foreground">{rangeDays}d</strong>
+              </span>
+            )}
             <span>
               Total: <strong className="text-foreground">{total}</strong>
             </span>

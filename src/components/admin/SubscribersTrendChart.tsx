@@ -12,10 +12,13 @@ import {
 import { format, subDays, startOfDay, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   subscribedDates: string[];
   days?: number;
+  onRangeChange?: (days: number) => void;
+  rangeOptions?: number[];
 }
 
 interface Point {
@@ -38,7 +41,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
   );
 };
 
-export function SubscribersTrendChart({ subscribedDates, days = 30 }: Props) {
+export function SubscribersTrendChart({ subscribedDates, days = 30, onRangeChange, rangeOptions }: Props) {
   const data = useMemo<Point[]>(() => {
     const today = startOfDay(new Date());
     const points: Point[] = [];
@@ -69,19 +72,34 @@ export function SubscribersTrendChart({ subscribedDates, days = 30 }: Props) {
             <TrendingUp className="w-4 h-4 text-primary" />
             <CardTitle className="text-base">Tendencia de suscripciones</CardTitle>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>
-              Últimos <strong className="text-foreground">{days} días</strong>
-            </span>
-            <span>
-              Total: <strong className="text-foreground">{total}</strong>
-            </span>
-            <span>
-              Promedio/día: <strong className="text-foreground">{avg}</strong>
-            </span>
-            <span>
-              Pico: <strong className="text-foreground">{peak}</strong>
-            </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            {onRangeChange && rangeOptions && (
+              <div className="inline-flex items-center rounded-md border border-border bg-muted/40 p-0.5">
+                {rangeOptions.map((opt) => (
+                  <Button
+                    key={opt}
+                    type="button"
+                    size="sm"
+                    variant={opt === days ? "default" : "ghost"}
+                    className="h-7 px-3 text-xs"
+                    onClick={() => onRangeChange(opt)}
+                  >
+                    {opt}d
+                  </Button>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>
+                Total: <strong className="text-foreground">{total}</strong>
+              </span>
+              <span>
+                Promedio/día: <strong className="text-foreground">{avg}</strong>
+              </span>
+              <span>
+                Pico: <strong className="text-foreground">{peak}</strong>
+              </span>
+            </div>
           </div>
         </div>
       </CardHeader>

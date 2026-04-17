@@ -30,6 +30,7 @@ export default function AdminSubscribers() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const [rangeDays, setRangeDays] = useState<number>(30);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -173,8 +174,21 @@ export default function AdminSubscribers() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <SubscribersTrendChart subscribedDates={subscribers.map((s) => s.subscribed_at)} days={30} />
-        <SubscribersSourceChart sources={subscribers.map((s) => s.source)} />
+        <SubscribersTrendChart
+          subscribedDates={subscribers.map((s) => s.subscribed_at)}
+          days={rangeDays}
+          onRangeChange={setRangeDays}
+          rangeOptions={[7, 30, 90]}
+        />
+        <SubscribersSourceChart
+          sources={subscribers
+            .filter((s) => {
+              const cutoff = Date.now() - rangeDays * 24 * 60 * 60 * 1000;
+              return new Date(s.subscribed_at).getTime() >= cutoff;
+            })
+            .map((s) => s.source)}
+          rangeDays={rangeDays}
+        />
       </div>
 
       {/* Filters */}

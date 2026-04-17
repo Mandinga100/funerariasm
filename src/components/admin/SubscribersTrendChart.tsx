@@ -8,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  TooltipProps,
 } from "recharts";
 import { format, subDays, startOfDay, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";

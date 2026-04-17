@@ -291,6 +291,9 @@ const FunerariaComuna = () => {
           comuna_slug: comuna.slug,
           comuna_nombre: comuna.nombre,
         }}
+        title={`Atendemos ${comuna.nombre} 24/7`}
+        description={`¿Antes de irse? Reciba nuestra guía gratuita con todos los pasos, costos y trámites funerarios en ${comuna.nombre}. Apoyo profesional cuando más lo necesite.`}
+        ctaLabel={`Recibir guía para ${comuna.nombre}`}
       />
     </Layout>
   );

@@ -11,6 +11,12 @@ interface ExitIntentPopupProps {
   storageKey?: string;
   /** Metadata adicional para guardar junto a la suscripción (ej: comuna_slug). */
   extraMetadata?: Record<string, unknown>;
+  /** Título personalizado del modal. */
+  title?: string;
+  /** Descripción personalizada del modal. */
+  description?: string;
+  /** Texto del CTA personalizado. */
+  ctaLabel?: string;
 }
 
 /**
@@ -22,6 +28,9 @@ const ExitIntentPopup = ({
   armDelayMs = 5000,
   storageKey = "exit-intent-shown",
   extraMetadata,
+  title,
+  description,
+  ctaLabel,
 }: ExitIntentPopupProps) => {
   const { triggered } = useExitIntent({ armDelayMs, storageKey });
   const [open, setOpen] = useState(false);
@@ -36,6 +45,9 @@ const ExitIntentPopup = ({
       onOpenChange={setOpen}
       source={source}
       extraMetadata={extraMetadata}
+      title={title}
+      description={description}
+      ctaLabel={ctaLabel}
     />
   );
 };

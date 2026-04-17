@@ -4,10 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { detectSubscriptionSource } from "@/lib/subscription-source";
 
 interface SubscribeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Origen explícito de la suscripción (slug en kebab-case: "footer", "blog", "inicio"…).
+   * Si se omite, se detecta automáticamente desde la ruta actual.
+   */
   source?: string;
 }
 

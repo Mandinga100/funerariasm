@@ -24,7 +24,7 @@ const nameSchema = z
   .regex(/^[\p{L}\s'.-]*$/u, { message: "El nombre contiene caracteres no permitidos" })
   .optional();
 
-const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: SubscribeModalProps) => {
+const SubscribeModal = ({ open, onOpenChange, source }: SubscribeModalProps) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,12 +48,16 @@ const SubscribeModal = ({ open, onOpenChange, source = "blog_floating_cta" }: Su
     const cleanName = parsedName.data?.trim() || null;
     setLoading(true);
     try {
+      const resolvedSource = source ?? detectSubscriptionSource();
       const { error: insertError } = await supabase
         .from("blog_subscribers")
         .insert({
           email: parsedEmail.data.toLowerCase(),
-          source,
-          metadata: cleanName ? { name: cleanName } : {},
+          source: resolvedSource,
+          metadata: {
+            ...(cleanName ? { name: cleanName } : {}),
+            captured_at_path: typeof window !== "undefined" ? window.location.pathname : null,
+          },
         });
       if (insertError) {
         // Unique violation = ya suscrito → tratar como éxito amable

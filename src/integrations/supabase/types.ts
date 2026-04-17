@@ -53,6 +53,72 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_action_invocations: {
+        Row: {
+          action_key: string
+          created_at: string
+          estimated_cost_usd: number
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          estimated_cost_usd?: number
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          estimated_cost_usd?: number
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_action_settings: {
+        Row: {
+          action_key: string
+          created_at: string
+          description: string
+          display_name: string
+          enabled: boolean
+          estimated_cost_usd: number
+          id: string
+          model: string | null
+          module: string
+          updated_at: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          description: string
+          display_name: string
+          enabled?: boolean
+          estimated_cost_usd?: number
+          id?: string
+          model?: string | null
+          module: string
+          updated_at?: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          description?: string
+          display_name?: string
+          enabled?: boolean
+          estimated_cost_usd?: number
+          id?: string
+          model?: string | null
+          module?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

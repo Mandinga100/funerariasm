@@ -583,9 +583,14 @@ export default function AdminSettings() {
                               <span className="text-[10px] font-semibold text-[#C5A059]">{initials}</span>
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate flex items-center gap-1.5">
-                              {admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate flex items-center gap-1.5 flex-wrap">
+                              <span className="truncate">{admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}</span>
+                              <RoleBadge
+                                isCeo={admin.role === "ceo" || admin.email === CEO_EMAIL}
+                                isAdmin={admin.role === "admin"}
+                                compact
+                              />
                               {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">

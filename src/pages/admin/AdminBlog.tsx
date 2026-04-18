@@ -285,6 +285,15 @@ export default function AdminBlog() {
               </div>
             ))}
           </div>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={posts.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "artículo", plural: "artículos" }}
+          />
         </>
       )}
 

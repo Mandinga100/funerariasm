@@ -83,33 +83,34 @@ const Blog = () => {
     fetchPosts();
   }, []);
 
-  const maxCards = activeFilter ? (isMobile ? 3 : 6) : undefined;
+  const maxCards = activeFilter || activeTag ? (isMobile ? 3 : 6) : undefined;
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 
   const filteredPosts = useMemo(() => {
-    const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
     const categoryOrder = ["novedades", "guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sortByDateDesc = (a: BlogPost, b: BlogPost) => {
+      const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return dateB - dateA;
+    };
+
+    // Tag filter has priority over category when both are present in the URL.
+    if (activeTag) {
+      const result = posts.filter((p) =>
+        p.tags?.some((t) => normalize(t) === activeTag)
+      );
+      result.sort(sortByDateDesc);
+      return result.slice(0, maxCards);
+    }
 
     if (activeFilter) {
-      let result: BlogPost[];
-      if (activeFilter === "novedades") {
-        result = posts.filter((p) => {
-          const cat = p.category ? normalize(p.category) : "";
-          return cat === "novedades";
-        });
-      } else {
-        result = posts.filter((p) => {
-          const cat = p.category ? normalize(p.category) : "";
-          return cat === activeFilter;
-        });
-      }
-      // Sort by trending: most recent first (proxy for relevance)
-      result.sort((a, b) => {
-        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return dateB - dateA;
+      const result = posts.filter((p) => {
+        const cat = p.category ? normalize(p.category) : "";
+        return cat === activeFilter;
       });
+      result.sort(sortByDateDesc);
       return result.slice(0, maxCards);
     }
 
@@ -121,11 +122,7 @@ const Blog = () => {
       byCategory.get(cat)!.push(p);
     }
     for (const group of byCategory.values()) {
-      group.sort((a, b) => {
-        const da = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const db = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return db - da;
-      });
+      group.sort(sortByDateDesc);
     }
     const ordered: BlogPost[] = [];
     const usedIds = new Set<string>();
@@ -148,7 +145,17 @@ const Blog = () => {
       round++;
     }
     return ordered;
-  }, [posts, activeFilter, maxCards]);
+  }, [posts, activeFilter, activeTag, maxCards]);
+
+  // Recover the original (non-normalized) tag label for the chip UI.
+  const activeTagLabel = useMemo(() => {
+    if (!activeTag) return null;
+    for (const p of posts) {
+      const found = p.tags?.find((t) => normalize(t) === activeTag);
+      if (found) return found;
+    }
+    return activeTag;
+  }, [activeTag, posts]);
 
   // Preload the LCP image: hero of the first visible blog card
   useEffect(() => {

@@ -29,6 +29,7 @@ interface AdminUser {
   role: AppRole;
   email?: string;
   display_name?: string;
+  avatar_url?: string;
 }
 
 const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; icon: string }> = {
@@ -131,20 +132,83 @@ export default function AdminSettings() {
     const { data: roles } = await supabase.from("user_roles").select("id, user_id, role");
     if (!roles) { setLoadingAdmins(false); return; }
 
-    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name");
-    const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p.display_name]));
+    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url");
+    const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
 
-    setAdmins(roles.map(r => ({
-      id: r.id,
-      user_id: r.user_id,
-      role: r.role as AppRole,
-      display_name: profileMap.get(r.user_id) ?? undefined,
-      email: r.user_id === user?.id ? user.email ?? undefined : undefined,
-    })));
+    setAdmins(roles.map(r => {
+      const p = profileMap.get(r.user_id);
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        role: r.role as AppRole,
+        display_name: p?.display_name ?? undefined,
+        avatar_url: p?.avatar_url ?? undefined,
+        email: r.user_id === user?.id ? user.email ?? undefined : undefined,
+      };
+    }));
     setLoadingAdmins(false);
   };
 
   useEffect(() => { loadAdmins(); }, []);
+
+  /* ── Cargar perfil propio cuando se abre el dialog ── */
+  const openOwnProfile = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setProfileName(data?.display_name ?? "");
+    setProfileAvatarUrl(data?.avatar_url ?? null);
+    setProfileDialog(true);
+  };
+
+  /* ── Subir avatar al bucket 'avatars' ── */
+  const handleAvatarUpload = async (file: File) => {
+    if (!user?.id) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600", upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      setProfileAvatarUrl(pub.publicUrl);
+      toast({ title: "Foto cargada", description: "Recuerde guardar para aplicar el cambio." });
+    } catch (e: any) {
+      toast({ title: "Error subiendo foto", description: e.message, variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  /* ── Guardar perfil propio ── */
+  const handleSaveOwnProfile = async () => {
+    if (!user?.id) return;
+    setSavingProfile(true);
+    // Verificar si ya existe profile
+    const { data: existing } = await supabase.from("profiles").select("id").eq("user_id", user.id).maybeSingle();
+    const payload = {
+      user_id: user.id,
+      display_name: profileName.trim() || null,
+      avatar_url: profileAvatarUrl,
+    };
+    const { error } = existing
+      ? await supabase.from("profiles").update(payload).eq("user_id", user.id)
+      : await supabase.from("profiles").insert(payload);
+    setSavingProfile(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Perfil actualizado" });
+      logAudit({ action: "update_profile", module: "equipo", description: "Actualizó su nombre o foto de perfil" });
+      setProfileDialog(false);
+      loadAdmins();
+    }
+  };
 
   /* ── Theme effect ── */
   useEffect(() => {

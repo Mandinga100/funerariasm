@@ -165,7 +165,7 @@ const BlogSection = () => {
   }, [allPosts, activeFilter]);
 
   return (
-    <section id="blog" className="py-24 bg-card">
+    <section ref={sectionRef} id="blog" className="py-24 bg-card scroll-mt-24">
       <div className="container">
         <div ref={headerRef} className="text-center mb-16">
           <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestro Blog</p>
@@ -177,7 +177,7 @@ const BlogSection = () => {
           </p>
         </div>
 
-        <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
+        <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
 
         <div
           key={transitionKey}

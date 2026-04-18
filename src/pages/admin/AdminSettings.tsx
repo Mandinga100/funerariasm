@@ -509,9 +509,11 @@ export default function AdminSettings() {
           <TabsTrigger value="reports" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <BarChart3 className="w-3.5 h-3.5 hidden sm:inline" />Informes
           </TabsTrigger>
-          <TabsTrigger value="audit" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
-            <ScrollText className="w-3.5 h-3.5 hidden sm:inline" />Auditoría
-          </TabsTrigger>
+          {isCeo && (
+            <TabsTrigger value="audit" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+              <ScrollText className="w-3.5 h-3.5 hidden sm:inline" />Auditoría
+            </TabsTrigger>
+          )}
           {isCeo && (
             <TabsTrigger value="integrations" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
               <Zap className="w-3.5 h-3.5 hidden sm:inline" />Integraciones
@@ -557,19 +559,36 @@ export default function AdminSettings() {
                   {admins.map(admin => {
                     const canManage = isCeo && admin.user_id !== user?.id;
                     const canChangeRole = isCeo;
+                    const isSelf = admin.user_id === user?.id;
+                    const initials = (admin.display_name ?? admin.email ?? admin.user_id).slice(0, 2).toUpperCase();
                     return (
-                      <div key={admin.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                      <div
+                        key={admin.id}
+                        className={cn(
+                          "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border transition-colors",
+                          isSelf
+                            ? "bg-[#C5A059]/5 border-[#C5A059]/40 hover:bg-[#C5A059]/10 cursor-pointer"
+                            : "hover:bg-muted/30"
+                        )}
+                        onClick={isSelf ? openOwnProfile : undefined}
+                        title={isSelf ? "Click para editar tu nombre y foto" : undefined}
+                      >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 flex items-center justify-center shrink-0">
-                            <UserCog className="w-4 h-4 text-[#C5A059]" />
+                          <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
+                            {admin.avatar_url ? (
+                              <img src={admin.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-semibold text-[#C5A059]">{initials}</span>
+                            )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
+                            <p className="text-sm font-medium truncate flex items-center gap-1.5">
                               {admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}
+                              {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">
                               {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
-                              {admin.user_id === user?.id && <span className="ml-1 text-[#C5A059] font-medium">(Tú)</span>}
+                              {isSelf && <span className="ml-1 text-[#C5A059] font-medium">(Tú — click para editar)</span>}
                             </p>
                           </div>
                         </div>

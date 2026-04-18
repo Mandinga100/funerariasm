@@ -12,24 +12,34 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  end: boolean;
+  badgeKey?: "leads" | "pagos";
+  /** Solo visible para CEO */
+  ceoOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" as const },
+  { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" },
   { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
-  { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false },
-  { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false },
-  { to: "/admin/blog", label: "Blog", icon: FileText, end: false },
-  { to: "/admin/suscriptores", label: "Suscriptores", icon: Mail, end: false },
+  { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false, ceoOnly: true },
+  { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false, ceoOnly: true },
+  { to: "/admin/blog", label: "Blog", icon: FileText, end: false, ceoOnly: true },
+  { to: "/admin/suscriptores", label: "Suscriptores", icon: Mail, end: false, ceoOnly: true },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
-  { to: "/admin/analytics-comunas", label: "Analítica Comunas", icon: MapPin, end: false },
-  { to: "/admin/roi-comunas", label: "ROI por Comuna", icon: Trophy, end: false },
-  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" as const },
-  { to: "/admin/ajustes/ia", label: "Ajustes IA", icon: Brain, end: false },
+  { to: "/admin/analytics-comunas", label: "Analítica Comunas", icon: MapPin, end: false, ceoOnly: true },
+  { to: "/admin/roi-comunas", label: "ROI por Comuna", icon: Trophy, end: false, ceoOnly: true },
+  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" },
+  { to: "/admin/ajustes/ia", label: "Ajustes IA", icon: Brain, end: false, ceoOnly: true },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings, end: false },
 ];
 
 export default function AdminLayout() {
-  const { signOut, user } = useAuth();
+  const { signOut, user, isCeo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -38,6 +48,31 @@ export default function AdminLayout() {
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
+
+  // Cargar perfil para mostrar nombre + avatar en sidebar
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setProfile(data ?? null);
+    })();
+    // Escuchar cambios en el propio perfil para reflejar edición desde Equipo
+    const ch = supabase
+      .channel(`own-profile-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const p = payload.new as { display_name: string | null; avatar_url: string | null };
+          setProfile({ display_name: p.display_name, avatar_url: p.avatar_url });
+        })
+      .subscribe();
+    return () => { cancelled = true; void supabase.removeChannel(ch); };
+  }, [user?.id]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -145,11 +180,34 @@ export default function AdminLayout() {
     return 0;
   };
 
+  const visibleNavItems = navItems.filter(i => isCeo || !i.ceoOnly);
+
+  const SidebarHeader = () => {
+    const initials = (profile?.display_name ?? user?.email ?? "?").slice(0, 2).toUpperCase();
+    return (
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="w-10 h-10 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 overflow-hidden shrink-0 flex items-center justify-center">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs font-semibold text-[#C5A059]">{initials}</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <h2 className="font-semibold text-sm leading-tight truncate">
+            {profile?.display_name ?? "CRM Funeraria"}
+          </h2>
+          <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+        </div>
+      </div>
+    );
+  };
+
   const SidebarNav = () => (
     <>
       <nav className="flex-1 p-1.5 space-y-0.5 overflow-y-auto">
-        {navItems.map(item => {
-          const count = getBadgeCount("badgeKey" in item ? item.badgeKey : undefined);
+        {visibleNavItems.map(item => {
+          const count = getBadgeCount(item.badgeKey);
           return (
             <NavLink
               key={item.to}
@@ -185,11 +243,8 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex bg-muted/20 dark">
       <aside className="hidden md:flex w-64 border-r bg-background flex-col">
-        <div className="p-4 border-b flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="font-semibold text-lg">CRM Funeraria</h2>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
+        <div className="p-3 border-b flex items-center justify-between gap-2">
+          <SidebarHeader />
           {!isMobile && <NotificationCenter />}
         </div>
         <SidebarNav />
@@ -204,9 +259,8 @@ export default function AdminLayout() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[260px] p-0 flex flex-col">
-              <div className="p-4 border-b">
-                <h2 className="font-semibold text-base">CRM Funeraria</h2>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <div className="p-3 border-b">
+                <SidebarHeader />
               </div>
               <SidebarNav />
             </SheetContent>

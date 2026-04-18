@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, CEO_EMAIL } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ interface AdminUser {
   role: AppRole;
   email?: string;
   display_name?: string;
+  avatar_url?: string;
 }
 
 const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; icon: string }> = {
@@ -37,7 +39,7 @@ const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; i
   moderator: { label: "Moderador", color: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración", icon: "📝" },
 };
 
-const CEO_EMAIL = "mandinga_atim@hotmail.com";
+
 
 export default function AdminSettings() {
   const { user } = useAuth();
@@ -50,6 +52,11 @@ export default function AdminSettings() {
   const [addDialog, setAddDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
+  const [profileDialog, setProfileDialog] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [addMode, setAddMode] = useState<"manual" | "invite">("manual");
   const [newEmail, setNewEmail] = useState("");
@@ -126,20 +133,83 @@ export default function AdminSettings() {
     const { data: roles } = await supabase.from("user_roles").select("id, user_id, role");
     if (!roles) { setLoadingAdmins(false); return; }
 
-    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name");
-    const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p.display_name]));
+    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url");
+    const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
 
-    setAdmins(roles.map(r => ({
-      id: r.id,
-      user_id: r.user_id,
-      role: r.role as AppRole,
-      display_name: profileMap.get(r.user_id) ?? undefined,
-      email: r.user_id === user?.id ? user.email ?? undefined : undefined,
-    })));
+    setAdmins(roles.map(r => {
+      const p = profileMap.get(r.user_id);
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        role: r.role as AppRole,
+        display_name: p?.display_name ?? undefined,
+        avatar_url: p?.avatar_url ?? undefined,
+        email: r.user_id === user?.id ? user.email ?? undefined : undefined,
+      };
+    }));
     setLoadingAdmins(false);
   };
 
   useEffect(() => { loadAdmins(); }, []);
+
+  /* ── Cargar perfil propio cuando se abre el dialog ── */
+  const openOwnProfile = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setProfileName(data?.display_name ?? "");
+    setProfileAvatarUrl(data?.avatar_url ?? null);
+    setProfileDialog(true);
+  };
+
+  /* ── Subir avatar al bucket 'avatars' ── */
+  const handleAvatarUpload = async (file: File) => {
+    if (!user?.id) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600", upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      setProfileAvatarUrl(pub.publicUrl);
+      toast({ title: "Foto cargada", description: "Recuerde guardar para aplicar el cambio." });
+    } catch (e: any) {
+      toast({ title: "Error subiendo foto", description: e.message, variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  /* ── Guardar perfil propio ── */
+  const handleSaveOwnProfile = async () => {
+    if (!user?.id) return;
+    setSavingProfile(true);
+    // Verificar si ya existe profile
+    const { data: existing } = await supabase.from("profiles").select("id").eq("user_id", user.id).maybeSingle();
+    const payload = {
+      user_id: user.id,
+      display_name: profileName.trim() || null,
+      avatar_url: profileAvatarUrl,
+    };
+    const { error } = existing
+      ? await supabase.from("profiles").update(payload).eq("user_id", user.id)
+      : await supabase.from("profiles").insert(payload);
+    setSavingProfile(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Perfil actualizado" });
+      logAudit({ action: "update_profile", module: "equipo", description: "Actualizó su nombre o foto de perfil" });
+      setProfileDialog(false);
+      loadAdmins();
+    }
+  };
 
   /* ── Theme effect ── */
   useEffect(() => {
@@ -440,9 +510,11 @@ export default function AdminSettings() {
           <TabsTrigger value="reports" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <BarChart3 className="w-3.5 h-3.5 hidden sm:inline" />Informes
           </TabsTrigger>
-          <TabsTrigger value="audit" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
-            <ScrollText className="w-3.5 h-3.5 hidden sm:inline" />Auditoría
-          </TabsTrigger>
+          {isCeo && (
+            <TabsTrigger value="audit" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+              <ScrollText className="w-3.5 h-3.5 hidden sm:inline" />Auditoría
+            </TabsTrigger>
+          )}
           {isCeo && (
             <TabsTrigger value="integrations" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
               <Zap className="w-3.5 h-3.5 hidden sm:inline" />Integraciones
@@ -488,23 +560,40 @@ export default function AdminSettings() {
                   {admins.map(admin => {
                     const canManage = isCeo && admin.user_id !== user?.id;
                     const canChangeRole = isCeo;
+                    const isSelf = admin.user_id === user?.id;
+                    const initials = (admin.display_name ?? admin.email ?? admin.user_id).slice(0, 2).toUpperCase();
                     return (
-                      <div key={admin.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                      <div
+                        key={admin.id}
+                        className={cn(
+                          "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border transition-colors",
+                          isSelf
+                            ? "bg-[#C5A059]/5 border-[#C5A059]/40 hover:bg-[#C5A059]/10 cursor-pointer"
+                            : "hover:bg-muted/30"
+                        )}
+                        onClick={isSelf ? openOwnProfile : undefined}
+                        title={isSelf ? "Click para editar tu nombre y foto" : undefined}
+                      >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 flex items-center justify-center shrink-0">
-                            <UserCog className="w-4 h-4 text-[#C5A059]" />
+                          <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
+                            {admin.avatar_url ? (
+                              <img src={admin.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-semibold text-[#C5A059]">{initials}</span>
+                            )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
+                            <p className="text-sm font-medium truncate flex items-center gap-1.5">
                               {admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}
+                              {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">
                               {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
-                              {admin.user_id === user?.id && <span className="ml-1 text-[#C5A059] font-medium">(Tú)</span>}
+                              {isSelf && <span className="ml-1 text-[#C5A059] font-medium">(Tú — click para editar)</span>}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0">
+                        <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0" onClick={(e) => e.stopPropagation()}>
                           {canChangeRole ? (
                             <Select
                               value={admin.role}
@@ -1149,6 +1238,60 @@ export default function AdminSettings() {
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
             <Button variant="destructive" onClick={handleDeleteAdmin} className="w-full sm:w-auto">Remover Acceso</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════ OWN PROFILE DIALOG ═══════════════ */}
+      <Dialog open={profileDialog} onOpenChange={setProfileDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserCog className="w-5 h-5 text-[#C5A059]" />Mi perfil</DialogTitle>
+            <DialogDescription>Personalice cómo aparece su nombre y foto en el equipo</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
+                {profileAvatarUrl ? (
+                  <img src={profileAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <UserCog className="w-8 h-8 text-[#C5A059]" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="avatar-upload" className="text-xs">Foto de perfil</Label>
+                <Input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingAvatar}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAvatarUpload(f);
+                  }}
+                  className="text-xs"
+                />
+                {uploadingAvatar && <p className="text-[10px] text-muted-foreground">Subiendo...</p>}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Nombre a mostrar</Label>
+              <Input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className="mt-1"
+                placeholder="Su nombre completo"
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground border-t pt-3">
+              <span>Email</span><span className="truncate ml-2">{user?.email}</span>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setProfileDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button onClick={handleSaveOwnProfile} disabled={savingProfile || uploadingAvatar} className="w-full sm:w-auto">
+              {savingProfile ? "Guardando..." : "Guardar perfil"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

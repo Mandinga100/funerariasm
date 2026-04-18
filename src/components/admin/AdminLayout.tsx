@@ -270,7 +270,10 @@ export default function AdminLayout() {
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-sm truncate">CRM Funeraria</h1>
-          {isMobile && <NotificationCenter />}
+          <div className="flex items-center gap-2">
+            <RoleBadge isCeo={isCeo} isAdmin={isAdmin} compact />
+            {isMobile && <NotificationCenter />}
+          </div>
         </header>
 
         <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">

@@ -252,7 +252,11 @@ const Blog = () => {
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground">
-                {activeFilter ? "No hay artículos en esta categoría aún." : "Próximamente publicaremos artículos de interés."}
+                {activeTag
+                  ? `No encontramos artículos con la etiqueta "${activeTagLabel}".`
+                  : activeFilter
+                    ? "No hay artículos en esta categoría aún."
+                    : "Próximamente publicaremos artículos de interés."}
               </p>
             </div>
           ) : (

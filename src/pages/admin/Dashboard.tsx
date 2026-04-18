@@ -113,6 +113,7 @@ function formatMinutes(mins: number): string {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { isCeo } = useAuth();
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Stats>({

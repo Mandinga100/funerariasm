@@ -50,6 +50,11 @@ export default function AdminSettings() {
   const [addDialog, setAddDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
+  const [profileDialog, setProfileDialog] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [addMode, setAddMode] = useState<"manual" | "invite">("manual");
   const [newEmail, setNewEmail] = useState("");

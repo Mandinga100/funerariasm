@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import NotificationCenter from "@/components/admin/crm/NotificationCenter";
+import RoleBadge from "@/components/admin/RoleBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
@@ -39,7 +40,7 @@ const navItems: NavItem[] = [
 ];
 
 export default function AdminLayout() {
-  const { signOut, user, isCeo } = useAuth();
+  const { signOut, user, isCeo, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -193,10 +194,13 @@ export default function AdminLayout() {
             <span className="text-xs font-semibold text-[#C5A059]">{initials}</span>
           )}
         </div>
-        <div className="min-w-0">
-          <h2 className="font-semibold text-sm leading-tight truncate">
-            {profile?.display_name ?? "CRM Funeraria"}
-          </h2>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h2 className="font-semibold text-sm leading-tight truncate">
+              {profile?.display_name ?? "CRM Funeraria"}
+            </h2>
+            <RoleBadge isCeo={isCeo} isAdmin={isAdmin} compact />
+          </div>
           <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
         </div>
       </div>
@@ -266,7 +270,10 @@ export default function AdminLayout() {
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-sm truncate">CRM Funeraria</h1>
-          {isMobile && <NotificationCenter />}
+          <div className="flex items-center gap-2">
+            <RoleBadge isCeo={isCeo} isAdmin={isAdmin} compact />
+            {isMobile && <NotificationCenter />}
+          </div>
         </header>
 
         <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">

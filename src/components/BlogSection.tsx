@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import OptimizedImage from "@/components/ui/optimized-image";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoryImage } from "@/lib/blog-categories";
 import BlogCategoryFilter from "@/components/BlogCategoryFilter";
@@ -59,9 +59,21 @@ const BlogSection = () => {
   const headerRef = useScrollReveal();
   const gridRef = useStaggerReveal(100);
   const [allPosts, setAllPosts] = useState<BlogPost[]>(FALLBACK_POSTS);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const activeFilter = searchParams.get("cat");
   const [transitionKey, setTransitionKey] = useState(0);
   const isFirstRender = useRef(true);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Persist filter to URL (?cat=) so links are shareable and back/forward works.
+  // We use push (not replace) so each filter change creates a history entry.
+  const handleFilterChange = (filter: string | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (filter) next.set("cat", filter);
+    else next.delete("cat");
+    setSearchParams(next, { replace: false });
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -78,13 +90,18 @@ const BlogSection = () => {
   }, []);
 
   // Bump key whenever the filter changes so the grid re-mounts and re-runs its enter animation.
+  // Also smooth-scroll the Blog section into view so the user sees the filtered result,
+  // unless the URL hash explicitly targets another section.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     setTransitionKey((k) => k + 1);
-  }, [activeFilter]);
+    if (sectionRef.current && (!location.hash || location.hash === "#blog")) {
+      sectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [activeFilter, location.hash]);
 
   const filteredPosts = useMemo(() => {
     // Lógica idéntica a /blog (Blog.tsx): match estricto por categoría normalizada,
@@ -148,7 +165,7 @@ const BlogSection = () => {
   }, [allPosts, activeFilter]);
 
   return (
-    <section id="blog" className="py-24 bg-card">
+    <section ref={sectionRef} id="blog" className="py-24 bg-card scroll-mt-24">
       <div className="container">
         <div ref={headerRef} className="text-center mb-16">
           <p className="text-gold text-xs tracking-solemn uppercase mb-4">Nuestro Blog</p>
@@ -160,7 +177,7 @@ const BlogSection = () => {
           </p>
         </div>
 
-        <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
+        <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
 
         <div
           key={transitionKey}

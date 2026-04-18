@@ -15,6 +15,8 @@ import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LeadDetailSheet from "@/components/admin/crm/LeadDetailSheet";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface Lead {
   id: string;
@@ -523,54 +525,67 @@ function LeadCard({ lead }: { lead: Lead }) {
 
 /* ─── Desktop list view ─── */
 function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSelect: (l: Lead) => void; onStageChange: (id: string, stage: string) => void }) {
+  const { page, pageSize, totalPages, setPage, setPageSize, from, to } = usePagination("leads", leads.length);
+  const paginated = leads.slice(from, to + 1);
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <table className="w-full text-sm table-auto">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Nombre</th>
-            <th className="text-center px-3 py-2 font-medium whitespace-nowrap w-16">Prior.</th>
-            <th className="text-left px-3 py-2 font-medium hidden sm:table-cell whitespace-nowrap">Contacto</th>
-            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Urgencia</th>
-            <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Etapa</th>
-            <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fuente</th>
-            <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fecha</th>
-            <th className="px-3 py-2 w-10"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map(lead => (
-            <tr key={lead.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(lead)}>
-              <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
-              <td className="px-3 py-2 text-center"><PriorityBadge score={(() => { const c = lead.ai_classification as any; return c?.priority_score ?? null; })()} /></td>
-              <td className="px-3 py-2 text-xs hidden sm:table-cell">
-                <div className="truncate max-w-[160px]">{lead.email}</div>
-                <div className="text-muted-foreground">{lead.phone}</div>
-              </td>
-              <td className="px-3 py-2">
-                {lead.urgency && (
-                  <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">
-                    {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
-                  </Badge>
-                )}
-              </td>
-              <td className="px-3 py-2">
-                <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>
-                  <SelectTrigger className="h-7 text-xs w-[120px]" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </td>
-              <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
-              <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
-              <td className="px-3 py-2">
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button>
-              </td>
+    <div className="space-y-2">
+      <div className="rounded-md border overflow-x-auto">
+        <table className="w-full text-sm table-auto">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Nombre</th>
+              <th className="text-center px-3 py-2 font-medium whitespace-nowrap w-16">Prior.</th>
+              <th className="text-left px-3 py-2 font-medium hidden sm:table-cell whitespace-nowrap">Contacto</th>
+              <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Urgencia</th>
+              <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Etapa</th>
+              <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fuente</th>
+              <th className="text-left px-3 py-2 font-medium hidden md:table-cell whitespace-nowrap">Fecha</th>
+              <th className="px-3 py-2 w-10"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paginated.map(lead => (
+              <tr key={lead.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(lead)}>
+                <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
+                <td className="px-3 py-2 text-center"><PriorityBadge score={(() => { const c = lead.ai_classification as any; return c?.priority_score ?? null; })()} /></td>
+                <td className="px-3 py-2 text-xs hidden sm:table-cell">
+                  <div className="truncate max-w-[160px]">{lead.email}</div>
+                  <div className="text-muted-foreground">{lead.phone}</div>
+                </td>
+                <td className="px-3 py-2">
+                  {lead.urgency && (
+                    <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">
+                      {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
+                    </Badge>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>
+                    <SelectTrigger className="h-7 text-xs w-[120px]" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </td>
+                <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
+                <td className="px-3 py-2">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={leads.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel={{ singular: "lead", plural: "leads" }}
+      />
     </div>
   );
 }

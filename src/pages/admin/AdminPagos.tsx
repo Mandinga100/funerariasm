@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { cn } from "@/lib/utils";
-
-const PAGE_SIZE = 20;
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface Transaction {
   id: string;
@@ -68,7 +68,7 @@ export default function AdminPagos() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  // pagination handled via usePagination hook
   const [casesRevenue, setCasesRevenue] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem("admin_notification_sound");

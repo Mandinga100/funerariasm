@@ -14,8 +14,8 @@ import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, 
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
-
-const PAGE_SIZE = 20;
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface ServiceCase {
   id: string;
@@ -83,7 +83,7 @@ export default function AdminCasos() {
   const [filterPipeline, setFilterPipeline] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const { toast: _t } = useToast();
   const { toast } = useToast();
 
   const load = useCallback(async () => {

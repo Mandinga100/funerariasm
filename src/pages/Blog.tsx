@@ -157,6 +157,36 @@ const Blog = () => {
     return activeTag;
   }, [activeTag, posts]);
 
+  // When the active tag returns 0 results, surface the 3 most-used tags from
+  // articles that share the active category (or globally as fallback).
+  // Excludes the active tag itself.
+  const relatedTagSuggestions = useMemo(() => {
+    if (!activeTag || filteredPosts.length > 0) return [] as { slug: string; label: string; count: number }[];
+    const scopePosts = activeFilter
+      ? posts.filter((p) => p.category && normalize(p.category) === activeFilter)
+      : posts;
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const p of scopePosts) {
+      for (const raw of p.tags || []) {
+        const slug = normalize(raw);
+        if (!slug || slug === activeTag) continue;
+        const existing = counts.get(slug);
+        if (existing) existing.count += 1;
+        else counts.set(slug, { label: raw, count: 1 });
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([slug, v]) => ({ slug, label: v.label, count: v.count }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, 3);
+  }, [activeTag, activeFilter, filteredPosts.length, posts]);
+
+  const applyTag = (slug: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tag", slug);
+    setSearchParams(next, { replace: true });
+  };
+
   // Preload the LCP image: hero of the first visible blog card
   useEffect(() => {
     const firstPost = filteredPosts[0];
@@ -258,6 +288,26 @@ const Blog = () => {
                     ? "No hay artículos en esta categoría aún."
                     : "Próximamente publicaremos artículos de interés."}
               </p>
+              {activeTag && relatedTagSuggestions.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-xs uppercase tracking-wide-brand text-muted-foreground/80 mb-3">
+                    Etiquetas relacionadas
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {relatedTagSuggestions.map(({ slug, label }) => (
+                      <button
+                        key={slug}
+                        onClick={() => applyTag(slug)}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-wide-brand uppercase border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-accent-foreground transition-brand"
+                        aria-label={`Filtrar por etiqueta ${label}`}
+                      >
+                        <Tag className="w-3 h-3" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -1241,6 +1241,60 @@ export default function AdminSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ═══════════════ OWN PROFILE DIALOG ═══════════════ */}
+      <Dialog open={profileDialog} onOpenChange={setProfileDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserCog className="w-5 h-5 text-[#C5A059]" />Mi perfil</DialogTitle>
+            <DialogDescription>Personalice cómo aparece su nombre y foto en el equipo</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
+                {profileAvatarUrl ? (
+                  <img src={profileAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <UserCog className="w-8 h-8 text-[#C5A059]" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="avatar-upload" className="text-xs">Foto de perfil</Label>
+                <Input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingAvatar}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAvatarUpload(f);
+                  }}
+                  className="text-xs"
+                />
+                {uploadingAvatar && <p className="text-[10px] text-muted-foreground">Subiendo...</p>}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Nombre a mostrar</Label>
+              <Input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className="mt-1"
+                placeholder="Su nombre completo"
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground border-t pt-3">
+              <span>Email</span><span className="truncate ml-2">{user?.email}</span>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setProfileDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button onClick={handleSaveOwnProfile} disabled={savingProfile || uploadingAvatar} className="w-full sm:w-auto">
+              {savingProfile ? "Guardando..." : "Guardar perfil"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

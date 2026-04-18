@@ -6,6 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import { installRlsMonitor } from "@/lib/rls-block-monitor";
+
+// Activar monitor de RLS blocks (registra errores 42501 en audit_logs como módulo "rls_block")
+installRlsMonitor();
 
 // Public pages — eager (kept in main bundle for fast first paint on critical routes)
 import Index from "./pages/Index.tsx";

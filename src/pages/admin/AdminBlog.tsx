@@ -15,6 +15,8 @@ import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles, Wand2 } from "lucide
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import type { Tables } from "@/integrations/supabase/types";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 type BlogPost = Tables<"blog_posts">;
 

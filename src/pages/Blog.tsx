@@ -32,15 +32,22 @@ const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<string | null>(searchParams.get("cat"));
+  const activeFilter = searchParams.get("cat");
+  const activeTag = searchParams.get("tag");
 
+  // Selecting a category clears any active tag so the views stay coherent.
   const handleFilterChange = (filter: string | null) => {
-    setActiveFilter(filter);
-    if (filter) {
-      setSearchParams({ cat: filter }, { replace: true });
-    } else {
-      setSearchParams({}, { replace: true });
-    }
+    const next = new URLSearchParams(searchParams);
+    if (filter) next.set("cat", filter);
+    else next.delete("cat");
+    next.delete("tag");
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearTag = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tag");
+    setSearchParams(next, { replace: true });
   };
 
   useEffect(() => {

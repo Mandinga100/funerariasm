@@ -261,7 +261,7 @@ export default function AdminTracking() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(item => (
+                {paginated.map(item => (
                   <TableRow key={item.id} className="cursor-pointer hover:bg-muted/30" onClick={() => openDetail(item)}>
                     <TableCell className="font-medium">{item.family_name}</TableCell>
                     <TableCell>
@@ -308,7 +308,7 @@ export default function AdminTracking() {
 
           {/* Mobile Cards */}
           <div className="space-y-3 md:hidden">
-            {filtered.map(item => (
+            {paginated.map(item => (
               <Card key={item.id} className="border" onClick={() => openDetail(item)}>
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">

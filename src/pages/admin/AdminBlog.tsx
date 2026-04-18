@@ -34,6 +34,8 @@ function slugify(t: string) {
 export default function AdminBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("blog", posts.length);
+  const paginatedPosts = posts.slice(from, to + 1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<BlogPost>>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -218,7 +220,7 @@ export default function AdminBlog() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {posts.map(post => (
+                {paginatedPosts.map(post => (
                   <TableRow key={post.id}>
                     <TableCell className="font-medium max-w-[300px] truncate">{post.title}</TableCell>
                     <TableCell>
@@ -252,7 +254,7 @@ export default function AdminBlog() {
             </Table>
           </div>
           <div className="space-y-2 md:hidden">
-            {posts.map(post => (
+            {paginatedPosts.map(post => (
               <div key={post.id} className="border rounded-lg p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">

@@ -222,6 +222,20 @@ const Blog = () => {
         <div className="container">
           <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
 
+          {activeTag && (
+            <div className="flex justify-center mb-8 -mt-2">
+              <button
+                onClick={clearTag}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-wide-brand uppercase border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-accent-foreground transition-brand"
+                aria-label={`Quitar filtro por etiqueta ${activeTagLabel}`}
+              >
+                <Tag className="w-3 h-3" />
+                <span>Etiqueta: {activeTagLabel}</span>
+                <span aria-hidden="true" className="text-base leading-none">×</span>
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (

@@ -593,7 +593,7 @@ export default function AdminSettings() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0">
+                        <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0" onClick={(e) => e.stopPropagation()}>
                           {canChangeRole ? (
                             <Select
                               value={admin.role}

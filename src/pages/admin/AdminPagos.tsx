@@ -154,11 +154,11 @@ export default function AdminPagos() {
     return true;
   });
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginatedRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("pagos", filtered.length);
+  const paginatedRows = filtered.slice(from, to + 1);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setCurrentPage(1); }, [filterStatus, filterType, searchQuery]);
+  useEffect(() => { setPage(1); }, [filterStatus, filterType, searchQuery, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);
@@ -361,40 +361,15 @@ export default function AdminPagos() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Pág. {currentPage}/{totalPages} ({filtered.length})
-          </p>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
-              <ChevronLeft className="w-4 h-4" /><span className="hidden sm:inline ml-1">Anterior</span>
-            </Button>
-            <span className="text-xs px-2 text-muted-foreground sm:hidden">{currentPage}/{totalPages}</span>
-            <div className="hidden sm:flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                  acc.push(p);
-                  return acc;
-                }, [])
-                .map((p, i) =>
-                  typeof p === "string" ? (
-                    <span key={`e${i}`} className="px-1 text-muted-foreground">…</span>
-                  ) : (
-                    <Button key={p} variant={p === currentPage ? "default" : "outline"} size="sm" className="w-9" onClick={() => setCurrentPage(p)}>
-                      {p}
-                    </Button>
-                  )
-                )}
-            </div>
-            <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-              <span className="hidden sm:inline mr-1">Siguiente</span><ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={filtered.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel={{ singular: "transacción", plural: "transacciones" }}
+      />
 
       {/* Detail dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>

@@ -87,31 +87,39 @@ const BlogSection = () => {
   }, [activeFilter]);
 
   const filteredPosts = useMemo(() => {
-    // Normalize once. Posts are already ordered by published_at desc from the query.
+    // Lógica idéntica a /blog (Blog.tsx): match estricto por categoría normalizada,
+    // ordenado por fecha desc (proxy de relevancia) y limitado a 6.
+    const categoryOrder = [
+      "novedades", "guias", "servicios", "duelo", "prevision",
+      "contencion-emocional", "salud-mental", "apoyo-familiar",
+    ];
+
     if (activeFilter) {
-      // Category match by normalized category OR by tag containing the filter key/label.
-      const matches = allPosts.filter((p) => {
+      const result = allPosts.filter((p) => {
         const cat = p.category ? normalizeKey(p.category) : "";
-        if (cat === activeFilter) return true;
-        if (cat.includes(activeFilter) || activeFilter.includes(cat)) return true;
-        // Tag-based fallback: surfaces posts tagged with the category even if categorized differently.
-        if (p.tags?.some((t) => normalizeKey(t) === activeFilter)) return true;
-        return false;
+        return cat === activeFilter;
       });
-      // Most relevant = most recent first (already sorted), capped at 6.
-      return matches.slice(0, POSTS_PER_VIEW);
+      result.sort((a, b) => {
+        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return dateB - dateA;
+      });
+      return result.slice(0, POSTS_PER_VIEW);
     }
 
-    // "Todos": round-robin across categories to surface variety, most recent per category first.
-    const categoryOrder = [
-      "guias", "servicios", "duelo", "prevision",
-      "contencion-emocional", "salud-mental", "apoyo-familiar", "novedades",
-    ];
+    // "Todos": round-robin entre categorías, lo más reciente de cada una primero.
     const byCategory = new Map<string, BlogPost[]>();
     for (const p of allPosts) {
       const cat = p.category ? normalizeKey(p.category) : "other";
       if (!byCategory.has(cat)) byCategory.set(cat, []);
       byCategory.get(cat)!.push(p);
+    }
+    for (const group of byCategory.values()) {
+      group.sort((a, b) => {
+        const da = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const db = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return db - da;
+      });
     }
     const ordered: BlogPost[] = [];
     const usedIds = new Set<string>();

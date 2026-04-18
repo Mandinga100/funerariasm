@@ -24,25 +24,29 @@ const CORE_SECTOR_TAGS = [
   "Atención Inmediata",
 ];
 
-/** Geographic coverage — Chile entero. Sampled per article to stay below MAX_TAGS. */
+/**
+ * Geographic coverage — Chile entero a nivel de REGIÓN (no comunas/ciudades).
+ * Decisión editorial: usar siempre el nombre de la región (ej. "Región Metropolitana"
+ * en vez de "Santiago" o comunas específicas) para evitar inconsistencias y reforzar
+ * cobertura nacional en SEO/AEO/GEO/LLMO.
+ */
 const GEO_TAGS_CHILE = [
-  "Santiago",
   "Región Metropolitana",
-  "Valparaíso",
-  "Viña del Mar",
-  "Concepción",
-  "La Serena",
-  "Antofagasta",
-  "Temuco",
-  "Puerto Montt",
-  "Rancagua",
-  "Talca",
-  "Iquique",
-  "Arica",
-  "Chillán",
-  "Punta Arenas",
-  "Coyhaique",
-  "Copiapó",
+  "Región de Valparaíso",
+  "Región del Biobío",
+  "Región de Coquimbo",
+  "Región de Antofagasta",
+  "Región de La Araucanía",
+  "Región de Los Lagos",
+  "Región de O'Higgins",
+  "Región del Maule",
+  "Región de Tarapacá",
+  "Región de Arica y Parinacota",
+  "Región de Ñuble",
+  "Región de Magallanes",
+  "Región de Aysén",
+  "Región de Atacama",
+  "Región de Los Ríos",
 ];
 
 /** Intent + sector-specific tag pools per category, optimized for SEO/AEO/GEO/LLMO. */

@@ -623,6 +623,9 @@ export default function Dashboard() {
         <ComunaAnalyticsWidget />
       </Suspense>
 
+      {/* Widget de ofrendas memoriales — solo CEO */}
+      {isCeo && <MemorialOfferingsWidget />}
+
       {/* Recent Leads */}
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">

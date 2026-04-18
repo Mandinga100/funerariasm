@@ -288,6 +288,26 @@ const Blog = () => {
                     ? "No hay artículos en esta categoría aún."
                     : "Próximamente publicaremos artículos de interés."}
               </p>
+              {activeTag && relatedTagSuggestions.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-xs uppercase tracking-wide-brand text-muted-foreground/80 mb-3">
+                    Etiquetas relacionadas
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {relatedTagSuggestions.map(({ slug, label }) => (
+                      <button
+                        key={slug}
+                        onClick={() => applyTag(slug)}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-wide-brand uppercase border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-accent-foreground transition-brand"
+                        aria-label={`Filtrar por etiqueta ${label}`}
+                      >
+                        <Tag className="w-3 h-3" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

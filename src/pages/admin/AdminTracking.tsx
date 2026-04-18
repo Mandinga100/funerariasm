@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -77,6 +79,10 @@ export default function AdminTracking() {
       return matchSearch && matchStatus;
     });
   }, [items, searchQuery, filterStatus]);
+
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", filtered.length);
+  const paginated = useMemo(() => filtered.slice(from, to + 1), [filtered, from, to]);
+  useEffect(() => { setPage(1); }, [searchQuery, filterStatus, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("family_tracking").update({ status }).eq("id", id);

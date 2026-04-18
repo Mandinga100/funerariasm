@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
 ];
 
 export default function AdminLayout() {
-  const { signOut, user, isCeo } = useAuth();
+  const { signOut, user, isCeo, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();

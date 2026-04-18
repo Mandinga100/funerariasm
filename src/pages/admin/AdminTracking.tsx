@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -77,6 +79,10 @@ export default function AdminTracking() {
       return matchSearch && matchStatus;
     });
   }, [items, searchQuery, filterStatus]);
+
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", filtered.length);
+  const paginated = useMemo(() => filtered.slice(from, to + 1), [filtered, from, to]);
+  useEffect(() => { setPage(1); }, [searchQuery, filterStatus, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("family_tracking").update({ status }).eq("id", id);
@@ -255,7 +261,7 @@ export default function AdminTracking() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(item => (
+                {paginated.map(item => (
                   <TableRow key={item.id} className="cursor-pointer hover:bg-muted/30" onClick={() => openDetail(item)}>
                     <TableCell className="font-medium">{item.family_name}</TableCell>
                     <TableCell>
@@ -302,7 +308,7 @@ export default function AdminTracking() {
 
           {/* Mobile Cards */}
           <div className="space-y-3 md:hidden">
-            {filtered.map(item => (
+            {paginated.map(item => (
               <Card key={item.id} className="border" onClick={() => openDetail(item)}>
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
@@ -340,6 +346,16 @@ export default function AdminTracking() {
               </Card>
             ))}
           </div>
+
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={filtered.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "seguimiento", plural: "seguimientos" }}
+          />
         </>
       )}
 

@@ -13,6 +13,8 @@ import { es } from "date-fns/locale";
 import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
 import { SubscribersSourceChart } from "@/components/admin/SubscribersSourceChart";
 import { getSourceLabel } from "@/lib/subscription-source";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface Subscriber {
   id: string;

@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 type Memorial = Tables<"memorials">;
 
@@ -30,6 +32,8 @@ export default function AdminMemoriales() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Memorial>>(EMPTY);
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("memoriales", items.length);
+  const paginated = items.slice(from, to + 1);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
@@ -171,7 +175,7 @@ export default function AdminMemoriales() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map(item => (
+                {paginated.map(item => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.full_name}</TableCell>
                     <TableCell>{item.city ?? "—"}</TableCell>
@@ -201,7 +205,7 @@ export default function AdminMemoriales() {
             </Table>
           </div>
           <div className="space-y-2 md:hidden">
-            {items.map(item => (
+            {paginated.map(item => (
               <div key={item.id} className="border rounded-lg p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{item.full_name}</p>
@@ -227,6 +231,15 @@ export default function AdminMemoriales() {
               </div>
             ))}
           </div>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={items.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "memorial", plural: "memoriales" }}
+          />
         </>
       )}
 

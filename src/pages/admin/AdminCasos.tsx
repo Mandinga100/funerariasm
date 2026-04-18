@@ -14,8 +14,8 @@ import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, 
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
-
-const PAGE_SIZE = 20;
+import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface ServiceCase {
   id: string;
@@ -83,7 +83,6 @@ export default function AdminCasos() {
   const [filterPipeline, setFilterPipeline] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const load = useCallback(async () => {
@@ -122,10 +121,10 @@ export default function AdminCasos() {
     return true;
   });
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginatedRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", filtered.length);
+  const paginatedRows = filtered.slice(from, to + 1);
 
-  useEffect(() => { setCurrentPage(1); }, [filterPipeline, filterPayment, searchQuery]);
+  useEffect(() => { setPage(1); }, [filterPipeline, filterPayment, searchQuery, setPage]);
 
   const updateCase = async (id: string, updates: Partial<ServiceCase>) => {
     const { error } = await supabase.from("service_cases").update(updates as any).eq("id", id);
@@ -388,16 +387,15 @@ export default function AdminCasos() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-2 mt-4">
-          <p className="text-xs text-muted-foreground">Pág. {currentPage}/{totalPages} ({filtered.length})</p>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-            <span className="text-xs px-2">{currentPage}/{totalPages}</span>
-            <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
-          </div>
-        </div>
-      )}
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={filtered.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel={{ singular: "caso", plural: "casos" }}
+      />
 
       {/* Detail sheet */}
       <CaseDetailSheet

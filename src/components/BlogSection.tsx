@@ -60,73 +60,83 @@ const BlogSection = () => {
   const gridRef = useStaggerReveal(100);
   const [allPosts, setAllPosts] = useState<BlogPost[]>(FALLBACK_POSTS);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [transitionKey, setTransitionKey] = useState(0);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     const fetchPosts = async () => {
+      // Fetch a healthy pool so each category has enough posts to surface 6 relevant ones.
       const { data } = await supabase
         .from("blog_posts")
         .select("id, title, slug, excerpt, cover_image, category, tags, published_at")
         .eq("published", true)
         .order("published_at", { ascending: false })
-        .limit(12);
+        .limit(80);
       if (data && data.length > 0) setAllPosts(data as BlogPost[]);
     };
     fetchPosts();
   }, []);
 
-  const filteredPosts = useMemo(() => {
-    let result = allPosts;
-    if (activeFilter) {
-      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-      result = allPosts.filter((p) => {
-        const cat = p.category ? normalize(p.category) : "";
-        return cat === activeFilter;
-      });
-    } else {
-      // Default "Todos": pick the most relevant (most recent) post from each category in filter order
-      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
-      const categoryOrder = ["guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
-      
-      // Group posts by normalized category
-      const byCategory = new Map<string, BlogPost[]>();
-      for (const p of allPosts) {
-        const cat = p.category ? normalize(p.category) : "other";
-        if (!byCategory.has(cat)) byCategory.set(cat, []);
-        byCategory.get(cat)!.push(p);
-      }
-      // Sort each group by date descending (most recent = most relevant)
-      for (const posts of byCategory.values()) {
-        posts.sort((a, b) => {
-          const da = a.published_at ? new Date(a.published_at).getTime() : 0;
-          const db = b.published_at ? new Date(b.published_at).getTime() : 0;
-          return db - da;
-        });
-      }
-      // Round-robin: pick top post from each category in order, then second, etc.
-      const ordered: BlogPost[] = [];
-      const usedIds = new Set<string>();
-      let round = 0;
-      const maxRounds = Math.max(...Array.from(byCategory.values()).map(v => v.length), 0);
-      while (ordered.length < allPosts.length && round < maxRounds) {
-        for (const cat of categoryOrder) {
-          const catPosts = byCategory.get(cat);
-          if (catPosts && catPosts[round] && !usedIds.has(catPosts[round].id)) {
-            ordered.push(catPosts[round]);
-            usedIds.add(catPosts[round].id);
-          }
-        }
-        // Also include "other" categories not in the predefined order
-        for (const [cat, catPosts] of byCategory) {
-          if (!categoryOrder.includes(cat) && catPosts[round] && !usedIds.has(catPosts[round].id)) {
-            ordered.push(catPosts[round]);
-            usedIds.add(catPosts[round].id);
-          }
-        }
-        round++;
-      }
-      result = ordered;
+  // Bump key whenever the filter changes so the grid re-mounts and re-runs its enter animation.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-    return result.slice(0, 6);
+    setTransitionKey((k) => k + 1);
+  }, [activeFilter]);
+
+  const filteredPosts = useMemo(() => {
+    // Normalize once. Posts are already ordered by published_at desc from the query.
+    if (activeFilter) {
+      // Category match by normalized category OR by tag containing the filter key/label.
+      const matches = allPosts.filter((p) => {
+        const cat = p.category ? normalizeKey(p.category) : "";
+        if (cat === activeFilter) return true;
+        if (cat.includes(activeFilter) || activeFilter.includes(cat)) return true;
+        // Tag-based fallback: surfaces posts tagged with the category even if categorized differently.
+        if (p.tags?.some((t) => normalizeKey(t) === activeFilter)) return true;
+        return false;
+      });
+      // Most relevant = most recent first (already sorted), capped at 6.
+      return matches.slice(0, POSTS_PER_VIEW);
+    }
+
+    // "Todos": round-robin across categories to surface variety, most recent per category first.
+    const categoryOrder = [
+      "guias", "servicios", "duelo", "prevision",
+      "contencion-emocional", "salud-mental", "apoyo-familiar", "novedades",
+    ];
+    const byCategory = new Map<string, BlogPost[]>();
+    for (const p of allPosts) {
+      const cat = p.category ? normalizeKey(p.category) : "other";
+      if (!byCategory.has(cat)) byCategory.set(cat, []);
+      byCategory.get(cat)!.push(p);
+    }
+    const ordered: BlogPost[] = [];
+    const usedIds = new Set<string>();
+    const maxRounds = Math.max(0, ...Array.from(byCategory.values()).map((v) => v.length));
+    for (let round = 0; round < maxRounds && ordered.length < POSTS_PER_VIEW; round++) {
+      for (const cat of categoryOrder) {
+        const post = byCategory.get(cat)?.[round];
+        if (post && !usedIds.has(post.id)) {
+          ordered.push(post);
+          usedIds.add(post.id);
+          if (ordered.length >= POSTS_PER_VIEW) break;
+        }
+      }
+      if (ordered.length >= POSTS_PER_VIEW) break;
+      for (const [cat, catPosts] of byCategory) {
+        if (categoryOrder.includes(cat)) continue;
+        const post = catPosts[round];
+        if (post && !usedIds.has(post.id)) {
+          ordered.push(post);
+          usedIds.add(post.id);
+          if (ordered.length >= POSTS_PER_VIEW) break;
+        }
+      }
+    }
+    return ordered.slice(0, POSTS_PER_VIEW);
   }, [allPosts, activeFilter]);
 
   return (

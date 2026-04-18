@@ -157,6 +157,36 @@ const Blog = () => {
     return activeTag;
   }, [activeTag, posts]);
 
+  // When the active tag returns 0 results, surface the 3 most-used tags from
+  // articles that share the active category (or globally as fallback).
+  // Excludes the active tag itself.
+  const relatedTagSuggestions = useMemo(() => {
+    if (!activeTag || filteredPosts.length > 0) return [] as { slug: string; label: string; count: number }[];
+    const scopePosts = activeFilter
+      ? posts.filter((p) => p.category && normalize(p.category) === activeFilter)
+      : posts;
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const p of scopePosts) {
+      for (const raw of p.tags || []) {
+        const slug = normalize(raw);
+        if (!slug || slug === activeTag) continue;
+        const existing = counts.get(slug);
+        if (existing) existing.count += 1;
+        else counts.set(slug, { label: raw, count: 1 });
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([slug, v]) => ({ slug, label: v.label, count: v.count }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, 3);
+  }, [activeTag, activeFilter, filteredPosts.length, posts]);
+
+  const applyTag = (slug: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tag", slug);
+    setSearchParams(next, { replace: true });
+  };
+
   // Preload the LCP image: hero of the first visible blog card
   useEffect(() => {
     const firstPost = filteredPosts[0];

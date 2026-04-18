@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import OptimizedImage from "@/components/ui/optimized-image";
 import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 import { Link } from "react-router-dom";
@@ -6,6 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCategoryImage } from "@/lib/blog-categories";
 import BlogCategoryFilter from "@/components/BlogCategoryFilter";
 import { Calendar, Tag, ArrowRight } from "lucide-react";
+
+const POSTS_PER_VIEW = 6;
+const normalizeKey = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 
 interface BlogPost {
   id: string;

@@ -231,6 +231,15 @@ export default function AdminMemoriales() {
               </div>
             ))}
           </div>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={items.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "memorial", plural: "memoriales" }}
+          />
         </>
       )}
 

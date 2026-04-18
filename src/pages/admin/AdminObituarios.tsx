@@ -236,6 +236,15 @@ export default function AdminObituarios() {
               </div>
             ))}
           </div>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={items.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "obituario", plural: "obituarios" }}
+          />
         </>
       )}
 

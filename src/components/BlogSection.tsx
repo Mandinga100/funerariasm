@@ -62,16 +62,24 @@ const BlogSection = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const activeFilter = searchParams.get("cat");
+  const activeTag = searchParams.get("tag");
   const [transitionKey, setTransitionKey] = useState(0);
   const isFirstRender = useRef(true);
   const sectionRef = useRef<HTMLElement>(null);
 
   // Persist filter to URL (?cat=) so links are shareable and back/forward works.
-  // We use push (not replace) so each filter change creates a history entry.
+  // Selecting a category clears any active tag filter so views stay coherent.
   const handleFilterChange = (filter: string | null) => {
     const next = new URLSearchParams(searchParams);
     if (filter) next.set("cat", filter);
     else next.delete("cat");
+    next.delete("tag");
+    setSearchParams(next, { replace: false });
+  };
+
+  const clearTag = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tag");
     setSearchParams(next, { replace: false });
   };
 
@@ -101,26 +109,34 @@ const BlogSection = () => {
     if (sectionRef.current && (!location.hash || location.hash === "#blog")) {
       sectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [activeFilter, location.hash]);
+  }, [activeFilter, activeTag, location.hash]);
 
   const filteredPosts = useMemo(() => {
-    // Lógica idéntica a /blog (Blog.tsx): match estricto por categoría normalizada,
-    // ordenado por fecha desc (proxy de relevancia) y limitado a 6.
+    // Tag tiene prioridad sobre categoría cuando ambos coexisten en la URL.
     const categoryOrder = [
       "novedades", "guias", "servicios", "duelo", "prevision",
       "contencion-emocional", "salud-mental", "apoyo-familiar",
     ];
+    const sortByDateDesc = (a: BlogPost, b: BlogPost) => {
+      const da = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const db = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return db - da;
+    };
+
+    if (activeTag) {
+      const result = allPosts.filter((p) =>
+        p.tags?.some((t) => normalizeKey(t) === activeTag)
+      );
+      result.sort(sortByDateDesc);
+      return result.slice(0, POSTS_PER_VIEW);
+    }
 
     if (activeFilter) {
       const result = allPosts.filter((p) => {
         const cat = p.category ? normalizeKey(p.category) : "";
         return cat === activeFilter;
       });
-      result.sort((a, b) => {
-        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return dateB - dateA;
-      });
+      result.sort(sortByDateDesc);
       return result.slice(0, POSTS_PER_VIEW);
     }
 
@@ -132,11 +148,7 @@ const BlogSection = () => {
       byCategory.get(cat)!.push(p);
     }
     for (const group of byCategory.values()) {
-      group.sort((a, b) => {
-        const da = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const db = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return db - da;
-      });
+      group.sort(sortByDateDesc);
     }
     const ordered: BlogPost[] = [];
     const usedIds = new Set<string>();
@@ -162,7 +174,17 @@ const BlogSection = () => {
       }
     }
     return ordered.slice(0, POSTS_PER_VIEW);
-  }, [allPosts, activeFilter]);
+  }, [allPosts, activeFilter, activeTag]);
+
+  // Recover the original (non-normalized) tag label to display in the chip.
+  const activeTagLabel = useMemo(() => {
+    if (!activeTag) return null;
+    for (const p of allPosts) {
+      const found = p.tags?.find((t) => normalizeKey(t) === activeTag);
+      if (found) return found;
+    }
+    return activeTag;
+  }, [activeTag, allPosts]);
 
   return (
     <section ref={sectionRef} id="blog" className="py-24 bg-card scroll-mt-24">
@@ -178,6 +200,20 @@ const BlogSection = () => {
         </div>
 
         <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
+
+        {activeTag && (
+          <div className="flex justify-center mb-8 -mt-2">
+            <button
+              onClick={clearTag}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-wide-brand uppercase border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-accent-foreground transition-brand"
+              aria-label={`Quitar filtro por etiqueta ${activeTagLabel}`}
+            >
+              <Tag className="w-3 h-3" />
+              <span>Etiqueta: {activeTagLabel}</span>
+              <span aria-hidden="true" className="text-base leading-none">×</span>
+            </button>
+          </div>
+        )}
 
         <div
           key={transitionKey}

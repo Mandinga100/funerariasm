@@ -32,15 +32,22 @@ const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<string | null>(searchParams.get("cat"));
+  const activeFilter = searchParams.get("cat");
+  const activeTag = searchParams.get("tag");
 
+  // Selecting a category clears any active tag so the views stay coherent.
   const handleFilterChange = (filter: string | null) => {
-    setActiveFilter(filter);
-    if (filter) {
-      setSearchParams({ cat: filter }, { replace: true });
-    } else {
-      setSearchParams({}, { replace: true });
-    }
+    const next = new URLSearchParams(searchParams);
+    if (filter) next.set("cat", filter);
+    else next.delete("cat");
+    next.delete("tag");
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearTag = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tag");
+    setSearchParams(next, { replace: true });
   };
 
   useEffect(() => {
@@ -76,33 +83,34 @@ const Blog = () => {
     fetchPosts();
   }, []);
 
-  const maxCards = activeFilter ? (isMobile ? 3 : 6) : undefined;
+  const maxCards = activeFilter || activeTag ? (isMobile ? 3 : 6) : undefined;
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 
   const filteredPosts = useMemo(() => {
-    const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
     const categoryOrder = ["novedades", "guias", "servicios", "duelo", "prevision", "contencion-emocional", "salud-mental", "apoyo-familiar"];
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sortByDateDesc = (a: BlogPost, b: BlogPost) => {
+      const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return dateB - dateA;
+    };
+
+    // Tag filter has priority over category when both are present in the URL.
+    if (activeTag) {
+      const result = posts.filter((p) =>
+        p.tags?.some((t) => normalize(t) === activeTag)
+      );
+      result.sort(sortByDateDesc);
+      return result.slice(0, maxCards);
+    }
 
     if (activeFilter) {
-      let result: BlogPost[];
-      if (activeFilter === "novedades") {
-        result = posts.filter((p) => {
-          const cat = p.category ? normalize(p.category) : "";
-          return cat === "novedades";
-        });
-      } else {
-        result = posts.filter((p) => {
-          const cat = p.category ? normalize(p.category) : "";
-          return cat === activeFilter;
-        });
-      }
-      // Sort by trending: most recent first (proxy for relevance)
-      result.sort((a, b) => {
-        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return dateB - dateA;
+      const result = posts.filter((p) => {
+        const cat = p.category ? normalize(p.category) : "";
+        return cat === activeFilter;
       });
+      result.sort(sortByDateDesc);
       return result.slice(0, maxCards);
     }
 
@@ -114,11 +122,7 @@ const Blog = () => {
       byCategory.get(cat)!.push(p);
     }
     for (const group of byCategory.values()) {
-      group.sort((a, b) => {
-        const da = a.published_at ? new Date(a.published_at).getTime() : 0;
-        const db = b.published_at ? new Date(b.published_at).getTime() : 0;
-        return db - da;
-      });
+      group.sort(sortByDateDesc);
     }
     const ordered: BlogPost[] = [];
     const usedIds = new Set<string>();
@@ -141,7 +145,17 @@ const Blog = () => {
       round++;
     }
     return ordered;
-  }, [posts, activeFilter, maxCards]);
+  }, [posts, activeFilter, activeTag, maxCards]);
+
+  // Recover the original (non-normalized) tag label for the chip UI.
+  const activeTagLabel = useMemo(() => {
+    if (!activeTag) return null;
+    for (const p of posts) {
+      const found = p.tags?.find((t) => normalize(t) === activeTag);
+      if (found) return found;
+    }
+    return activeTag;
+  }, [activeTag, posts]);
 
   // Preload the LCP image: hero of the first visible blog card
   useEffect(() => {
@@ -208,6 +222,20 @@ const Blog = () => {
         <div className="container">
           <BlogCategoryFilter active={activeFilter} onChange={handleFilterChange} />
 
+          {activeTag && (
+            <div className="flex justify-center mb-8 -mt-2">
+              <button
+                onClick={clearTag}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-wide-brand uppercase border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-accent-foreground transition-brand"
+                aria-label={`Quitar filtro por etiqueta ${activeTagLabel}`}
+              >
+                <Tag className="w-3 h-3" />
+                <span>Etiqueta: {activeTagLabel}</span>
+                <span aria-hidden="true" className="text-base leading-none">×</span>
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
@@ -224,7 +252,11 @@ const Blog = () => {
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground">
-                {activeFilter ? "No hay artículos en esta categoría aún." : "Próximamente publicaremos artículos de interés."}
+                {activeTag
+                  ? `No encontramos artículos con la etiqueta "${activeTagLabel}".`
+                  : activeFilter
+                    ? "No hay artículos en esta categoría aún."
+                    : "Próximamente publicaremos artículos de interés."}
               </p>
             </div>
           ) : (

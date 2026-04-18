@@ -194,10 +194,13 @@ export default function AdminLayout() {
             <span className="text-xs font-semibold text-[#C5A059]">{initials}</span>
           )}
         </div>
-        <div className="min-w-0">
-          <h2 className="font-semibold text-sm leading-tight truncate">
-            {profile?.display_name ?? "CRM Funeraria"}
-          </h2>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h2 className="font-semibold text-sm leading-tight truncate">
+              {profile?.display_name ?? "CRM Funeraria"}
+            </h2>
+            <RoleBadge isCeo={isCeo} isAdmin={isAdmin} compact />
+          </div>
           <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
         </div>
       </div>

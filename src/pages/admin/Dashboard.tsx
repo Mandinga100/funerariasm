@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import MemorialOfferingsWidget from "@/components/admin/MemorialOfferingsWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -111,6 +113,7 @@ function formatMinutes(mins: number): string {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { isCeo } = useAuth();
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Stats>({
@@ -619,6 +622,9 @@ export default function Dashboard() {
       <Suspense fallback={<div className="h-64 rounded-lg border bg-muted/30 animate-pulse" />}>
         <ComunaAnalyticsWidget />
       </Suspense>
+
+      {/* Widget de ofrendas memoriales — solo CEO */}
+      {isCeo && <MemorialOfferingsWidget />}
 
       {/* Recent Leads */}
       <Card>

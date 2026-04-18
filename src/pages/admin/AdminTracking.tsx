@@ -346,6 +346,16 @@ export default function AdminTracking() {
               </Card>
             ))}
           </div>
+
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={filtered.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel={{ singular: "seguimiento", plural: "seguimientos" }}
+          />
         </>
       )}
 

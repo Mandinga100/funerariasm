@@ -154,7 +154,11 @@ const BlogSection = () => {
 
         <BlogCategoryFilter active={activeFilter} onChange={setActiveFilter} />
 
-        <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div
+          key={transitionKey}
+          ref={gridRef}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto blog-grid-fade"
+        >
           {filteredPosts.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">No hay artículos en esta categoría aún.</p>
@@ -162,12 +166,12 @@ const BlogSection = () => {
           ) : (
             filteredPosts.map((post, index) => {
               const image = post.cover_image || getCategoryImage(post.category);
-              const mobileHidden = index >= 3 ? "hidden sm:block" : "";
               return (
                 <Link
                   key={post.id}
                   to={post.slug === "#" ? "/blog" : `/blog/${post.slug}`}
-                  className={`group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)] ${mobileHidden}`}
+                  style={{ animationDelay: `${index * 70}ms` }}
+                  className="blog-card-enter group bg-background rounded-lg overflow-hidden border border-border/50 hover:border-gold/30 transition-brand hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.15)]"
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-muted">
                     <OptimizedImage

@@ -39,7 +39,7 @@ const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; i
   moderator: { label: "Moderador", color: "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800", desc: "Gestión de contenido, condolencias y blog. Sin acceso a pagos ni configuración", icon: "📝" },
 };
 
-const CEO_EMAIL = "mandinga_atim@hotmail.com";
+
 
 export default function AdminSettings() {
   const { user } = useAuth();

@@ -32,6 +32,8 @@ export default function AdminMemoriales() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Memorial>>(EMPTY);
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("memoriales", items.length);
+  const paginated = items.slice(from, to + 1);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();

@@ -911,6 +911,7 @@ export default function AdminSettings() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los módulos</SelectItem>
+                    <SelectItem value="rls_block">🚫 Accesos bloqueados (RLS)</SelectItem>
                     <SelectItem value="equipo">Equipo</SelectItem>
                     <SelectItem value="leads">Leads</SelectItem>
                     <SelectItem value="pagos">Pagos</SelectItem>
@@ -950,24 +951,40 @@ export default function AdminSettings() {
                       update: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300",
                       export: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
                       login: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300",
+                      rls_block: "bg-red-100 dark:bg-red-950/60 text-red-900 dark:text-red-200 border border-red-300 dark:border-red-800",
                     };
+                    const isRlsBlock = log.action === "rls_block";
                     const badgeClass = actionColors[log.action] ?? "bg-muted text-muted-foreground";
                     const date = new Date(log.created_at);
+                    const meta = log.new_data ?? {};
                     return (
-                      <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 p-2.5 rounded-lg border hover:bg-muted/30 transition-colors">
+                      <div
+                        key={log.id}
+                        className={cn(
+                          "flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 p-2.5 rounded-lg border hover:bg-muted/30 transition-colors",
+                          isRlsBlock && "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900/60"
+                        )}
+                      >
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[10px] text-muted-foreground font-mono whitespace-nowrap">
                             {date.toLocaleDateString("es-CL")} {date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                           </span>
                           <Badge className={`${badgeClass} text-[10px] px-1.5 py-0`} variant="secondary">
-                            {log.action.replace(/_/g, " ")}
+                            {isRlsBlock ? "🚫 acceso bloqueado" : log.action.replace(/_/g, " ")}
                           </Badge>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs truncate">{log.description}</p>
+                          <p className={cn("text-xs truncate", isRlsBlock && "font-medium text-red-900 dark:text-red-200")}>
+                            {log.description}
+                          </p>
                           <p className="text-[10px] text-muted-foreground truncate">
-                            {log.user_email ?? "Sistema"} · {log.user_role ?? ""} · {log.module}
-                            {log.entity_type && ` · ${log.entity_type}`}
+                            <span className="font-medium">{log.user_email ?? "Sistema"}</span>
+                            {log.user_role && ` · ${log.user_role}`}
+                            {!isRlsBlock && ` · ${log.module}`}
+                            {!isRlsBlock && log.entity_type && ` · ${log.entity_type}`}
+                            {isRlsBlock && meta.table && ` · tabla ${meta.table}`}
+                            {isRlsBlock && meta.operation && ` · ${String(meta.operation).toUpperCase()}`}
+                            {isRlsBlock && meta.pathname && ` · ${meta.pathname}`}
                           </p>
                         </div>
                       </div>

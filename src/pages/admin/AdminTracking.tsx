@@ -86,7 +86,12 @@ export default function AdminTracking() {
   });
   const { searchQuery, filterStatus } = filters;
   const [form, setForm] = useState({ family_name: "", family_email: "", family_phone: "", notes: "" });
+  const [activeKpi, setActiveKpi] = useState<"total" | "activos" | "finalizados" | "hoy" | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const { toast } = useToast();
+  const { isCeo } = useAuth();
+  const selection = useRowSelection<TrackingItem>((r) => r.id);
 
   const load = async () => {
     setLoading(true);

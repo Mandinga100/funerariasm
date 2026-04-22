@@ -98,12 +98,25 @@ const MemorialDetail = () => {
       const mem = data?.[0] as Memorial | undefined;
       if (mem) {
         setMemorial(mem);
+
+        // Lead the snippet with the deceased's name + life span so search
+        // engines surface it as the primary identifier of the page.
+        const deathYear = mem.death_date ? new Date(mem.death_date + "T12:00:00").getFullYear() : null;
+        const lifeSpan =
+          mem.birth_date && mem.death_date
+            ? `(${new Date(mem.birth_date + "T12:00:00").getFullYear()} – ${deathYear})`
+            : deathYear
+              ? `(${deathYear})`
+              : "";
+        const namePrefix = `${mem.full_name}${lifeSpan ? " " + lifeSpan : ""}.`;
+        const tail =
+          mem.tribute_text?.trim() ||
+          mem.biography?.trim() ||
+          `Memorial en honor a ${mem.full_name}. Un espacio para recordarle, dejar mensajes y encender velas en su memoria.`;
+
         applySeoMeta({
           title: `${mem.full_name} — Legado Eterno`,
-          description:
-            mem.tribute_text?.trim() ||
-            mem.biography?.trim() ||
-            `Memorial en honor a ${mem.full_name}. Un espacio para recordarle, dejar mensajes y encender velas en su memoria.`,
+          description: `${namePrefix} ${tail}`,
           url: `https://funerariasantamargarita.cl/legados-eternos/${mem.slug}`,
           image: mem.photo_url,
           type: "profile",

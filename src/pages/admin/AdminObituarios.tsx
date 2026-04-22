@@ -12,6 +12,7 @@ import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react"
 import type { Tables } from "@/integrations/supabase/types";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 
 type Obituary = Tables<"obituaries">;

@@ -336,7 +336,7 @@ export default function AdminLeads() {
                     className={cn(
                       "rounded-lg border-2 p-1.5 lg:p-2 transition-colors min-w-0",
                       stage.color,
-                      snapshot.isDraggingOver && "ring-2 ring-primary"
+                      snapshot.isDraggingOver && "ring-2 ring-ring"
                     )}
                   >
                     <div className="flex items-center justify-between mb-1.5 px-1">

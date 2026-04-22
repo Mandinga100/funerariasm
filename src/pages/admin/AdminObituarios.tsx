@@ -178,6 +178,7 @@ export default function AdminObituarios() {
               tableKey="admin_obituarios"
               rows={paginated}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "full_name",

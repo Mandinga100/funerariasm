@@ -361,6 +361,21 @@ export default function AdminRevenueComunas() {
           )}
         </CardContent>
       </Card>
+
+      {kpiModal && (
+        <KpiDetailModal<RevenueRow>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiModal.title}
+          description={kpiModal.description}
+          rows={kpiModal.rows}
+          rowKey={kpiModal.rowKey}
+          columns={kpiModal.columns}
+          onExportCSV={() => exportKpi("csv")}
+          onExportXLSX={() => exportKpi("xlsx")}
+          totalLabel="comunas"
+        />
+      )}
     </div>
   );
 }

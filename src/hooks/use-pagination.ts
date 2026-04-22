@@ -5,6 +5,7 @@ export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 const DEFAULT_PAGE_SIZE: PageSize = 10;
 const STORAGE_PREFIX = "crm:pageSize:";
+const PAGE_PREFIX = "crm:page:";
 
 function readStoredPageSize(key: string): PageSize {
   if (typeof window === "undefined") return DEFAULT_PAGE_SIZE;
@@ -16,6 +17,18 @@ function readStoredPageSize(key: string): PageSize {
     /* ignore */
   }
   return DEFAULT_PAGE_SIZE;
+}
+
+function readStoredPage(key: string): number {
+  if (typeof window === "undefined") return 1;
+  try {
+    const raw = window.localStorage.getItem(PAGE_PREFIX + key);
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  } catch {
+    /* ignore */
+  }
+  return 1;
 }
 
 /**

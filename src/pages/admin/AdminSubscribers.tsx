@@ -9,14 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Mail, Search, Users, RefreshCw, CalendarPlus, UserCheck } from "lucide-react";
+import { Mail, Users, RefreshCw, CalendarPlus, UserCheck, UserX } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
 import { SubscribersSourceChart } from "@/components/admin/SubscribersSourceChart";
 import { getSourceLabel } from "@/lib/subscription-source";
-import { DataTablePagination } from "@/components/admin/DataTablePagination";
-import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 import KpiCard from "@/components/admin/KpiCard";
 import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
@@ -38,11 +36,27 @@ interface Subscriber {
   unsubscribed_at: string | null;
 }
 
+type KpiKey = "total" | "active" | "month" | "unsubscribed";
+
+const exportColumns: ExportColumn<Subscriber>[] = [
+  { key: "email", label: "Email", accessor: (r) => r.email },
+  { key: "name", label: "Nombre", accessor: (r) => r.metadata?.name ?? "" },
+  { key: "source", label: "Origen", accessor: (r) => getSourceLabel(r.source) },
+  { key: "subscribed_at", label: "Fecha de suscripción", accessor: (r) => format(new Date(r.subscribed_at), "yyyy-MM-dd HH:mm") },
+  { key: "status", label: "Estado", accessor: (r) => (r.unsubscribed_at ? "Desuscrito" : "Activo") },
+  { key: "last_campaign", label: "Última campaña", accessor: (r) => r.metadata?.last_campaign_subject ?? "" },
+  { key: "last_campaign_at", label: "Fecha última campaña", accessor: (r) => r.metadata?.last_campaign_at ? format(new Date(r.metadata.last_campaign_at), "yyyy-MM-dd HH:mm") : "" },
+];
+
 export default function AdminSubscribers() {
   const { toast } = useToast();
+  const { isCeo } = useAuth();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
-  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_subscribers", {
+  const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { filters, setFilter } = usePersistentFilters("admin_subscribers", {
     search: "",
     sourceFilter: "all",
     dateFrom: "",
@@ -50,6 +64,8 @@ export default function AdminSubscribers() {
     rangeDays: 30,
   });
   const { search, sourceFilter, dateFrom, dateTo, rangeDays } = filters;
+
+  const selection = useRowSelection<Subscriber>((r) => r.id);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -90,44 +106,86 @@ export default function AdminSubscribers() {
   }, [subscribers, search, sourceFilter, dateFrom, dateTo]);
 
   const stats = useMemo(() => {
-    const active = subscribers.filter((s) => !s.unsubscribed_at).length;
+    const active = subscribers.filter((s) => !s.unsubscribed_at);
+    const unsubscribed = subscribers.filter((s) => !!s.unsubscribed_at);
     const thisMonth = subscribers.filter((s) => {
       const d = new Date(s.subscribed_at);
       const now = new Date();
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    }).length;
-    return { total: subscribers.length, active, thisMonth };
+    });
+    return {
+      total: subscribers.length,
+      active: active.length,
+      activeRows: active,
+      unsubscribed: unsubscribed.length,
+      unsubscribedRows: unsubscribed,
+      thisMonth: thisMonth.length,
+      thisMonthRows: thisMonth,
+    };
   }, [subscribers]);
 
-  const exportCSV = () => {
-    if (filtered.length === 0) {
-      toast({ title: "Sin datos", description: "No hay suscriptores para exportar con los filtros actuales." });
+  const kpiModal = useMemo<{ title: string; description: string; rows: Subscriber[] } | null>(() => {
+    if (!activeKpi) return null;
+    if (activeKpi === "total") return { title: "Todos los suscriptores", description: "Listado completo del blog.", rows: subscribers };
+    if (activeKpi === "active") return { title: "Suscriptores activos", description: "Reciben campañas de email.", rows: stats.activeRows };
+    if (activeKpi === "month") return { title: "Suscriptores del mes en curso", description: "Nuevas suscripciones este mes.", rows: stats.thisMonthRows };
+    if (activeKpi === "unsubscribed") return { title: "Suscriptores desuscritos", description: "Han optado por no recibir más campañas.", rows: stats.unsubscribedRows };
+    return null;
+  }, [activeKpi, subscribers, stats]);
+
+  const kpiColumns: KpiDetailColumn<Subscriber>[] = [
+    { key: "email", label: "Email", cell: (r) => <span className="font-mono text-xs">{r.email}</span> },
+    { key: "name", label: "Nombre", cell: (r) => r.metadata?.name || <span className="text-muted-foreground italic">—</span> },
+    { key: "source", label: "Origen", cell: (r) => <Badge variant="outline" className="text-[10px]">{getSourceLabel(r.source)}</Badge> },
+    {
+      key: "subscribed_at",
+      label: "Fecha",
+      cell: (r) => <span className="text-xs text-muted-foreground">{format(new Date(r.subscribed_at), "dd MMM yyyy", { locale: es })}</span>,
+    },
+    {
+      key: "status",
+      label: "Estado",
+      cell: (r) =>
+        r.unsubscribed_at ? (
+          <Badge variant="destructive" className="text-[10px]">Desuscrito</Badge>
+        ) : (
+          <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">Activo</Badge>
+        ),
+    },
+  ];
+
+  const exportRows = (rows: Subscriber[], kind: "csv" | "xlsx", base = "suscriptores") => {
+    if (rows.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para exportar." });
       return;
     }
-    const headers = ["Email", "Nombre", "Origen", "Fecha de suscripción", "Estado", "Última campaña", "Fecha última campaña"];
-    const escape = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
-    const rows = filtered.map((s) =>
-      [
-        escape(s.email),
-        escape(s.metadata?.name ?? ""),
-        escape(s.source ?? ""),
-        escape(format(new Date(s.subscribed_at), "yyyy-MM-dd HH:mm")),
-        escape(s.unsubscribed_at ? "Desuscrito" : "Activo"),
-        escape(s.metadata?.last_campaign_subject ?? ""),
-        escape(s.metadata?.last_campaign_at ? format(new Date(s.metadata.last_campaign_at), "yyyy-MM-dd HH:mm") : ""),
-      ].join(",")
-    );
-    const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `suscriptores-blog-${format(new Date(), "yyyy-MM-dd")}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: "Exportación completada", description: `${filtered.length} suscriptores exportados.` });
+    const filename = `${base}-${todayStamp()}`;
+    if (kind === "csv") downloadCSV(rows, exportColumns, filename);
+    else downloadXLSX(rows, exportColumns, filename, "Suscriptores");
+    toast({ title: "Exportación completada", description: `${rows.length} suscriptores exportados.` });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selection.selectedIds);
+    if (ids.length === 0) return;
+    setDeleting(true);
+    const { error } = await supabase.from("blog_subscribers").delete().in("id", ids);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Error al eliminar", description: error.message, variant: "destructive" });
+      return;
+    }
+    logAudit({
+      action: "delete",
+      module: "subscribers",
+      description: `Eliminó ${ids.length} suscriptor(es)`,
+      entity_type: "blog_subscribers",
+      new_data: { ids },
+    });
+    toast({ title: "Eliminados", description: `${ids.length} suscriptor(es) eliminados.` });
+    selection.clear();
+    setConfirmDeleteOpen(false);
+    fetchSubscribers();
   };
 
   const clearFilters = () => {
@@ -136,6 +194,8 @@ export default function AdminSubscribers() {
     setFilter("dateFrom", "");
     setFilter("dateTo", "");
   };
+
+  const headerState = selection.getSelectionStateFor(filtered);
 
   return (
     <div className="space-y-6">
@@ -149,48 +209,41 @@ export default function AdminSubscribers() {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
-          <Button size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-            <Download className="w-4 h-4 mr-2" />
-            Exportar CSV ({filtered.length})
-          </Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
-                <p className="text-2xl font-semibold">{stats.total}</p>
-              </div>
-              <Users className="w-8 h-8 text-muted-foreground/40" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Activos</p>
-                <p className="text-2xl font-semibold text-primary">{stats.active}</p>
-              </div>
-              <Mail className="w-8 h-8 text-muted-foreground/40" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Este mes</p>
-                <p className="text-2xl font-semibold">{stats.thisMonth}</p>
-              </div>
-              <Users className="w-8 h-8 text-muted-foreground/40" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPIs interactivos */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Total"
+          value={stats.total}
+          icon={Users}
+          onClick={stats.total > 0 ? () => setActiveKpi("total") : undefined}
+          hint={stats.total > 0 ? "Ver todos" : undefined}
+        />
+        <KpiCard
+          label="Activos"
+          value={stats.active}
+          icon={UserCheck}
+          accentClassName="bg-primary"
+          onClick={stats.active > 0 ? () => setActiveKpi("active") : undefined}
+          hint={stats.active > 0 ? "Ver activos" : undefined}
+        />
+        <KpiCard
+          label="Este mes"
+          value={stats.thisMonth}
+          icon={CalendarPlus}
+          onClick={stats.thisMonth > 0 ? () => setActiveKpi("month") : undefined}
+          hint={stats.thisMonth > 0 ? "Ver del mes" : undefined}
+        />
+        <KpiCard
+          label="Desuscritos"
+          value={stats.unsubscribed}
+          icon={UserX}
+          accentClassName="bg-destructive"
+          onClick={stats.unsubscribed > 0 ? () => setActiveKpi("unsubscribed") : undefined}
+          hint={stats.unsubscribed > 0 ? "Ver desuscritos" : undefined}
+        />
       </div>
 
       {/* Charts */}
@@ -219,13 +272,11 @@ export default function AdminSubscribers() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <div className="md:col-span-2">
               <Input
                 placeholder="Buscar por email o nombre…"
                 value={search}
                 onChange={(e) => setFilter("search", e.target.value)}
-                className="pl-9"
               />
             </div>
             <Select value={sourceFilter} onValueChange={(v) => setFilter("sourceFilter", v)}>
@@ -256,6 +307,17 @@ export default function AdminSubscribers() {
         </CardContent>
       </Card>
 
+      {/* Bulk actions */}
+      <BulkActionsBar
+        count={selection.count}
+        onClear={selection.clear}
+        onExportCSV={() => exportRows(selection.getSelectedRows(subscribers), "csv")}
+        onExportXLSX={() => exportRows(selection.getSelectedRows(subscribers), "xlsx")}
+        onDelete={isCeo ? () => setConfirmDeleteOpen(true) : undefined}
+        canDelete={isCeo}
+        helperText={!isCeo ? "Solo CEO puede eliminar" : undefined}
+      />
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -264,6 +326,12 @@ export default function AdminSubscribers() {
             rows={loading ? [] : filtered}
             rowKey={(r) => r.id}
             emptyMessage={loading ? "Cargando suscriptores…" : "No hay suscriptores con los filtros actuales."}
+            selection={{
+              isSelected: selection.isSelected,
+              toggle: selection.toggle,
+              headerState,
+              toggleAll: () => selection.toggleAll(filtered),
+            }}
             columns={[
               {
                 key: "name",
@@ -287,7 +355,7 @@ export default function AdminSubscribers() {
                 label: "Origen",
                 defaultWidth: 150,
                 cell: (r) => (
-                  <Badge variant="outline" className="text-xs border-gold/40 text-foreground bg-gold/5">
+                  <Badge variant="outline" className="text-xs">
                     {getSourceLabel(r.source)}
                   </Badge>
                 ),
@@ -340,6 +408,31 @@ export default function AdminSubscribers() {
           />
         </CardContent>
       </Card>
+
+      {/* KPI Detail */}
+      {kpiModal && (
+        <KpiDetailModal<Subscriber>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiModal.title}
+          description={kpiModal.description}
+          rows={kpiModal.rows}
+          rowKey={(r) => r.id}
+          columns={kpiColumns}
+          onExportCSV={() => exportRows(kpiModal.rows, "csv", `suscriptores-${activeKpi}`)}
+          onExportXLSX={() => exportRows(kpiModal.rows, "xlsx", `suscriptores-${activeKpi}`)}
+          totalLabel="suscriptores"
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleBulkDelete}
+        count={selection.count}
+        itemLabel={{ singular: "suscriptor", plural: "suscriptores" }}
+        loading={deleting}
+      />
     </div>
   );
 }

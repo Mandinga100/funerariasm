@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock } from "lucide-react";
 import { differenceInHours, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,12 +18,35 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { useAuth } from "@/hooks/useAuth";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
 import {
   PIPELINE_STAGES,
   URGENCY_LABELS,
   getUrgencyClasses,
   getPriorityClasses,
 } from "@/lib/crm-tokens";
+
+type KpiKey = "total" | "urgent" | "overdue" | "closed";
+
+const LEAD_EXPORT_COLUMNS: ExportColumn<Lead>[] = [
+  { key: "name", label: "Nombre", accessor: (l) => l.name ?? "" },
+  { key: "email", label: "Email", accessor: (l) => l.email ?? "" },
+  { key: "phone", label: "Teléfono", accessor: (l) => l.phone ?? "" },
+  { key: "comuna", label: "Comuna", accessor: (l) => l.comuna ?? "" },
+  { key: "urgency", label: "Urgencia", accessor: (l) => l.urgency ?? "" },
+  { key: "stage", label: "Etapa", accessor: (l) => l.pipeline_stage ?? "" },
+  { key: "plan", label: "Plan", accessor: (l) => l.selected_plan ?? "" },
+  { key: "value", label: "Valor estimado", accessor: (l) => l.estimated_value ?? 0 },
+  { key: "source", label: "Fuente", accessor: (l) => l.source ?? "" },
+  { key: "created", label: "Creado", accessor: (l) => l.created_at },
+];
 
 interface Lead {
   id: string;

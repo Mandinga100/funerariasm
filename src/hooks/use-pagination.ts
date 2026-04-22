@@ -5,6 +5,7 @@ export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 const DEFAULT_PAGE_SIZE: PageSize = 10;
 const STORAGE_PREFIX = "crm:pageSize:";
+const PAGE_PREFIX = "crm:page:";
 
 function readStoredPageSize(key: string): PageSize {
   if (typeof window === "undefined") return DEFAULT_PAGE_SIZE;
@@ -18,6 +19,18 @@ function readStoredPageSize(key: string): PageSize {
   return DEFAULT_PAGE_SIZE;
 }
 
+function readStoredPage(key: string): number {
+  if (typeof window === "undefined") return 1;
+  try {
+    const raw = window.localStorage.getItem(PAGE_PREFIX + key);
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  } catch {
+    /* ignore */
+  }
+  return 1;
+}
+
 /**
  * Hook senior-grade de paginación con:
  * - Persistencia por módulo en localStorage (clave única)
@@ -27,9 +40,9 @@ function readStoredPageSize(key: string): PageSize {
  */
 export function usePagination(storageKey: string, totalCount = 0) {
   const [pageSize, setPageSizeState] = useState<PageSize>(() => readStoredPageSize(storageKey));
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState<number>(() => readStoredPage(storageKey));
 
-  // Persist
+  // Persist pageSize
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_PREFIX + storageKey, String(pageSize));
@@ -37,6 +50,15 @@ export function usePagination(storageKey: string, totalCount = 0) {
       /* ignore */
     }
   }, [pageSize, storageKey]);
+
+  // Persist current page
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(PAGE_PREFIX + storageKey, String(page));
+    } catch {
+      /* ignore */
+    }
+  }, [page, storageKey]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 

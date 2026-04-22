@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 
 interface Transaction {
   id: string;
@@ -79,9 +80,12 @@ export default function AdminPagos() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_pagos", {
+    filterStatus: "all",
+    filterType: "all",
+    searchQuery: "",
+  });
+  const { filterStatus, filterType, searchQuery } = filters;
   // pagination handled via usePagination hook
   const [casesRevenue, setCasesRevenue] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -178,7 +182,7 @@ export default function AdminPagos() {
   const paginatedRows = sorted.slice(from, to + 1);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [filterStatus, filterType, searchQuery, setPage]);
+  useEffect(() => { if (filtersHydrated) setPage(1); }, [filterStatus, filterType, searchQuery, filtersHydrated, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);
@@ -244,11 +248,11 @@ export default function AdminPagos() {
       <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch sm:items-center">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setFilter("searchQuery", e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2">
           <div className="flex-1 sm:w-40">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={(v) => setFilter("filterStatus", v)}>
               <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -259,7 +263,7 @@ export default function AdminPagos() {
             </Select>
           </div>
           <div className="flex-1 sm:w-44">
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={(v) => setFilter("filterType", v)}>
               <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -271,7 +275,7 @@ export default function AdminPagos() {
           </div>
         </div>
         {(filterStatus !== "all" || filterType !== "all" || searchQuery) && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); setSearchQuery(""); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setFilter("filterStatus", "all"); setFilter("filterType", "all"); setFilter("searchQuery", ""); }}>
             <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}

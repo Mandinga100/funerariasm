@@ -1,4 +1,36 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+/**
+ * Soft golden halo that fades in/out once when the crown lands.
+ * - Mobile: lighter blur (4px) to keep filter cost low.
+ * - Desktop: 8px for richer glow.
+ * - `will-change` only active during the animation window.
+ * - Unmounts after the animation finishes so no GPU layer stays alive.
+ */
+const CrownHalo = () => {
+  const [active, setActive] = useState(true);
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setActive(false), 1300);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (!active) return null;
+
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0 animate-crown-halo rounded-full"
+      style={{
+        background:
+          "radial-gradient(circle, hsl(var(--gold) / 0.32) 0%, hsl(var(--gold) / 0.12) 38%, transparent 62%)",
+        filter: `blur(${isMobile ? 4 : 8}px)`,
+        willChange: "opacity, transform",
+      }}
+    />
+  );
+};
 import crownTier1 from "@/assets/offerings/crown-tier1.png";
 import crownTier2 from "@/assets/offerings/crown-tier2.png";
 import crownTier3 from "@/assets/offerings/crown-tier3.png";
@@ -107,16 +139,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             transformOrigin: "50% 50%",
           }}
         >
-          {/* Soft golden halo that pulses outward as the crown lands */}
-          <div
-            aria-hidden
-            className="absolute inset-0 animate-crown-halo rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, hsl(var(--gold) / 0.32) 0%, hsl(var(--gold) / 0.12) 38%, transparent 62%)",
-              filter: "blur(8px)",
-            }}
-          />
+          {/* Soft golden halo — pulses once during placement, then unmounts to free GPU */}
+          <CrownHalo />
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"

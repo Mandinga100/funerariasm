@@ -54,6 +54,19 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   suspicious: { label: "Sospechoso", className: "bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300" },
 };
 
+// Orden intuitivo de prioridad para columna Estado en pagos
+// (asc = más relevante primero para gestión funeraria/financiera).
+const PAYMENT_STATUS_PRIORITY: Record<string, number> = {
+  confirmed: 1,
+  pending_review: 2,
+  proof_uploaded: 3,
+  transfer_reported: 4,
+  initiated: 5,
+  suspicious: 6,
+  rejected: 7,
+};
+const paymentStatusRank = (s: string) => PAYMENT_STATUS_PRIORITY[s] ?? 99;
+
 const typeLabels: Record<string, string> = {
   servicio: "Servicio Funerario",
   planificacion: "Planificación Anticipada",

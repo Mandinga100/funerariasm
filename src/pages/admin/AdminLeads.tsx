@@ -424,7 +424,8 @@ export default function AdminLeads() {
             label="Urgentes"
             value={stats.urgent.length}
             icon={Flame}
-            tone="danger"
+            iconClassName="text-destructive"
+            accentClassName="border-destructive/40"
             onClick={stats.urgent.length > 0 ? () => setActiveKpi("urgent") : undefined}
             hint={stats.urgent.length > 0 ? "Ver detalles" : undefined}
           />
@@ -432,7 +433,8 @@ export default function AdminLeads() {
             label="Vencidos"
             value={stats.overdue.length}
             icon={AlarmClock}
-            tone="warning"
+            iconClassName="text-amber-500"
+            accentClassName="border-amber-500/40"
             onClick={stats.overdue.length > 0 ? () => setActiveKpi("overdue") : undefined}
             hint={stats.overdue.length > 0 ? "Ver detalles" : undefined}
           />
@@ -440,7 +442,8 @@ export default function AdminLeads() {
             label="Cerrados"
             value={stats.closed.length}
             icon={CheckCircle2}
-            tone="success"
+            iconClassName="text-emerald-500"
+            accentClassName="border-emerald-500/40"
             onClick={stats.closed.length > 0 ? () => setActiveKpi("closed") : undefined}
             hint={stats.closed.length > 0 ? "Ver detalles" : undefined}
           />

@@ -11,6 +11,7 @@ import MemorialPhoto from "@/components/memorial/MemorialPhoto";
 import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
+import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
 
 interface Memorial {
   id: string;
@@ -66,7 +67,8 @@ const MemorialDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [memorial, setMemorial] = useState<Memorial | null>(null);
   const [condolences, setCondolences] = useState<Condolence[]>([]);
-  const [offerings, setOfferings] = useState<Offering[]>([]);
+  // Non-crown demo offerings (candles, flowers) + paid crowns from DB.
+  const [baseOfferings, setBaseOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
@@ -74,6 +76,13 @@ const MemorialDetail = () => {
   const [crownModalOpen, setCrownModalOpen] = useState(false);
   const [tributesModalOpen, setTributesModalOpen] = useState(false);
   const [crownSending, setCrownSending] = useState(false);
+
+  // Centralized simulated-crown state — auto-resets on memorial change/unmount
+  // and guarantees a single visible tier across rapid clicks.
+  const { simulate: simulateCrown, mergeWithPaid } = useSimulatedCrown(memorial?.id ?? null);
+
+  // Final list shown in UI: simulated crown (if any) replaces all other crowns.
+  const offerings = useMemo(() => mergeWithPaid(baseOfferings), [baseOfferings, mergeWithPaid]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -119,7 +128,7 @@ const MemorialDetail = () => {
         setCondolences((condsRes.data as Condolence[]) || []);
         // Only crowns with completed payment persist across navigation.
         // Demo/simulated crowns live only in local state for the current session.
-        setOfferings((offeringsRes.data as Offering[]) || []);
+        setBaseOfferings((offeringsRes.data as Offering[]) || []);
       }
       setLoading(false);
     };
@@ -176,7 +185,7 @@ const MemorialDetail = () => {
       donor_name: "Anónimo",
       created_at: new Date().toISOString(),
     };
-    setOfferings((prev) => [demoOffering, ...prev]);
+    setBaseOfferings((prev) => [demoOffering, ...prev]);
     toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);
 
@@ -184,21 +193,13 @@ const MemorialDetail = () => {
     if (!memorial) return;
 
     if (data.simulate) {
-      // Visual-only demo: temporarily REPLACE every existing crown (paid or demo)
-      // with the freshly selected tier. The next navigation/reload will refetch
-      // only payment_status='completed' crowns, so the demo automatically vanishes.
-      setOfferings((prev) => {
-        const withoutCrowns = prev.filter((o) => o.offering_type !== "flower_crown");
-        const demoCrown: Offering = {
-          id: `demo-crown-${Date.now()}`,
-          offering_type: "flower_crown",
-          crown_tier: data.tier,
-          donor_name: data.donorName,
-          donor_message: data.message,
-          amount: data.amount,
-          created_at: new Date().toISOString(),
-        };
-        return [demoCrown, ...withoutCrowns];
+      // Delegate to the centralized hook: replaces any previous simulated
+      // crown atomically and cancels stale rapid clicks via its token guard.
+      simulateCrown({
+        donorName: data.donorName,
+        message: data.message,
+        amount: data.amount,
+        tier: data.tier,
       });
       toast.success(`🌺 Vista previa: Corona Tier ${data.tier}`);
       setCrownModalOpen(false);
@@ -223,10 +224,10 @@ const MemorialDetail = () => {
       return;
     }
 
-    setOfferings((prev) => [inserted as Offering, ...prev]);
+    setBaseOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);
-  }, [memorial]);
+  }, [memorial, simulateCrown]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr + "T12:00:00").toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });

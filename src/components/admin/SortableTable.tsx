@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useTablePreferences, type SortDirection } from "@/hooks/use-table-preferences";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
 
 export interface SortableColumn<T> {
   key: string;
@@ -35,6 +36,13 @@ interface SortableTableProps<T> {
   className?: string;
   /** External sort handler (e.g. when sorting happens server-side). When omitted, rows are sorted in-memory. */
   externalSort?: (key: string | null, dir: SortDirection) => void;
+  /** Cuando está presente añade una columna inicial de checkbox para selección masiva. */
+  selection?: {
+    isSelected: (id: string) => boolean;
+    toggle: (id: string) => void;
+    headerState: "none" | "some" | "all";
+    toggleAll: () => void;
+  };
 }
 
 export function SortableTable<T>({
@@ -46,6 +54,7 @@ export function SortableTable<T>({
   emptyMessage,
   className,
   externalSort,
+  selection,
 }: SortableTableProps<T>) {
   const { prefs, setColumnWidth, toggleSort } = useTablePreferences(tableKey);
 

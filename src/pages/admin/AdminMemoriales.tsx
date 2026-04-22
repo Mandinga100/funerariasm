@@ -174,6 +174,7 @@ export default function AdminMemoriales() {
               tableKey="admin_memoriales"
               rows={paginated}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "full_name",

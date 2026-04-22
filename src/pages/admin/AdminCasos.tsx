@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 
 interface ServiceCase {
   id: string;
@@ -140,8 +141,14 @@ export default function AdminCasos() {
     return true;
   });
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", filtered.length);
-  const paginatedRows = filtered.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<ServiceCase>("admin_casos", filtered, {
+    payment_status: (r) => paymentRank(r.payment_status),
+    pipeline_stage: (r) => pipelineRank(r.pipeline_stage),
+    total_amount: (r) => r.total_amount,
+    created_at: (r) => new Date(r.created_at).getTime(),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", sorted.length);
+  const paginatedRows = sorted.slice(from, to + 1);
 
   useEffect(() => { setPage(1); }, [filterPipeline, filterPayment, searchQuery, setPage]);
 
@@ -281,6 +288,7 @@ export default function AdminCasos() {
               rows={paginatedRows}
               rowKey={(r) => r.id}
               onRowClick={(r) => setSelected(r)}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "case_number",

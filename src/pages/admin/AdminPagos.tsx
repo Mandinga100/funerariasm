@@ -15,6 +15,7 @@ import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 
 interface Transaction {
   id: string;
@@ -52,6 +53,19 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   rejected: { label: "Rechazado", className: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300" },
   suspicious: { label: "Sospechoso", className: "bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300" },
 };
+
+// Orden intuitivo de prioridad para columna Estado en pagos
+// (asc = más relevante primero para gestión funeraria/financiera).
+const PAYMENT_STATUS_PRIORITY: Record<string, number> = {
+  confirmed: 1,
+  pending_review: 2,
+  proof_uploaded: 3,
+  transfer_reported: 4,
+  initiated: 5,
+  suspicious: 6,
+  rejected: 7,
+};
+const paymentStatusRank = (s: string) => PAYMENT_STATUS_PRIORITY[s] ?? 99;
 
 const typeLabels: Record<string, string> = {
   servicio: "Servicio Funerario",
@@ -154,8 +168,14 @@ export default function AdminPagos() {
     return true;
   });
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("pagos", filtered.length);
-  const paginatedRows = filtered.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<Transaction>("admin_pagos", filtered, {
+    status: (r) => paymentStatusRank(r.status),
+    amount: (r) => r.amount,
+    created_at: (r) => new Date(r.created_at).getTime(),
+    payment_type: (r) => typeLabels[r.payment_type] ?? r.payment_type,
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("pagos", sorted.length);
+  const paginatedRows = sorted.slice(from, to + 1);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [filterStatus, filterType, searchQuery, setPage]);
@@ -290,6 +310,7 @@ export default function AdminPagos() {
               rows={paginatedRows}
               rowKey={(r) => r.id}
               onRowClick={(r) => setSelected(r)}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "transaction_ref",

@@ -17,6 +17,7 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import type { Tables } from "@/integrations/supabase/types";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 
 type BlogPost = Tables<"blog_posts">;
 
@@ -34,8 +35,13 @@ function slugify(t: string) {
 export default function AdminBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("blog", posts.length);
-  const paginatedPosts = posts.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<BlogPost>("admin_blog", posts, {
+    created_at: (r) => new Date(r.created_at).getTime(),
+    published_at: (r) => (r.published_at ? new Date(r.published_at).getTime() : 0),
+    published: (r) => (r.published ? 1 : 0),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("blog", sorted.length);
+  const paginatedPosts = sorted.slice(from, to + 1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<BlogPost>>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -213,6 +219,7 @@ export default function AdminBlog() {
               tableKey="admin_blog"
               rows={paginatedPosts}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "title",

@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useToast } from "@/hooks/use-toast";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -35,6 +36,18 @@ const STATUS_META: Record<string, { label: string; emoji: string; color: string;
   traslado: { label: "Traslado", emoji: "🟠", color: "bg-orange-100 text-orange-800 border-orange-300", desc: "Traslado al cementerio o crematorio" },
   finalizado: { label: "Finalizado", emoji: "🟢", color: "bg-green-100 text-green-800 border-green-300", desc: "Servicio completado satisfactoriamente" },
 };
+
+// Orden intuitivo de seguimiento funerario: servicios activos primero,
+// finalizados al final.
+const TRACKING_STATUS_PRIORITY: Record<string, number> = {
+  ceremonia: 1,
+  velatorio: 2,
+  traslado: 3,
+  en_preparación: 4,
+  recibido: 5,
+  finalizado: 6,
+};
+const trackingStatusRank = (s: string) => TRACKING_STATUS_PRIORITY[s] ?? 99;
 
 interface TrackingItem {
   id: string;
@@ -80,8 +93,13 @@ export default function AdminTracking() {
     });
   }, [items, searchQuery, filterStatus]);
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", filtered.length);
-  const paginated = useMemo(() => filtered.slice(from, to + 1), [filtered, from, to]);
+  const { sorted, sortHandled } = useSortedRows<TrackingItem>("admin_tracking", filtered, {
+    status: (r) => trackingStatusRank(r.status),
+    assigned_at: (r) => new Date(r.assigned_at).getTime(),
+    updated_at: (r) => new Date(r.updated_at).getTime(),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", sorted.length);
+  const paginated = useMemo(() => sorted.slice(from, to + 1), [sorted, from, to]);
   useEffect(() => { setPage(1); }, [searchQuery, filterStatus, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
@@ -252,6 +270,7 @@ export default function AdminTracking() {
               tableKey="admin_tracking"
               rows={paginated}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               onRowClick={(r) => openDetail(r)}
               columns={[
                 {

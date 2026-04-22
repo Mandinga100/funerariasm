@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock } from "lucide-react";
 import { differenceInHours, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,12 +18,35 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { useAuth } from "@/hooks/useAuth";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
 import {
   PIPELINE_STAGES,
   URGENCY_LABELS,
   getUrgencyClasses,
   getPriorityClasses,
 } from "@/lib/crm-tokens";
+
+type KpiKey = "total" | "urgent" | "overdue" | "closed";
+
+const LEAD_EXPORT_COLUMNS: ExportColumn<Lead>[] = [
+  { key: "name", label: "Nombre", accessor: (l) => l.name ?? "" },
+  { key: "email", label: "Email", accessor: (l) => l.email ?? "" },
+  { key: "phone", label: "Teléfono", accessor: (l) => l.phone ?? "" },
+  { key: "comuna", label: "Comuna", accessor: (l) => l.comuna ?? "" },
+  { key: "urgency", label: "Urgencia", accessor: (l) => l.urgency ?? "" },
+  { key: "stage", label: "Etapa", accessor: (l) => l.pipeline_stage ?? "" },
+  { key: "plan", label: "Plan", accessor: (l) => l.selected_plan ?? "" },
+  { key: "value", label: "Valor estimado", accessor: (l) => l.estimated_value ?? 0 },
+  { key: "source", label: "Fuente", accessor: (l) => l.source ?? "" },
+  { key: "created", label: "Creado", accessor: (l) => l.created_at },
+];
 
 interface Lead {
   id: string;
@@ -80,6 +103,104 @@ export default function AdminLeads() {
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { isCeo } = useAuth();
+  const selection = useRowSelection<Lead>((l) => l.id);
+  const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const urgent = leads.filter((l) => l.urgency === "inmediata" || l.urgency === "immediate");
+    const overdue = leads.filter((l) => {
+      if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
+      const hours = differenceInHours(now, new Date(l.created_at));
+      if (l.urgency === "inmediata" || l.urgency === "immediate") return hours >= 2;
+      if (l.urgency === "normal") return hours >= 24;
+      return hours >= 72;
+    });
+    const closed = leads.filter((l) => (l.pipeline_stage ?? "") === "cerrado" || l.status === "closed");
+    return { total: leads.length, urgent, overdue, closed };
+  }, [leads]);
+
+  const kpiRows = useMemo(() => {
+    if (activeKpi === "total") return leads;
+    if (activeKpi === "urgent") return stats.urgent;
+    if (activeKpi === "overdue") return stats.overdue;
+    if (activeKpi === "closed") return stats.closed;
+    return [] as Lead[];
+  }, [activeKpi, leads, stats]);
+
+  const kpiMeta: Record<KpiKey, { title: string; description: string }> = {
+    total: { title: "Todos los leads", description: "Listado completo de contactos recibidos." },
+    urgent: { title: "Leads urgentes", description: "Contactos marcados como urgencia inmediata." },
+    overdue: { title: "Leads vencidos sin contactar", description: "Leads en etapa 'Nuevo' que superaron su SLA." },
+    closed: { title: "Leads cerrados", description: "Contactos cuyo proceso ya finalizó." },
+  };
+
+  const kpiColumns: KpiDetailColumn<Lead>[] = useMemo(() => [
+    { key: "name", label: "Nombre", cell: (l) => <span className="font-medium">{l.name ?? "—"}</span>, exportAccessor: (l) => l.name ?? "" },
+    { key: "phone", label: "Teléfono", cell: (l) => <span className="tabular-nums">{l.phone ?? "—"}</span>, exportAccessor: (l) => l.phone ?? "" },
+    {
+      key: "urgency",
+      label: "Urgencia",
+      cell: (l) => l.urgency ? (
+        <Badge variant="secondary" className={cn("text-[10px]", getUrgencyClasses(l.urgency))}>
+          {URGENCY_LABELS[l.urgency] ?? l.urgency}
+        </Badge>
+      ) : <span className="text-muted-foreground">—</span>,
+      exportAccessor: (l) => l.urgency ?? "",
+    },
+    { key: "stage", label: "Etapa", cell: (l) => l.pipeline_stage ?? "nuevo", exportAccessor: (l) => l.pipeline_stage ?? "nuevo" },
+    {
+      key: "created",
+      label: "Recibido",
+      cell: (l) => <span className="text-xs text-muted-foreground">{format(new Date(l.created_at), "dd/MM HH:mm", { locale: es })}</span>,
+      exportAccessor: (l) => l.created_at,
+      align: "right",
+    },
+  ], []);
+
+  const exportRows = (rows: Lead[], fmt: "csv" | "xlsx") => {
+    const fname = `leads-${todayStamp()}`;
+    if (fmt === "csv") downloadCSV(rows, LEAD_EXPORT_COLUMNS, fname);
+    else downloadXLSX(rows, LEAD_EXPORT_COLUMNS, fname, "Leads");
+  };
+
+  const exportKpi = (fmt: "csv" | "xlsx") => {
+    const cols: ExportColumn<Lead>[] = kpiColumns.map((c) => ({
+      key: c.key,
+      label: c.label,
+      accessor: c.exportAccessor ?? (() => ""),
+    }));
+    const fname = `leads-${activeKpi ?? "kpi"}-${todayStamp()}`;
+    if (fmt === "csv") downloadCSV(kpiRows, cols, fname);
+    else downloadXLSX(kpiRows, cols, fname, "Leads");
+  };
+
+  const handleBulkDelete = async () => {
+    if (!isCeo) return;
+    const ids = Array.from(selection.selectedIds);
+    if (ids.length === 0) return;
+    setDeleting(true);
+    const { error } = await supabase.from("contact_leads").delete().in("id", ids);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    logAudit({
+      action: "delete",
+      module: "leads",
+      description: `Eliminó ${ids.length} lead(s) en bloque`,
+      entity_type: "contact_lead",
+      new_data: { ids },
+    });
+    toast({ title: "Eliminados", description: `${ids.length} lead(s) eliminados` });
+    selection.clear();
+    setConfirmDeleteOpen(false);
+    loadLeads();
+  };
 
   useEffect(() => {
     const openId = searchParams.get("open");
@@ -289,7 +410,60 @@ export default function AdminLeads() {
         </div>
       </div>
 
-      {/* Mobile: Accordion-style stacked stages */}
+      {/* KPIs interactivos (oculto en kanban desktop para no recargar UI) */}
+      {(isMobile || viewMode === "list") && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <KpiCard
+            label="Total leads"
+            value={stats.total}
+            icon={Inbox}
+            onClick={stats.total > 0 ? () => setActiveKpi("total") : undefined}
+            hint={stats.total > 0 ? "Ver todos" : undefined}
+          />
+          <KpiCard
+            label="Urgentes"
+            value={stats.urgent.length}
+            icon={Flame}
+            iconClassName="text-destructive"
+            accentClassName="border-destructive/40"
+            onClick={stats.urgent.length > 0 ? () => setActiveKpi("urgent") : undefined}
+            hint={stats.urgent.length > 0 ? "Ver detalles" : undefined}
+          />
+          <KpiCard
+            label="Vencidos"
+            value={stats.overdue.length}
+            icon={AlarmClock}
+            iconClassName="text-amber-500"
+            accentClassName="border-amber-500/40"
+            onClick={stats.overdue.length > 0 ? () => setActiveKpi("overdue") : undefined}
+            hint={stats.overdue.length > 0 ? "Ver detalles" : undefined}
+          />
+          <KpiCard
+            label="Cerrados"
+            value={stats.closed.length}
+            icon={CheckCircle2}
+            iconClassName="text-emerald-500"
+            accentClassName="border-emerald-500/40"
+            onClick={stats.closed.length > 0 ? () => setActiveKpi("closed") : undefined}
+            hint={stats.closed.length > 0 ? "Ver detalles" : undefined}
+          />
+        </div>
+      )}
+
+      {/* Bulk actions bar */}
+      {viewMode === "list" && !isMobile && (
+        <BulkActionsBar
+          count={selection.count}
+          onClear={selection.clear}
+          onExportCSV={() => exportRows(selection.getSelectedRows(filtered), "csv")}
+          onExportXLSX={() => exportRows(selection.getSelectedRows(filtered), "xlsx")}
+          onDelete={isCeo ? () => setConfirmDeleteOpen(true) : undefined}
+          canDelete={isCeo}
+          helperText={!isCeo ? "Solo CEO puede eliminar" : undefined}
+        />
+      )}
+
+
       {isMobile ? (
         <MobileStagesView
           leadsByStage={leadsByStage}
@@ -356,10 +530,40 @@ export default function AdminLeads() {
           </div>
         </DragDropContext>
       ) : (
-        <LeadListView leads={filtered} onSelect={setSelectedLead} onStageChange={handleStageChange} />
+        <LeadListView
+          leads={filtered}
+          onSelect={setSelectedLead}
+          onStageChange={handleStageChange}
+          selection={selection}
+        />
       )}
 
       <LeadDetailSheet lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdate={loadLeads} />
+
+      {activeKpi && (
+        <KpiDetailModal<Lead>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiMeta[activeKpi].title}
+          description={kpiMeta[activeKpi].description}
+          rows={kpiRows}
+          rowKey={(l) => l.id}
+          columns={kpiColumns}
+          onRowClick={(l) => { setSelectedLead(l); setActiveKpi(null); }}
+          onExportCSV={() => exportKpi("csv")}
+          onExportXLSX={() => exportKpi("xlsx")}
+          totalLabel="leads"
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleBulkDelete}
+        count={selection.count}
+        itemLabel={{ singular: "lead", plural: "leads" }}
+        loading={deleting}
+      />
     </div>
   );
 }
@@ -521,15 +725,33 @@ function LeadCard({ lead }: { lead: Lead }) {
 }
 
 /* ─── Desktop list view ─── */
-function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSelect: (l: Lead) => void; onStageChange: (id: string, stage: string) => void }) {
+function LeadListView({
+  leads,
+  onSelect,
+  onStageChange,
+  selection,
+}: {
+  leads: Lead[];
+  onSelect: (l: Lead) => void;
+  onStageChange: (id: string, stage: string) => void;
+  selection: ReturnType<typeof useRowSelection<Lead>>;
+}) {
   const { page, pageSize, totalPages, setPage, setPageSize, from, to } = usePagination("leads", leads.length);
   const paginated = leads.slice(from, to + 1);
+  const headerState = selection.getSelectionStateFor(paginated);
   return (
     <div className="space-y-2">
       <div className="rounded-md border overflow-x-auto">
         <table className="w-full text-sm table-auto">
           <thead>
             <tr className="border-b bg-muted/50">
+              <th className="px-3 py-2 w-10">
+                <SelectionCheckbox
+                  state={headerState}
+                  onChange={() => selection.toggleAll(paginated)}
+                  label="Seleccionar todos en esta página"
+                />
+              </th>
               <th className="text-left px-3 py-2 font-medium whitespace-nowrap">Nombre</th>
               <th className="text-center px-3 py-2 font-medium whitespace-nowrap w-16">Prior.</th>
               <th className="text-left px-3 py-2 font-medium hidden sm:table-cell whitespace-nowrap">Contacto</th>
@@ -541,36 +763,56 @@ function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSel
             </tr>
           </thead>
           <tbody>
-            {paginated.map(lead => (
-              <tr key={lead.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(lead)}>
-                <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
-                <td className="px-3 py-2 text-center"><PriorityBadge score={(() => { const c = lead.ai_classification as any; return c?.priority_score ?? null; })()} /></td>
-                <td className="px-3 py-2 text-xs hidden sm:table-cell">
-                  <div className="truncate max-w-[160px]">{lead.email}</div>
-                  <div className="text-muted-foreground">{lead.phone}</div>
-                </td>
-                <td className="px-3 py-2">
-                  {lead.urgency && (
-                    <Badge className={cn("text-[10px]", getUrgencyClasses(lead.urgency))} variant="secondary">
-                      {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
-                    </Badge>
+            {paginated.map(lead => {
+              const isSel = selection.isSelected(lead.id);
+              return (
+                <tr
+                  key={lead.id}
+                  className={cn(
+                    "border-b hover:bg-muted/30 cursor-pointer transition-colors",
+                    isSel && "bg-primary/5",
                   )}
-                </td>
-                <td className="px-3 py-2">
-                  <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>
-                    <SelectTrigger className="h-7 text-xs w-[120px]" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
-                <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
-                <td className="px-3 py-2">
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button>
-                </td>
-              </tr>
-            ))}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest("[data-no-row-click]")) return;
+                    onSelect(lead);
+                  }}
+                >
+                  <td className="px-3 py-2">
+                    <SelectionCheckbox
+                      state={isSel}
+                      onChange={() => selection.toggle(lead.id)}
+                      label={`Seleccionar ${lead.name ?? "lead"}`}
+                    />
+                  </td>
+                  <td className="px-3 py-2 font-medium max-w-[180px] truncate">{lead.name ?? "—"}</td>
+                  <td className="px-3 py-2 text-center"><PriorityBadge score={(() => { const c = lead.ai_classification as any; return c?.priority_score ?? null; })()} /></td>
+                  <td className="px-3 py-2 text-xs hidden sm:table-cell">
+                    <div className="truncate max-w-[160px]">{lead.email}</div>
+                    <div className="text-muted-foreground">{lead.phone}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    {lead.urgency && (
+                      <Badge className={cn("text-[10px]", getUrgencyClasses(lead.urgency))} variant="secondary">
+                        {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-3 py-2" data-no-row-click>
+                    <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => { onStageChange(lead.id, v); }}>
+                      <SelectTrigger className="h-7 text-xs w-[120px]" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.emoji} {s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{lead.source ?? "—"}</td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell whitespace-nowrap">{format(new Date(lead.created_at), "dd/MM HH:mm")}</td>
+                  <td className="px-3 py-2">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -101,9 +101,12 @@ export default function AdminCasos() {
   const [cases, setCases] = useState<ServiceCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ServiceCase | null>(null);
-  const [filterPipeline, setFilterPipeline] = useState("all");
-  const [filterPayment, setFilterPayment] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_casos", {
+    filterPipeline: "all",
+    filterPayment: "all",
+    searchQuery: "",
+  });
+  const { filterPipeline, filterPayment, searchQuery } = filters;
   const { toast } = useToast();
 
   const load = useCallback(async () => {

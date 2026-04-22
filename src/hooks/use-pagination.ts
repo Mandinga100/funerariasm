@@ -40,9 +40,9 @@ function readStoredPage(key: string): number {
  */
 export function usePagination(storageKey: string, totalCount = 0) {
   const [pageSize, setPageSizeState] = useState<PageSize>(() => readStoredPageSize(storageKey));
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState<number>(() => readStoredPage(storageKey));
 
-  // Persist
+  // Persist pageSize
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_PREFIX + storageKey, String(pageSize));
@@ -50,6 +50,15 @@ export function usePagination(storageKey: string, totalCount = 0) {
       /* ignore */
     }
   }, [pageSize, storageKey]);
+
+  // Persist current page
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(PAGE_PREFIX + storageKey, String(page));
+    } catch {
+      /* ignore */
+    }
+  }, [page, storageKey]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 

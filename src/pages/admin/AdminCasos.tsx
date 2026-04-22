@@ -256,78 +256,113 @@ export default function AdminCasos() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="rounded-md border hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Caso</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Pago</TableHead>
-                  <TableHead>Monto</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRows.map(c => {
-                  const stale = isStale(c);
-                  return (
-                  <TableRow key={c.id} className={cn("cursor-pointer hover:bg-muted/30", stale && "bg-red-50 dark:bg-red-950/40 border-l-2 border-l-red-500")} onClick={() => setSelected(c)}>
-                    <TableCell className="font-mono text-xs">
-                      <div className="flex items-center gap-1.5">
+          <div className="hidden md:block">
+            <SortableTable<ServiceCase>
+              tableKey="admin_casos"
+              rows={paginatedRows}
+              rowKey={(r) => r.id}
+              onRowClick={(r) => setSelected(r)}
+              columns={[
+                {
+                  key: "case_number",
+                  label: "Caso",
+                  defaultWidth: 160,
+                  cell: (r) => {
+                    const stale = isStale(r);
+                    return (
+                      <div className="flex items-center gap-1.5 font-mono text-xs">
                         {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
-                        {c.case_number}
+                        {r.case_number}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-sm">{c.client_name ?? "Sin nombre"}</p>
-                        {c.client_phone && <p className="text-xs text-muted-foreground">{c.client_phone}</p>}
-                      </div>
-                    </TableCell>
-                    <TableCell><Badge variant="secondary" className="text-xs">{c.selected_plan ?? "—"}</Badge></TableCell>
-                    <TableCell>{getPipelineBadge(c.pipeline_stage)}</TableCell>
-                    <TableCell>{getPaymentBadge(c.payment_status)}</TableCell>
-                    <TableCell className="font-semibold">{c.total_amount > 0 ? fmt(c.total_amount) : "—"}</TableCell>
-                    <TableCell>
+                    );
+                  },
+                },
+                {
+                  key: "client_name",
+                  label: "Cliente",
+                  defaultWidth: 200,
+                  cell: (r) => (
+                    <div>
+                      <p className="font-medium text-sm">{r.client_name ?? "Sin nombre"}</p>
+                      {r.client_phone && <p className="text-xs text-muted-foreground">{r.client_phone}</p>}
+                    </div>
+                  ),
+                },
+                {
+                  key: "selected_plan",
+                  label: "Plan",
+                  defaultWidth: 140,
+                  cell: (r) => <Badge variant="secondary" className="text-xs">{r.selected_plan ?? "—"}</Badge>,
+                },
+                {
+                  key: "pipeline_stage",
+                  label: "Etapa",
+                  defaultWidth: 140,
+                  cell: (r) => getPipelineBadge(r.pipeline_stage),
+                },
+                {
+                  key: "payment_status",
+                  label: "Pago",
+                  defaultWidth: 130,
+                  cell: (r) => getPaymentBadge(r.payment_status),
+                },
+                {
+                  key: "total_amount",
+                  label: "Monto",
+                  defaultWidth: 130,
+                  cell: (r) => <span className="font-semibold">{r.total_amount > 0 ? fmt(r.total_amount) : "—"}</span>,
+                },
+                {
+                  key: "created_at",
+                  label: "Fecha",
+                  defaultWidth: 140,
+                  cell: (r) => {
+                    const stale = isStale(r);
+                    return (
                       <div className="flex items-center gap-1">
-                        <span className="text-sm text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yy", { locale: es })}</span>
-                        {stale && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{staleHours(c)}h</Badge>}
+                        <span className="text-sm text-muted-foreground">{format(new Date(r.created_at), "dd/MM/yy", { locale: es })}</span>
+                        {stale && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{staleHours(r)}h</Badge>}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><MoreVertical className="w-4 h-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelected(c)}><Eye className="w-4 h-4 mr-2" />Ver detalle</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {PIPELINE_STAGES.filter(s => s.id !== c.pipeline_stage).map(s => (
-                            <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { pipeline_stage: s.id } as any)}>
-                              {s.emoji} Mover a {s.label}
-                            </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuSeparator />
-                          {PAYMENT_STATUSES.filter(s => s.id !== c.payment_status).map(s => (
-                            <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { payment_status: s.id } as any)}>
-                              💰 Pago: {s.label}
-                            </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600" onClick={() => deleteCase(c.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                    );
+                  },
+                },
+                {
+                  key: "actions",
+                  label: "Acciones",
+                  sortable: false,
+                  resizable: false,
+                  defaultWidth: 90,
+                  align: "right",
+                  cellClassName: "text-right",
+                  cell: (c) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSelected(c)}><Eye className="w-4 h-4 mr-2" />Ver detalle</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {PIPELINE_STAGES.filter(s => s.id !== c.pipeline_stage).map(s => (
+                          <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { pipeline_stage: s.id } as any)}>
+                            {s.emoji} Mover a {s.label}
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        ))}
+                        <DropdownMenuSeparator />
+                        {PAYMENT_STATUSES.filter(s => s.id !== c.payment_status).map(s => (
+                          <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { payment_status: s.id } as any)}>
+                            💰 Pago: {s.label}
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" onClick={() => deleteCase(c.id)}>
+                          <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                } satisfies SortableColumn<ServiceCase>,
+              ]}
+            />
           </div>
 
           {/* Mobile cards */}

@@ -312,8 +312,10 @@ const MemorialDetail = () => {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([{ name: "Legados Eternos", path: "/legados-eternos" }, { name: memorial.full_name, path: `/legados-eternos/${memorial.slug}` }])) }} />
 
       <section className="pt-28 pb-12 bg-primary text-primary-foreground">
-        <div className="container max-w-3xl">
+        <div className="container">
           <Breadcrumbs items={[{ label: "Legados Eternos", href: "/legados-eternos" }, { label: memorial.full_name }]} />
+        </div>
+        <div className="container max-w-3xl">
           <Link to="/legados-eternos" className="group inline-flex items-center gap-2 text-gold/70 hover:text-gold text-sm mb-10 px-5 py-2.5 rounded-full border border-gold/20 hover:border-gold/50 bg-gold/5 hover:bg-gold/10 transition-all duration-300 shadow-[0_0_12px_-4px_hsl(var(--gold)/0.15)] hover:shadow-[0_0_20px_-4px_hsl(var(--gold)/0.35)]">
             <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
             Volver a Legados Eternos

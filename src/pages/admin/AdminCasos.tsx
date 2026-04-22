@@ -154,7 +154,7 @@ export default function AdminCasos() {
   const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", sorted.length);
   const paginatedRows = sorted.slice(from, to + 1);
 
-  useEffect(() => { setPage(1); }, [filterPipeline, filterPayment, searchQuery, setPage]);
+  useEffect(() => { if (filtersHydrated) setPage(1); }, [filterPipeline, filterPayment, searchQuery, filtersHydrated, setPage]);
 
   const updateCase = async (id: string, updates: Partial<ServiceCase>) => {
     const { error } = await supabase.from("service_cases").update(updates as any).eq("id", id);

@@ -422,6 +422,21 @@ export default function AdminAnalyticsComunas() {
           )}
         </CardContent>
       </Card>
+
+      {kpiModal && (
+        <KpiDetailModal<any>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiModal.title}
+          description={kpiModal.description}
+          rows={kpiModal.rows as any[]}
+          rowKey={kpiModal.rowKey as any}
+          columns={kpiModal.columns as any}
+          onExportCSV={() => exportKpi("csv")}
+          onExportXLSX={() => exportKpi("xlsx")}
+          totalLabel="filas"
+        />
+      )}
     </div>
   );
 }

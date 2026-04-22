@@ -33,8 +33,13 @@ export default function AdminMemoriales() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Memorial>>(EMPTY);
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("memoriales", items.length);
-  const paginated = items.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<Memorial>("admin_memoriales", items, {
+    death_date: (r) => (r.death_date ? new Date(r.death_date).getTime() : 0),
+    created_at: (r) => new Date(r.created_at).getTime(),
+    published: (r) => (r.published ? 1 : 0),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("memoriales", sorted.length);
+  const paginated = sorted.slice(from, to + 1);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();

@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -71,8 +72,11 @@ export default function AdminTracking() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [detailSheet, setDetailSheet] = useState(false);
   const [selectedItem, setSelectedItem] = useState<TrackingItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_tracking", {
+    searchQuery: "",
+    filterStatus: "all",
+  });
+  const { searchQuery, filterStatus } = filters;
   const [form, setForm] = useState({ family_name: "", family_email: "", family_phone: "", notes: "" });
   const { toast } = useToast();
 
@@ -100,7 +104,7 @@ export default function AdminTracking() {
   });
   const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", sorted.length);
   const paginated = useMemo(() => sorted.slice(from, to + 1), [sorted, from, to]);
-  useEffect(() => { setPage(1); }, [searchQuery, filterStatus, setPage]);
+  useEffect(() => { if (filtersHydrated) setPage(1); }, [searchQuery, filterStatus, filtersHydrated, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("family_tracking").update({ status }).eq("id", id);

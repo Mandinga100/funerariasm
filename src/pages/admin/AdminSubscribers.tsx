@@ -15,6 +15,7 @@ import { SubscribersSourceChart } from "@/components/admin/SubscribersSourceChar
 import { getSourceLabel } from "@/lib/subscription-source";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 
 interface Subscriber {
   id: string;

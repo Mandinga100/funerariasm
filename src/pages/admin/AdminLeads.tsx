@@ -17,6 +17,7 @@ import LeadDetailSheet from "@/components/admin/crm/LeadDetailSheet";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 
 interface Lead {
   id: string;

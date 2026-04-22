@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 
 interface Transaction {
   id: string;

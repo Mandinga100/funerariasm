@@ -212,21 +212,42 @@ export default function AdminAnalyticsComunas() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        {kpis.map((k) => (
-          <Card key={k.label}>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-muted/50">
-                  <k.icon className={`w-5 h-5 ${k.color}`} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold leading-none">{k.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard
+          label="Pageviews"
+          value={totalViews.toLocaleString("es-CL")}
+          icon={MapPin}
+          iconClassName="text-blue-500"
+          accentClassName="bg-blue-500"
+          onClick={rows.length > 0 ? () => setActiveKpi("views") : undefined}
+          hint={rows.length > 0 ? "Ver ranking por comuna" : undefined}
+        />
+        <KpiCard
+          label="Conversiones"
+          value={totalConv.toLocaleString("es-CL")}
+          icon={ArrowRightLeft}
+          iconClassName="text-emerald-500"
+          accentClassName="bg-emerald-500"
+          onClick={totalConv > 0 ? () => setActiveKpi("conv") : undefined}
+          hint={totalConv > 0 ? "Ver detalle por evento" : undefined}
+        />
+        <KpiCard
+          label="CTR Global"
+          value={`${overallCtr.toFixed(1)}%`}
+          icon={Phone}
+          iconClassName="text-purple-500"
+          accentClassName="bg-purple-500"
+          onClick={rows.length > 0 ? () => setActiveKpi("ctr") : undefined}
+          hint={rows.length > 0 ? "Ver CTR por comuna" : undefined}
+        />
+        <KpiCard
+          label="Comunas activas"
+          value={`${activeComunas}/52`}
+          icon={FileText}
+          iconClassName="text-amber-500"
+          accentClassName="bg-amber-500"
+          onClick={rows.length > 0 ? () => setActiveKpi("comunas") : undefined}
+          hint={rows.length > 0 ? "Ver listado completo" : undefined}
+        />
       </div>
 
       {/* Charts */}

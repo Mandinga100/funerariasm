@@ -558,6 +558,33 @@ export default function AdminCasos() {
         onClose={() => setSelected(null)}
         onUpdate={load}
       />
+
+      {/* KPI detail modal */}
+      <KpiDetailModal<ServiceCase>
+        open={!!activeKpi}
+        onClose={() => setActiveKpi(null)}
+        title={activeKpi ? KPI_TITLES[activeKpi].title : ""}
+        description={activeKpi ? KPI_TITLES[activeKpi].description : ""}
+        rows={kpiRows}
+        rowKey={(r) => r.id}
+        columns={kpiColumns}
+        summary={kpiSummary}
+        onRowClick={(r) => { setSelected(r); setActiveKpi(null); }}
+        onExportCSV={() => activeKpi && exportRows(kpiRows, "csv")}
+        onExportXLSX={() => activeKpi && exportRows(kpiRows, "xlsx")}
+        emptyMessage="No hay casos en esta categoría."
+        totalLabel="casos"
+      />
+
+      {/* Bulk delete confirm */}
+      <ConfirmDeleteDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleBulkDelete}
+        count={selection.count}
+        itemLabel={{ singular: "caso", plural: "casos" }}
+        loading={deleting}
+      />
     </div>
   );
 }

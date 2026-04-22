@@ -163,6 +163,51 @@ export default function AdminRevenueComunas() {
     else { setSortKey(k); setSortDir("desc"); }
   };
 
+  /* ─── KPI modal config ─── */
+  const kpiModal = useMemo(() => {
+    if (!activeKpi) return null;
+    const cols: KpiDetailColumn<RevenueRow>[] = [
+      { key: "comuna", label: "Comuna", cell: (r) => <span className="font-medium">{r.nombre}</span>, exportAccessor: (r) => r.nombre },
+      { key: "rev", label: "Ingresos", align: "right", cell: (r) => <span className="font-semibold text-gold tabular-nums">{r.totalRevenue > 0 ? fmtCLP(r.totalRevenue) : "—"}</span>, exportAccessor: (r) => r.totalRevenue },
+      { key: "cases", label: "Casos", align: "right", cell: (r) => <span className="tabular-nums">{r.cases || "—"}</span>, exportAccessor: (r) => r.cases },
+      { key: "leads", label: "Leads", align: "right", cell: (r) => <span className="tabular-nums">{r.leads || "—"}</span>, exportAccessor: (r) => r.leads },
+      { key: "views", label: "Pageviews", align: "right", cell: (r) => <span className="tabular-nums">{r.views || "—"}</span>, exportAccessor: (r) => r.views },
+      { key: "ticket", label: "Ticket prom.", align: "right", cell: (r) => <span className="text-muted-foreground tabular-nums">{r.avgTicket > 0 ? fmtCLP(r.avgTicket) : "—"}</span>, exportAccessor: (r) => r.avgTicket },
+    ];
+    const titles: Record<string, string> = {
+      revenue: "Comunas con ingresos atribuidos",
+      cases: "Comunas con casos contratados",
+      leads: "Comunas con leads atribuidos",
+      comunas: "Listado completo de comunas con actividad",
+    };
+    const filterFn: Record<string, (r: RevenueRow) => boolean> = {
+      revenue: (r) => r.totalRevenue > 0,
+      cases: (r) => r.cases > 0,
+      leads: (r) => r.leads > 0,
+      comunas: (r) => r.totalRevenue > 0,
+    };
+    const filtered = rows.filter(filterFn[activeKpi]);
+    return {
+      title: titles[activeKpi],
+      description: range === 0 ? "Histórico completo." : `Datos de los últimos ${range} días.`,
+      rows: [...filtered].sort((a, b) => b.totalRevenue - a.totalRevenue),
+      rowKey: (r: RevenueRow) => r.slug,
+      columns: cols,
+      filename: `roi_${activeKpi}`,
+    };
+  }, [activeKpi, rows, range]);
+
+  const exportKpi = (format: "csv" | "xlsx") => {
+    if (!kpiModal) return;
+    const exportColumns = kpiModal.columns
+      .filter((c: any) => c.exportAccessor)
+      .map((c: any) => ({ key: c.key, label: c.label, accessor: c.exportAccessor }));
+    const filename = `${kpiModal.filename}_${todayStamp()}`;
+    if (format === "csv") downloadCSV(kpiModal.rows, exportColumns, filename);
+    else downloadXLSX(kpiModal.rows, exportColumns, filename, "ROI Comunas");
+    toast({ title: "Exportación completada", description: `${kpiModal.rows.length} comunas exportadas.` });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">

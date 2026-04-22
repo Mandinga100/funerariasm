@@ -367,6 +367,17 @@ export default function AdminTracking() {
         </Select>
       </div>
 
+      {/* Bulk actions */}
+      <BulkActionsBar
+        count={selection.count}
+        onClear={selection.clear}
+        onExportCSV={() => exportRows(selection.getSelectedRows(items), "csv")}
+        onExportXLSX={() => exportRows(selection.getSelectedRows(items), "xlsx")}
+        onDelete={isCeo ? () => setBulkDeleteOpen(true) : undefined}
+        canDelete={isCeo}
+        helperText={!isCeo ? "Solo CEO puede eliminar" : undefined}
+      />
+
       {/* Content */}
       {loading ? (
         <p className="text-muted-foreground text-center py-8">Cargando...</p>

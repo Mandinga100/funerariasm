@@ -34,11 +34,14 @@ export default function AdminSubscribers() {
   const { toast } = useToast();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [rangeDays, setRangeDays] = useState<number>(30);
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_subscribers", {
+    search: "",
+    sourceFilter: "all",
+    dateFrom: "",
+    dateTo: "",
+    rangeDays: 30,
+  });
+  const { search, sourceFilter, dateFrom, dateTo, rangeDays } = filters;
 
   const fetchSubscribers = async () => {
     setLoading(true);

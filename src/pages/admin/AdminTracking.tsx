@@ -584,6 +584,33 @@ export default function AdminTracking() {
       {selectedItem && (
         <TrackingDetailSheet open={detailSheet} onOpenChange={setDetailSheet} item={selectedItem} onEdit={openEdit} onCopyLink={copyCode} />
       )}
+
+      {/* KPI Detail Modal */}
+      {kpiModal && (
+        <KpiDetailModal<TrackingItem>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiModal.title}
+          description={kpiModal.description}
+          rows={kpiModal.rows}
+          rowKey={(r) => r.id}
+          columns={kpiColumns}
+          onRowClick={(r) => { setActiveKpi(null); openDetail(r); }}
+          onExportCSV={() => exportRows(kpiModal.rows, "csv", `seguimientos-${activeKpi}`)}
+          onExportXLSX={() => exportRows(kpiModal.rows, "xlsx", `seguimientos-${activeKpi}`)}
+          totalLabel="seguimientos"
+        />
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleBulkDelete}
+        count={selection.count}
+        itemLabel={{ singular: "seguimiento", plural: "seguimientos" }}
+        loading={bulkDeleting}
+      />
     </div>
   );
 }

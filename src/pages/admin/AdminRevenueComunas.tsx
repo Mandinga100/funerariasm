@@ -190,22 +190,42 @@ export default function AdminRevenueComunas() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><DollarSign className="w-3 h-3" />Ingresos atribuidos</div>
-          <div className="text-2xl font-semibold">{fmtCLP(totals.revenue)}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><Target className="w-3 h-3" />Casos contratados</div>
-          <div className="text-2xl font-semibold">{totals.cases}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><Search className="w-3 h-3" />Leads atribuidos</div>
-          <div className="text-2xl font-semibold">{totals.leads}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><MapPin className="w-3 h-3" />Comunas con ingresos</div>
-          <div className="text-2xl font-semibold">{totals.activeComunas}</div>
-        </CardContent></Card>
+        <KpiCard
+          label="Ingresos atribuidos"
+          value={fmtCLP(totals.revenue)}
+          icon={DollarSign}
+          iconClassName="text-gold"
+          accentClassName="bg-gold"
+          onClick={totals.revenue > 0 ? () => setActiveKpi("revenue") : undefined}
+          hint={totals.revenue > 0 ? "Ver casos generadores" : undefined}
+        />
+        <KpiCard
+          label="Casos contratados"
+          value={totals.cases}
+          icon={Target}
+          iconClassName="text-emerald-500"
+          accentClassName="bg-emerald-500"
+          onClick={totals.cases > 0 ? () => setActiveKpi("cases") : undefined}
+          hint={totals.cases > 0 ? "Ver detalle por comuna" : undefined}
+        />
+        <KpiCard
+          label="Leads atribuidos"
+          value={totals.leads}
+          icon={Search}
+          iconClassName="text-blue-500"
+          accentClassName="bg-blue-500"
+          onClick={totals.leads > 0 ? () => setActiveKpi("leads") : undefined}
+          hint={totals.leads > 0 ? "Ver origen por comuna" : undefined}
+        />
+        <KpiCard
+          label="Comunas con ingresos"
+          value={totals.activeComunas}
+          icon={MapPin}
+          iconClassName="text-amber-500"
+          accentClassName="bg-amber-500"
+          onClick={totals.activeComunas > 0 ? () => setActiveKpi("comunas") : undefined}
+          hint={totals.activeComunas > 0 ? "Ver listado completo" : undefined}
+        />
       </div>
 
       {/* Top 10 chart */}

@@ -248,11 +248,11 @@ export default function AdminPagos() {
       <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch sm:items-center">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar nombre, ref o RUT..." value={searchQuery} onChange={(e) => setFilter("searchQuery", e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2">
           <div className="flex-1 sm:w-40">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={(v) => setFilter("filterStatus", v)}>
               <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -263,7 +263,7 @@ export default function AdminPagos() {
             </Select>
           </div>
           <div className="flex-1 sm:w-44">
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={(v) => setFilter("filterType", v)}>
               <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -275,7 +275,7 @@ export default function AdminPagos() {
           </div>
         </div>
         {(filterStatus !== "all" || filterType !== "all" || searchQuery) && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterType("all"); setSearchQuery(""); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setFilter("filterStatus", "all"); setFilter("filterType", "all"); setFilter("searchQuery", ""); }}>
             <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}

@@ -85,11 +85,13 @@ export function useTablePreferences(tableKey: string, defaults?: Partial<TablePr
       if (syncTimer.current) window.clearTimeout(syncTimer.current);
       syncTimer.current = window.setTimeout(async () => {
         await supabase.from("user_table_preferences").upsert(
-          {
-            user_id: userId,
-            table_key: tableKey,
-            preferences: next as unknown as Record<string, unknown>,
-          },
+          [
+            {
+              user_id: userId,
+              table_key: tableKey,
+              preferences: next as unknown as Record<string, unknown>,
+            },
+          ],
           { onConflict: "user_id,table_key" },
         );
       }, 600);

@@ -422,7 +422,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
           <p className="font-medium text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
         </div>
         {lead.urgency && (
-          <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", urgencyColor[lead.urgency] ?? "")}>
+          <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium border whitespace-nowrap", getUrgencyClasses(lead.urgency))}>
             {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
@@ -480,7 +480,7 @@ function LeadCard({ lead }: { lead: Lead }) {
           <p className="font-medium text-xs lg:text-sm leading-tight truncate">{lead.name ?? "Sin nombre"}</p>
         </div>
         {lead.urgency && (
-          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap flex-shrink-0", urgencyColor[lead.urgency] ?? "")}>
+          <span className={cn("text-[8px] lg:text-[9px] px-1 py-0.5 rounded-full font-medium border whitespace-nowrap flex-shrink-0", getUrgencyClasses(lead.urgency))}>
             {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
           </span>
         )}
@@ -540,7 +540,7 @@ function LeadListView({ leads, onSelect, onStageChange }: { leads: Lead[]; onSel
                 </td>
                 <td className="px-3 py-2">
                   {lead.urgency && (
-                    <Badge className={cn("text-[10px]", urgencyColor[lead.urgency])} variant="secondary">
+                    <Badge className={cn("text-[10px]", getUrgencyClasses(lead.urgency))} variant="secondary">
                       {URGENCY_LABELS[lead.urgency] ?? lead.urgency}
                     </Badge>
                   )}

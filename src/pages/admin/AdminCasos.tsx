@@ -104,10 +104,22 @@ const isStale = (c: ServiceCase) =>
 const staleHours = (c: ServiceCase) =>
   Math.round((Date.now() - new Date(c.updated_at).getTime()) / 3600000);
 
+type CaseKpi = "active" | "pagados" | "totalRevenue" | "stale" | null;
+const KPI_TITLES: Record<Exclude<CaseKpi, null>, { title: string; description: string }> = {
+  active: { title: "Casos activos", description: "Casos en contactado, cotizado o contratado." },
+  pagados: { title: "Casos pagados", description: "Casos con pago confirmado." },
+  totalRevenue: { title: "Ingresos por casos", description: "Casos contratados con pago confirmado." },
+  stale: { title: "Casos sin movimiento", description: "Más de 48 h sin actualización (no cerrados)." },
+};
+
 export default function AdminCasos() {
   const [cases, setCases] = useState<ServiceCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ServiceCase | null>(null);
+  const [activeKpi, setActiveKpi] = useState<CaseKpi>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { isCeo } = useAuth();
   const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_casos", {
     filterPipeline: "all",
     filterPayment: "all",

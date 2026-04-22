@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Calendar, MapPin, ArrowLeft, Heart } from "lucide-react";
-import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import { buildBreadcrumbJsonLd, buildObituaryArticleJsonLd, buildPersonJsonLd } from "@/lib/seo-schemas";
 import { applySeoMeta } from "@/lib/seo-meta";
 
 interface Obituary {

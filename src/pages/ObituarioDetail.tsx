@@ -42,15 +42,30 @@ const ObituarioDetail = () => {
         .maybeSingle();
       if (data) {
         setObit(data as Obituary);
+
+        // Build a snippet that always leads with the deceased's name so
+        // search engines and social previews surface it prominently.
+        const deathYear = data.death_date ? new Date(data.death_date + "T12:00:00").getFullYear() : null;
+        const lifeSpan =
+          data.birth_date && data.death_date
+            ? `(${new Date(data.birth_date + "T12:00:00").getFullYear()} – ${deathYear})`
+            : deathYear
+              ? `(${deathYear})`
+              : "";
+        const namePrefix = `${data.full_name}${lifeSpan ? " " + lifeSpan : ""}.`;
+        const tail =
+          data.meta_description?.trim() ||
+          data.family_message?.trim() ||
+          data.biography?.trim() ||
+          `Funeraria Santa Margarita acompaña a la familia con servicio funerario profesional 24/7 en Santiago, Chile.`;
+
         applySeoMeta({
           title: data.meta_title || `${data.full_name} — Obituario`,
-          description:
-            data.meta_description ||
-            data.family_message ||
-            `Obituario de ${data.full_name}. Funeraria Santa Margarita acompaña a la familia con servicio funerario profesional 24/7 en Santiago, Chile.`,
+          description: `${namePrefix} ${tail}`,
           url: `https://funerariasantamargarita.cl/obituarios/${data.slug}`,
           image: data.photo_url,
           type: "article",
+          publishedAt: data.death_date,
         });
       }
       setLoading(false);

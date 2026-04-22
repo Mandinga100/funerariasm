@@ -86,10 +86,17 @@ export default function AdminLeads() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
-  const [filterUrgency, setFilterUrgency] = useState(searchParams.get("urgency") ?? "all");
-  const [filterStage, setFilterStage] = useState(searchParams.get("stage") ?? "all");
-  const [filterOverdue, setFilterOverdue] = useState(searchParams.get("filter") === "overdue");
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_leads", {
+    viewMode: "kanban" as "kanban" | "list",
+    filterUrgency: searchParams.get("urgency") ?? "all",
+    filterStage: searchParams.get("stage") ?? "all",
+    filterOverdue: searchParams.get("filter") === "overdue",
+  });
+  const { viewMode, filterUrgency, filterStage, filterOverdue } = filters;
+  const setViewMode = (v: "kanban" | "list") => setFilter("viewMode", v);
+  const setFilterUrgency = (v: string) => setFilter("filterUrgency", v);
+  const setFilterStage = (v: string) => setFilter("filterStage", v);
+  const setFilterOverdue = (v: boolean) => setFilter("filterOverdue", v);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });

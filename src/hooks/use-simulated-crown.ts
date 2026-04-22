@@ -67,12 +67,10 @@ function purgeIfFreshLoad() {
   }
 }
 
-let purged = false;
-function ensurePurgedOnce() {
-  if (purged) return;
-  purged = true;
-  purgeIfFreshLoad();
-}
+// Run the fresh-load purge ONCE at module evaluation time, not during render.
+// Calling side-effectful logic during render is unsafe and can perturb hook
+// ordering under React's concurrent/strict modes.
+purgeIfFreshLoad();
 
 function readStored(memorialId: string): SimulatedCrown | null {
   const ss = safeSession();
@@ -118,10 +116,6 @@ function writeStored(memorialId: string, crown: SimulatedCrown | null) {
  * - Resets when memorialId changes or the component unmounts.
  */
 export function useSimulatedCrown(memorialId: string | null) {
-  // Run the fresh-load purge synchronously on first import so that the very
-  // first useState initializer below already sees a clean storage.
-  ensurePurgedOnce();
-
   const [simulated, setSimulated] = useState<SimulatedCrown | null>(() =>
     memorialId ? readStored(memorialId) : null,
   );

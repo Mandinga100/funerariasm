@@ -13,6 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { ArrowUpDown, ExternalLink, Search, Trophy, DollarSign, Target, MapPin } from "lucide-react";
 import { subDays } from "date-fns";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import { downloadCSV, downloadXLSX, todayStamp } from "@/lib/admin-export";
+import { useToast } from "@/hooks/use-toast";
 
 type Range = 30 | 90 | 365 | 0; // 0 = all-time
 
@@ -41,6 +45,8 @@ export default function AdminRevenueComunas() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof RevenueRow>("totalRevenue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [activeKpi, setActiveKpi] = useState<null | "revenue" | "cases" | "leads" | "comunas">(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +163,51 @@ export default function AdminRevenueComunas() {
     else { setSortKey(k); setSortDir("desc"); }
   };
 
+  /* ─── KPI modal config ─── */
+  const kpiModal = useMemo(() => {
+    if (!activeKpi) return null;
+    const cols: KpiDetailColumn<RevenueRow>[] = [
+      { key: "comuna", label: "Comuna", cell: (r) => <span className="font-medium">{r.nombre}</span>, exportAccessor: (r) => r.nombre },
+      { key: "rev", label: "Ingresos", align: "right", cell: (r) => <span className="font-semibold text-gold tabular-nums">{r.totalRevenue > 0 ? fmtCLP(r.totalRevenue) : "—"}</span>, exportAccessor: (r) => r.totalRevenue },
+      { key: "cases", label: "Casos", align: "right", cell: (r) => <span className="tabular-nums">{r.cases || "—"}</span>, exportAccessor: (r) => r.cases },
+      { key: "leads", label: "Leads", align: "right", cell: (r) => <span className="tabular-nums">{r.leads || "—"}</span>, exportAccessor: (r) => r.leads },
+      { key: "views", label: "Pageviews", align: "right", cell: (r) => <span className="tabular-nums">{r.views || "—"}</span>, exportAccessor: (r) => r.views },
+      { key: "ticket", label: "Ticket prom.", align: "right", cell: (r) => <span className="text-muted-foreground tabular-nums">{r.avgTicket > 0 ? fmtCLP(r.avgTicket) : "—"}</span>, exportAccessor: (r) => r.avgTicket },
+    ];
+    const titles: Record<string, string> = {
+      revenue: "Comunas con ingresos atribuidos",
+      cases: "Comunas con casos contratados",
+      leads: "Comunas con leads atribuidos",
+      comunas: "Listado completo de comunas con actividad",
+    };
+    const filterFn: Record<string, (r: RevenueRow) => boolean> = {
+      revenue: (r) => r.totalRevenue > 0,
+      cases: (r) => r.cases > 0,
+      leads: (r) => r.leads > 0,
+      comunas: (r) => r.totalRevenue > 0,
+    };
+    const filtered = rows.filter(filterFn[activeKpi]);
+    return {
+      title: titles[activeKpi],
+      description: range === 0 ? "Histórico completo." : `Datos de los últimos ${range} días.`,
+      rows: [...filtered].sort((a, b) => b.totalRevenue - a.totalRevenue),
+      rowKey: (r: RevenueRow) => r.slug,
+      columns: cols,
+      filename: `roi_${activeKpi}`,
+    };
+  }, [activeKpi, rows, range]);
+
+  const exportKpi = (format: "csv" | "xlsx") => {
+    if (!kpiModal) return;
+    const exportColumns = kpiModal.columns
+      .filter((c: any) => c.exportAccessor)
+      .map((c: any) => ({ key: c.key, label: c.label, accessor: c.exportAccessor }));
+    const filename = `${kpiModal.filename}_${todayStamp()}`;
+    if (format === "csv") downloadCSV(kpiModal.rows, exportColumns, filename);
+    else downloadXLSX(kpiModal.rows, exportColumns, filename, "ROI Comunas");
+    toast({ title: "Exportación completada", description: `${kpiModal.rows.length} comunas exportadas.` });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -184,22 +235,42 @@ export default function AdminRevenueComunas() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><DollarSign className="w-3 h-3" />Ingresos atribuidos</div>
-          <div className="text-2xl font-semibold">{fmtCLP(totals.revenue)}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><Target className="w-3 h-3" />Casos contratados</div>
-          <div className="text-2xl font-semibold">{totals.cases}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><Search className="w-3 h-3" />Leads atribuidos</div>
-          <div className="text-2xl font-semibold">{totals.leads}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><MapPin className="w-3 h-3" />Comunas con ingresos</div>
-          <div className="text-2xl font-semibold">{totals.activeComunas}</div>
-        </CardContent></Card>
+        <KpiCard
+          label="Ingresos atribuidos"
+          value={fmtCLP(totals.revenue)}
+          icon={DollarSign}
+          iconClassName="text-gold"
+          accentClassName="bg-gold"
+          onClick={totals.revenue > 0 ? () => setActiveKpi("revenue") : undefined}
+          hint={totals.revenue > 0 ? "Ver casos generadores" : undefined}
+        />
+        <KpiCard
+          label="Casos contratados"
+          value={totals.cases}
+          icon={Target}
+          iconClassName="text-emerald-500"
+          accentClassName="bg-emerald-500"
+          onClick={totals.cases > 0 ? () => setActiveKpi("cases") : undefined}
+          hint={totals.cases > 0 ? "Ver detalle por comuna" : undefined}
+        />
+        <KpiCard
+          label="Leads atribuidos"
+          value={totals.leads}
+          icon={Search}
+          iconClassName="text-blue-500"
+          accentClassName="bg-blue-500"
+          onClick={totals.leads > 0 ? () => setActiveKpi("leads") : undefined}
+          hint={totals.leads > 0 ? "Ver origen por comuna" : undefined}
+        />
+        <KpiCard
+          label="Comunas con ingresos"
+          value={totals.activeComunas}
+          icon={MapPin}
+          iconClassName="text-amber-500"
+          accentClassName="bg-amber-500"
+          onClick={totals.activeComunas > 0 ? () => setActiveKpi("comunas") : undefined}
+          hint={totals.activeComunas > 0 ? "Ver listado completo" : undefined}
+        />
       </div>
 
       {/* Top 10 chart */}
@@ -290,6 +361,21 @@ export default function AdminRevenueComunas() {
           )}
         </CardContent>
       </Card>
+
+      {kpiModal && (
+        <KpiDetailModal<RevenueRow>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiModal.title}
+          description={kpiModal.description}
+          rows={kpiModal.rows}
+          rowKey={kpiModal.rowKey}
+          columns={kpiModal.columns}
+          onExportCSV={() => exportKpi("csv")}
+          onExportXLSX={() => exportKpi("xlsx")}
+          totalLabel="comunas"
+        />
+      )}
     </div>
   );
 }

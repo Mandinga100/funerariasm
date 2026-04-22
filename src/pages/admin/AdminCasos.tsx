@@ -353,6 +353,16 @@ export default function AdminCasos() {
         <p className="text-muted-foreground">No hay casos que coincidan. Los casos se crean automáticamente cuando un lead pasa a "Contactado".</p>
       ) : (
         <>
+          <BulkActionsBar
+            count={selection.count}
+            totalLabel="casos seleccionados"
+            onClear={selection.clear}
+            onExportCSV={() => exportRows(selection.getSelectedRows(cases), "csv")}
+            onExportXLSX={() => exportRows(selection.getSelectedRows(cases), "xlsx")}
+            onDelete={() => setConfirmDeleteOpen(true)}
+            canDelete={isCeo}
+            helperText={!isCeo ? "Solo CEO puede eliminar" : undefined}
+          />
           {/* Desktop table */}
           <div className="hidden md:block">
             <SortableTable<ServiceCase>
@@ -361,6 +371,12 @@ export default function AdminCasos() {
               rowKey={(r) => r.id}
               onRowClick={(r) => setSelected(r)}
               externalSort={sortHandled}
+              selection={{
+                isSelected: selection.isSelected,
+                toggle: selection.toggle,
+                headerState,
+                toggleAll: () => selection.toggleAll(sorted),
+              }}
               columns={[
                 {
                   key: "case_number",

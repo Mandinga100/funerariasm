@@ -1,16 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, AlertTriangle, Briefcase, ChevronLeft, ChevronRight, FileDown, AlertCircle } from "lucide-react";
+import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, Briefcase, FileDown, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
@@ -18,6 +17,14 @@ import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { useAuth } from "@/hooks/useAuth";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
 
 interface ServiceCase {
   id: string;

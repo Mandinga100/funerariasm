@@ -27,6 +27,10 @@ import {
   Legend,
 } from "recharts";
 import { ArrowUpDown, ExternalLink, Search, MapPin, Phone, MessageCircle, FileText, ArrowRightLeft } from "lucide-react";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import { downloadCSV, downloadXLSX, todayStamp } from "@/lib/admin-export";
+import { useToast } from "@/hooks/use-toast";
 
 type Range = 7 | 30 | 90;
 

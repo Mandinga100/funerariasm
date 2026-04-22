@@ -249,11 +249,11 @@ export default function AdminCasos() {
       <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch sm:items-center">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar cliente, caso, difunto..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar cliente, caso, difunto..." value={searchQuery} onChange={e => setFilter("searchQuery", e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2">
           <div className="flex-1 sm:w-40">
-            <Select value={filterPipeline} onValueChange={setFilterPipeline}>
+            <Select value={filterPipeline} onValueChange={(v) => setFilter("filterPipeline", v)}>
               <SelectTrigger><SelectValue placeholder="Etapa" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
@@ -262,7 +262,7 @@ export default function AdminCasos() {
             </Select>
           </div>
           <div className="flex-1 sm:w-40">
-            <Select value={filterPayment} onValueChange={setFilterPayment}>
+            <Select value={filterPayment} onValueChange={(v) => setFilter("filterPayment", v)}>
               <SelectTrigger><SelectValue placeholder="Pago" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -272,7 +272,7 @@ export default function AdminCasos() {
           </div>
         </div>
         {(filterPipeline !== "all" || filterPayment !== "all" || searchQuery) && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterPipeline("all"); setFilterPayment("all"); setSearchQuery(""); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setFilter("filterPipeline", "all"); setFilter("filterPayment", "all"); setFilter("searchQuery", ""); }}>
             <X className="w-4 h-4 mr-1" /> Limpiar
           </Button>
         )}

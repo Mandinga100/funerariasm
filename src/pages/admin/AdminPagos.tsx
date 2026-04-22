@@ -80,9 +80,12 @@ export default function AdminPagos() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_pagos", {
+    filterStatus: "all",
+    filterType: "all",
+    searchQuery: "",
+  });
+  const { filterStatus, filterType, searchQuery } = filters;
   // pagination handled via usePagination hook
   const [casesRevenue, setCasesRevenue] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(() => {

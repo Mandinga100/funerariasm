@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
@@ -25,6 +26,13 @@ import {
   CheckCircle, Clock, MapPin, Users, FileText, CalendarDays, Activity,
   Search, AlertTriangle
 } from "lucide-react";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
 
 /* ─── Constants ─── */
 const STATUSES = ["recibido", "en_preparación", "velatorio", "ceremonia", "traslado", "finalizado"];

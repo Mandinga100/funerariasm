@@ -654,13 +654,18 @@ export default function AdminSettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base sm:text-lg">Tema de la interfaz</CardTitle>
-              <CardDescription>Seleccione el modo visual del CRM</CardDescription>
+              <CardDescription>Seleccione el modo visual del CRM. La opción "Sistema" sigue automáticamente la preferencia de su dispositivo.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
                   onClick={() => setTheme("light")}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${theme === "light" ? "border-[#C5A059] ring-2 ring-[#C5A059]/20 bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
+                  className={cn(
+                    "p-4 rounded-xl border-2 transition-all text-center",
+                    theme === "light"
+                      ? "border-accent ring-2 ring-accent/20 bg-accent/5"
+                      : "border-muted hover:border-muted-foreground/30"
+                  )}
                 >
                   <Sun className="w-8 h-8 mx-auto mb-2 text-amber-500" />
                   <p className="text-sm font-medium">Claro</p>
@@ -668,11 +673,29 @@ export default function AdminSettings() {
                 </button>
                 <button
                   onClick={() => setTheme("dark")}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${theme === "dark" ? "border-[#C5A059] ring-2 ring-[#C5A059]/20 bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
+                  className={cn(
+                    "p-4 rounded-xl border-2 transition-all text-center",
+                    theme === "dark"
+                      ? "border-accent ring-2 ring-accent/20 bg-accent/5"
+                      : "border-muted hover:border-muted-foreground/30"
+                  )}
                 >
-                  <Moon className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
+                  <Moon className="w-8 h-8 mx-auto mb-2 text-indigo-400" />
                   <p className="text-sm font-medium">Oscuro</p>
                   <p className="text-[11px] text-muted-foreground">Reduce fatiga visual</p>
+                </button>
+                <button
+                  onClick={() => setTheme("system")}
+                  className={cn(
+                    "p-4 rounded-xl border-2 transition-all text-center",
+                    theme === "system"
+                      ? "border-accent ring-2 ring-accent/20 bg-accent/5"
+                      : "border-muted hover:border-muted-foreground/30"
+                  )}
+                >
+                  <Monitor className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm font-medium">Sistema</p>
+                  <p className="text-[11px] text-muted-foreground">Sigue su dispositivo</p>
                 </button>
               </div>
             </CardContent>

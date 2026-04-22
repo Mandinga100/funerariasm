@@ -113,11 +113,12 @@ const MemorialDetail = () => {
             .select("id, offering_type, crown_tier, donor_name, donor_message, amount, created_at")
             .eq("memorial_id", mem.id)
             .eq("offering_type", "flower_crown")
-            .in("payment_status", ["completed", "simulated"])
+            .eq("payment_status", "completed")
             .order("created_at", { ascending: false }),
         ]);
         setCondolences((condsRes.data as Condolence[]) || []);
-        // Only crowns persist — candles & flowers are demo/visual only
+        // Only crowns with completed payment persist across navigation.
+        // Demo/simulated crowns live only in local state for the current session.
         setOfferings((offeringsRes.data as Offering[]) || []);
       }
       setLoading(false);
@@ -183,9 +184,11 @@ const MemorialDetail = () => {
     if (!memorial) return;
 
     if (data.simulate) {
-      // Visual-only demo: replace any existing crown with the selected tier
+      // Visual-only demo: temporarily REPLACE every existing crown (paid or demo)
+      // with the freshly selected tier. The next navigation/reload will refetch
+      // only payment_status='completed' crowns, so the demo automatically vanishes.
       setOfferings((prev) => {
-        const withoutCrowns = prev.filter((o) => o.offering_type !== "flower_crown" || !o.id.startsWith("demo-"));
+        const withoutCrowns = prev.filter((o) => o.offering_type !== "flower_crown");
         const demoCrown: Offering = {
           id: `demo-crown-${Date.now()}`,
           offering_type: "flower_crown",

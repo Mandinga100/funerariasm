@@ -244,9 +244,9 @@ export default function AdminTracking() {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar por familia o código..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9" />
+          <Input placeholder="Buscar por familia o código..." value={searchQuery} onChange={e => setFilter("searchQuery", e.target.value)} className="pl-9 h-9" />
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus} onValueChange={(v) => setFilter("filterStatus", v)}>
           <SelectTrigger className="w-full sm:w-44 h-9"><SelectValue placeholder="Filtrar estado" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>

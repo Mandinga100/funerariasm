@@ -167,8 +167,13 @@ const Memoriales = () => {
                         <img
                           src={mem.photo_url}
                           alt={`Retrato de ${mem.full_name}`}
+                          width={600}
+                          height={800}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          loading="lazy"
+                          loading={paginated.indexOf(mem) < 4 ? "eager" : "lazy"}
+                          fetchPriority={paginated.indexOf(mem) < 4 ? "high" : "auto"}
+                          decoding="async"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 280px"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-primary-foreground/5">

@@ -67,8 +67,11 @@ const MemorialesSection = () => {
                     <img
                       src={mem.photo_url}
                       alt={`Retrato de ${mem.full_name}`}
+                      width={600}
+                      height={800}
                       loading="lazy"
                       decoding="async"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 320px"
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (

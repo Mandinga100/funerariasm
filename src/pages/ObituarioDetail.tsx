@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Calendar, MapPin, ArrowLeft, Heart } from "lucide-react";
-import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import { buildBreadcrumbJsonLd, buildObituaryArticleJsonLd, buildPersonJsonLd } from "@/lib/seo-schemas";
 import { applySeoMeta } from "@/lib/seo-meta";
 
 interface Obituary {
@@ -136,18 +136,38 @@ const ObituarioDetail = () => {
 
   const age = getYears(obit.birth_date, obit.death_date);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: obit.full_name,
-    description: obit.meta_description || obit.family_message || `Obituario de ${obit.full_name}`,
-    url: `https://funerariasantamargarita.cl/obituarios/${obit.slug}`,
-    publisher: { "@type": "Organization", name: "Funeraria Santa Margarita" },
-  };
+  const pageUrl = `https://funerariasantamargarita.cl/obituarios/${obit.slug}`;
+  const description =
+    obit.meta_description?.trim() ||
+    obit.family_message?.trim() ||
+    obit.biography?.trim() ||
+    `Obituario de ${obit.full_name} — Funeraria Santa Margarita.`;
+
+  // Article describes the obituary page; Person describes the deceased.
+  // Together they enable richer snippets (name + dates + image).
+  const articleJsonLd = buildObituaryArticleJsonLd({
+    fullName: obit.full_name,
+    headline: `${obit.full_name} — Obituario`,
+    description,
+    pageUrl,
+    photoUrl: obit.photo_url,
+    deathDate: obit.death_date,
+    birthDate: obit.birth_date,
+  });
+  const personJsonLd = buildPersonJsonLd({
+    fullName: obit.full_name,
+    birthDate: obit.birth_date,
+    deathDate: obit.death_date,
+    description,
+    photoUrl: obit.photo_url,
+    city: obit.city,
+    pageUrl,
+  });
 
   return (
     <Layout>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([{ name: "Obituarios", path: "/obituarios" }, { name: obit.full_name, path: `/obituarios/${obit.slug}` }])) }} />
 
       {/* Header */}

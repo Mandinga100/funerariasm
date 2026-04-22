@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { MapPin, ArrowLeft, Heart, Send, MessageCircle } from "lucide-react";
-import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo-schemas";
 import { applySeoMeta } from "@/lib/seo-meta";
 import { toast } from "sonner";
 import MemorialPhoto from "@/components/memorial/MemorialPhoto";
@@ -309,15 +309,16 @@ const MemorialDetail = () => {
 
   const age = getYears(memorial.birth_date, memorial.death_date);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: memorial.full_name,
+  const pageUrl = `https://funerariasantamargarita.cl/legados-eternos/${memorial.slug}`;
+  const jsonLd = buildPersonJsonLd({
+    fullName: memorial.full_name,
     birthDate: memorial.birth_date,
     deathDate: memorial.death_date,
-    description: memorial.biography,
-    address: memorial.city ? { "@type": "PostalAddress", addressLocality: memorial.city } : undefined,
-  };
+    description: memorial.tribute_text || memorial.biography,
+    photoUrl: memorial.photo_url,
+    city: memorial.city,
+    pageUrl,
+  });
 
   return (
     <Layout>

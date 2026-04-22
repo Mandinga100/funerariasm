@@ -45,6 +45,8 @@ export default function AdminRevenueComunas() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof RevenueRow>("totalRevenue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [activeKpi, setActiveKpi] = useState<null | "revenue" | "cases" | "leads" | "comunas">(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     let cancelled = false;

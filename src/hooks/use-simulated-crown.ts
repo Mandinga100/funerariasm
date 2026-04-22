@@ -27,37 +27,143 @@ interface SimulationInput {
   tier: number;
 }
 
+const STORAGE_PREFIX = "sim_crown:";
+// Marker written on first load of the tab; if missing on next mount it means
+// the page was refreshed (or freshly opened) → purge any stored simulations.
+const SESSION_MARKER_KEY = "sim_crown:__session__";
+
+const storageKey = (memorialId: string) => `${STORAGE_PREFIX}${memorialId}`;
+
+const safeSession = (): Storage | null => {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+};
+
 /**
- * Centralized local-only state for the "recently simulated" flower crown.
+ * On the very first hook mount of a tab session, purge every stored
+ * simulated crown. This guarantees a refresh (which keeps sessionStorage
+ * alive) still wipes the preview, while in-app navigations keep it.
+ */
+function purgeIfFreshLoad() {
+  const ss = safeSession();
+  if (!ss) return;
+  if (ss.getItem(SESSION_MARKER_KEY)) return;
+  try {
+    const toDelete: string[] = [];
+    for (let i = 0; i < ss.length; i++) {
+      const key = ss.key(i);
+      if (key && key.startsWith(STORAGE_PREFIX) && key !== SESSION_MARKER_KEY) {
+        toDelete.push(key);
+      }
+    }
+    toDelete.forEach((k) => ss.removeItem(k));
+    ss.setItem(SESSION_MARKER_KEY, "1");
+  } catch {
+    /* ignore quota / privacy-mode errors */
+  }
+}
+
+let purged = false;
+function ensurePurgedOnce() {
+  if (purged) return;
+  purged = true;
+  purgeIfFreshLoad();
+}
+
+function readStored(memorialId: string): SimulatedCrown | null {
+  const ss = safeSession();
+  if (!ss) return null;
+  try {
+    const raw = ss.getItem(storageKey(memorialId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SimulatedCrown;
+    if (parsed && parsed.offering_type === "flower_crown" && typeof parsed.crown_tier === "number") {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(memorialId: string, crown: SimulatedCrown | null) {
+  const ss = safeSession();
+  if (!ss) return;
+  try {
+    if (crown) ss.setItem(storageKey(memorialId), JSON.stringify(crown));
+    else ss.removeItem(storageKey(memorialId));
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Centralized session-only state for the "recently simulated" flower crown.
  *
- * Guarantees:
+ * Persistence rules:
+ * - Stored in sessionStorage (per-tab, per-memorial) so a soft in-app
+ *   navigation back to the same memorial still shows the latest preview.
+ * - Wiped on every page refresh / fresh tab load via a session marker, so
+ *   F5 always returns to the paid-only baseline.
+ * - Wiped right before the page actually unloads (refresh / tab close) as a
+ *   defense-in-depth belt-and-braces measure.
+ *
+ * Concurrency rules:
  * - Only one simulated crown exists at a time per memorial (replaces previous).
- * - A monotonically-increasing token cancels stale rapid clicks so the latest
- *   tier always wins, even if React batches multiple updates close together.
- * - Resets when memorialId changes or the component unmounts so simulated
- *   crowns never leak across navigations or fast reloads.
+ * - A monotonic token cancels stale rapid clicks so the latest tier wins.
+ * - Resets when memorialId changes or the component unmounts.
  */
 export function useSimulatedCrown(memorialId: string | null) {
-  const [simulated, setSimulated] = useState<SimulatedCrown | null>(null);
+  // Run the fresh-load purge synchronously on first import so that the very
+  // first useState initializer below already sees a clean storage.
+  ensurePurgedOnce();
+
+  const [simulated, setSimulated] = useState<SimulatedCrown | null>(() =>
+    memorialId ? readStored(memorialId) : null,
+  );
   const tokenRef = useRef(0);
   const activeMemorialRef = useRef<string | null>(memorialId);
 
-  // Reset whenever the active memorial changes (or component unmounts).
+  // Sync with memorial change (or unmount). Re-hydrate from sessionStorage
+  // so navigating back to a memorial restores its preview within the tab.
   useEffect(() => {
     activeMemorialRef.current = memorialId;
-    setSimulated(null);
     tokenRef.current = 0;
+    setSimulated(memorialId ? readStored(memorialId) : null);
     return () => {
       activeMemorialRef.current = null;
-      setSimulated(null);
     };
   }, [memorialId]);
+
+  // Defense-in-depth: clear ALL stored simulations right before the page
+  // unloads so a hard refresh (or tab close + reopen via session restore)
+  // never resurrects a preview.
+  useEffect(() => {
+    const handler = () => {
+      const ss = safeSession();
+      if (!ss) return;
+      try {
+        const toDelete: string[] = [];
+        for (let i = 0; i < ss.length; i++) {
+          const key = ss.key(i);
+          if (key && key.startsWith(STORAGE_PREFIX)) toDelete.push(key);
+        }
+        toDelete.forEach((k) => ss.removeItem(k));
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
 
   const simulate = useCallback(
     (input: SimulationInput) => {
       if (!memorialId) return;
-      // Bump the token first so any in-flight handler that hasn't applied yet
-      // becomes stale and is discarded by the guard below.
       const myToken = ++tokenRef.current;
       const targetMemorial = memorialId;
 
@@ -71,13 +177,12 @@ export function useSimulatedCrown(memorialId: string | null) {
         created_at: new Date().toISOString(),
       };
 
-      // Apply only if still the latest simulation AND we're still on the same
-      // memorial — protects against stale closures during fast navigation.
       if (
         myToken === tokenRef.current &&
         activeMemorialRef.current === targetMemorial
       ) {
         setSimulated(next);
+        writeStored(targetMemorial, next);
       }
     },
     [memorialId],
@@ -86,14 +191,9 @@ export function useSimulatedCrown(memorialId: string | null) {
   const clear = useCallback(() => {
     tokenRef.current++;
     setSimulated(null);
-  }, []);
+    if (memorialId) writeStored(memorialId, null);
+  }, [memorialId]);
 
-  /**
-   * Merge the (already-paid) crowns coming from the DB with the local
-   * simulated one. The simulated crown takes visual priority by being placed
-   * first, while every other previous crown is hidden so the user only ever
-   * sees the most recently donated tier.
-   */
   const mergeWithPaid = useCallback(
     <T extends CrownLike>(paidOfferings: T[]): (T | SimulatedCrown)[] => {
       const nonCrowns = paidOfferings.filter(

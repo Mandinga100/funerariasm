@@ -15,8 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminTheme } from "@/hooks/use-admin-theme";
 import {
-  Users, Shield, Bell, Moon, Sun, BarChart3, Trash2,
+  Users, Shield, Bell, Moon, Sun, Monitor, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
   Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
@@ -68,9 +69,8 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
 
   /* ── Preferences State ── */
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    return (localStorage.getItem("crm_theme") as "light" | "dark") ?? "light";
-  });
+  // Tema gestionado por el hook compartido (light/dark/system) — única fuente de verdad.
+  const { theme, setTheme } = useAdminTheme();
   const [notifLeads, setNotifLeads] = useState(() => localStorage.getItem("crm_notif_leads") !== "false");
   const [notifPayments, setNotifPayments] = useState(() => localStorage.getItem("crm_notif_payments") !== "false");
   const [notifSound, setNotifSound] = useState(() => localStorage.getItem("admin_notification_sound") !== "false");
@@ -212,11 +212,7 @@ export default function AdminSettings() {
     }
   };
 
-  /* ── Theme effect ── */
-  useEffect(() => {
-    localStorage.setItem("crm_theme", theme);
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+  /* Tema: sincronización gestionada por useAdminTheme (no requiere efecto local). */
 
   /* ── Add admin by UUID ── */
   const handleAddByUserId = async (userId: string, role: AppRole) => {

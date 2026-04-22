@@ -530,10 +530,40 @@ export default function AdminLeads() {
           </div>
         </DragDropContext>
       ) : (
-        <LeadListView leads={filtered} onSelect={setSelectedLead} onStageChange={handleStageChange} />
+        <LeadListView
+          leads={filtered}
+          onSelect={setSelectedLead}
+          onStageChange={handleStageChange}
+          selection={selection}
+        />
       )}
 
       <LeadDetailSheet lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdate={loadLeads} />
+
+      {activeKpi && (
+        <KpiDetailModal<Lead>
+          open={!!activeKpi}
+          onClose={() => setActiveKpi(null)}
+          title={kpiMeta[activeKpi].title}
+          description={kpiMeta[activeKpi].description}
+          rows={kpiRows}
+          rowKey={(l) => l.id}
+          columns={kpiColumns}
+          onRowClick={(l) => { setSelectedLead(l); setActiveKpi(null); }}
+          onExportCSV={() => exportKpi("csv")}
+          onExportXLSX={() => exportKpi("xlsx")}
+          totalLabel="leads"
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleBulkDelete}
+        count={selection.count}
+        itemLabel={{ singular: "lead", plural: "leads" }}
+        loading={deleting}
+      />
     </div>
   );
 }

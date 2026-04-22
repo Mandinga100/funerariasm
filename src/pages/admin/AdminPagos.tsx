@@ -5,7 +5,7 @@ import { logAudit } from "@/hooks/useAuditLog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, Eye, Download, DollarSign, Clock, AlertTriangle, CheckCircle2, Search, FileDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
@@ -284,50 +284,83 @@ export default function AdminPagos() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="rounded-md border hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ref</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Monto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRows.map(tx => {
-                  const sc = statusConfig[tx.status] ?? { label: tx.status, className: "bg-muted" };
-                  const hasFraud = tx.fraud_flags && tx.fraud_flags.length > 0;
-                  return (
-                    <TableRow key={tx.id} className={hasFraud ? "bg-orange-50/50 dark:bg-orange-950/20" : ""}>
-                      <TableCell className="font-mono text-xs">{tx.transaction_ref}</TableCell>
-                      <TableCell className="font-medium">
-                        {tx.full_name}
-                        {hasFraud && <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-xs">{typeLabels[tx.payment_type] ?? tx.payment_type}</Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold">{fmt(tx.amount)}</TableCell>
-                      <TableCell>
-                        <Badge className={sc.className} variant="secondary">{sc.label}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(tx.created_at).toLocaleDateString("es-CL")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => setSelected(tx)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="hidden md:block">
+            <SortableTable<Transaction>
+              tableKey="admin_pagos"
+              rows={paginatedRows}
+              rowKey={(r) => r.id}
+              onRowClick={(r) => setSelected(r)}
+              columns={[
+                {
+                  key: "transaction_ref",
+                  label: "Ref",
+                  defaultWidth: 160,
+                  cell: (r) => <span className="font-mono text-xs">{r.transaction_ref}</span>,
+                },
+                {
+                  key: "full_name",
+                  label: "Nombre",
+                  defaultWidth: 220,
+                  cell: (r) => (
+                    <span className="font-medium">
+                      {r.full_name}
+                      {r.fraud_flags && r.fraud_flags.length > 0 && (
+                        <AlertTriangle className="inline ml-1 w-3 h-3 text-orange-500" />
+                      )}
+                    </span>
+                  ),
+                },
+                {
+                  key: "payment_type",
+                  label: "Tipo",
+                  defaultWidth: 140,
+                  cell: (r) => (
+                    <Badge variant="secondary" className="text-xs">
+                      {typeLabels[r.payment_type] ?? r.payment_type}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "amount",
+                  label: "Monto",
+                  defaultWidth: 130,
+                  cell: (r) => <span className="font-semibold">{fmt(r.amount)}</span>,
+                },
+                {
+                  key: "status",
+                  label: "Estado",
+                  defaultWidth: 140,
+                  cell: (r) => {
+                    const sc = statusConfig[r.status] ?? { label: r.status, className: "bg-muted" };
+                    return <Badge className={sc.className} variant="secondary">{sc.label}</Badge>;
+                  },
+                },
+                {
+                  key: "created_at",
+                  label: "Fecha",
+                  defaultWidth: 130,
+                  cell: (r) => (
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString("es-CL")}
+                    </span>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "",
+                  sortable: false,
+                  resizable: false,
+                  defaultWidth: 80,
+                  align: "right",
+                  cellClassName: "text-right",
+                  cell: (r) => (
+                    <Button size="sm" variant="ghost" onClick={() => setSelected(r)}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  ),
+                } satisfies SortableColumn<Transaction>,
+              ]}
+            />
           </div>
           {/* Mobile cards */}
           <div className="space-y-2 md:hidden">

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Mail, Search, Users, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
@@ -247,75 +247,85 @@ export default function AdminSubscribers() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Origen</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Última campaña enviada</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                      Cargando suscriptores…
-                    </TableCell>
-                  </TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                      No hay suscriptores con los filtros actuales.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">
-                        {s.metadata?.name || <span className="text-muted-foreground italic">Sin nombre</span>}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{s.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs border-gold/40 text-foreground bg-gold/5">
-                          {getSourceLabel(s.source)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(s.subscribed_at), "dd MMM yyyy, HH:mm", { locale: es })}
-                      </TableCell>
-                      <TableCell>
-                        {s.unsubscribed_at ? (
-                          <Badge variant="destructive" className="text-xs">Desuscrito</Badge>
-                        ) : (
-                          <Badge className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-                            Activo
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {s.metadata?.last_campaign_at ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium truncate max-w-[220px]" title={s.metadata.last_campaign_subject}>
-                              {s.metadata.last_campaign_subject || "Sin asunto"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(s.metadata.last_campaign_at), "dd MMM yyyy, HH:mm", { locale: es })}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground italic text-xs">Nunca</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <SortableTable<Subscriber>
+            tableKey="admin_subscribers"
+            rows={loading ? [] : filtered}
+            rowKey={(r) => r.id}
+            emptyMessage={loading ? "Cargando suscriptores…" : "No hay suscriptores con los filtros actuales."}
+            columns={[
+              {
+                key: "name",
+                label: "Nombre",
+                defaultWidth: 200,
+                accessor: (r) => r.metadata?.name ?? "",
+                cell: (r) => (
+                  <span className="font-medium">
+                    {r.metadata?.name || <span className="text-muted-foreground italic">Sin nombre</span>}
+                  </span>
+                ),
+              },
+              {
+                key: "email",
+                label: "Email",
+                defaultWidth: 240,
+                cell: (r) => <span className="font-mono text-xs">{r.email}</span>,
+              },
+              {
+                key: "source",
+                label: "Origen",
+                defaultWidth: 150,
+                cell: (r) => (
+                  <Badge variant="outline" className="text-xs border-gold/40 text-foreground bg-gold/5">
+                    {getSourceLabel(r.source)}
+                  </Badge>
+                ),
+              },
+              {
+                key: "subscribed_at",
+                label: "Fecha",
+                defaultWidth: 170,
+                cell: (r) => (
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(r.subscribed_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                  </span>
+                ),
+              },
+              {
+                key: "status",
+                label: "Estado",
+                defaultWidth: 110,
+                accessor: (r) => (r.unsubscribed_at ? "desuscrito" : "activo"),
+                cell: (r) =>
+                  r.unsubscribed_at ? (
+                    <Badge variant="destructive" className="text-xs">Desuscrito</Badge>
+                  ) : (
+                    <Badge className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+                      Activo
+                    </Badge>
+                  ),
+              },
+              {
+                key: "last_campaign",
+                label: "Última campaña enviada",
+                defaultWidth: 240,
+                resizable: false,
+                accessor: (r) => r.metadata?.last_campaign_at ?? "",
+                cell: (r) =>
+                  r.metadata?.last_campaign_at ? (
+                    <div className="flex flex-col">
+                      <span className="font-medium truncate" title={r.metadata.last_campaign_subject}>
+                        {r.metadata.last_campaign_subject || "Sin asunto"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(r.metadata.last_campaign_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground italic text-xs">Nunca</span>
+                  ),
+              } satisfies SortableColumn<Subscriber>,
+            ]}
+          />
         </CardContent>
       </Card>
     </div>

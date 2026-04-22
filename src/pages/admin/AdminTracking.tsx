@@ -247,63 +247,101 @@ export default function AdminTracking() {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="rounded-md border hidden md:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Familia</TableHead>
-                  <TableHead className="whitespace-nowrap">Código</TableHead>
-                  <TableHead className="whitespace-nowrap">Estado</TableHead>
-                  <TableHead className="whitespace-nowrap hidden lg:table-cell">Contacto</TableHead>
-                  <TableHead className="whitespace-nowrap hidden lg:table-cell">Registrado</TableHead>
-                  <TableHead className="whitespace-nowrap hidden xl:table-cell">Actualizado</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginated.map(item => (
-                  <TableRow key={item.id} className="cursor-pointer hover:bg-muted/30" onClick={() => openDetail(item)}>
-                    <TableCell className="font-medium">{item.family_name}</TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{item.family_code}</code>
-                    </TableCell>
-                    <TableCell>
-                      <Select value={item.status} onValueChange={v => updateStatus(item.id, v)}>
-                        <SelectTrigger className="w-[155px] h-8 text-xs" onClick={e => e.stopPropagation()}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map(s => (
-                            <SelectItem key={s} value={s}>
-                              <span className="flex items-center gap-1.5">
-                                <span>{STATUS_META[s]?.emoji}</span>
-                                <span>{STATUS_META[s]?.label}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">
-                      <div className="space-y-0.5">
-                        {item.family_email && <div className="flex items-center gap-1 text-xs"><Mail className="w-3 h-3" />{item.family_email}</div>}
-                        {item.family_phone && <div className="flex items-center gap-1 text-xs"><Phone className="w-3 h-3" />{item.family_phone}</div>}
-                        {!item.family_email && !item.family_phone && <span className="text-xs">—</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
-                      {format(new Date(item.assigned_at), "dd MMM yyyy", { locale: es })}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground hidden xl:table-cell whitespace-nowrap">
-                      {format(new Date(item.updated_at), "dd MMM, HH:mm", { locale: es })}
-                    </TableCell>
-                    <TableCell onClick={e => e.stopPropagation()}>
-                      <ActionsMenu item={item} onView={openDetail} onEdit={openEdit} onDelete={openDelete} onCopyLink={copyCode} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="hidden md:block">
+            <SortableTable<TrackingItem>
+              tableKey="admin_tracking"
+              rows={paginated}
+              rowKey={(r) => r.id}
+              onRowClick={(r) => openDetail(r)}
+              columns={[
+                {
+                  key: "family_name",
+                  label: "Familia",
+                  defaultWidth: 220,
+                  cell: (r) => <span className="font-medium">{r.family_name}</span>,
+                },
+                {
+                  key: "family_code",
+                  label: "Código",
+                  defaultWidth: 130,
+                  cell: (r) => (
+                    <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{r.family_code}</code>
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Estado",
+                  defaultWidth: 180,
+                  cell: (r) => (
+                    <Select value={r.status} onValueChange={v => updateStatus(r.id, v)}>
+                      <SelectTrigger
+                        className="w-[155px] h-8 text-xs"
+                        onClick={e => e.stopPropagation()}
+                        data-no-row-click
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUSES.map(s => (
+                          <SelectItem key={s} value={s}>
+                            <span className="flex items-center gap-1.5">
+                              <span>{STATUS_META[s]?.emoji}</span>
+                              <span>{STATUS_META[s]?.label}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                },
+                {
+                  key: "contact",
+                  label: "Contacto",
+                  defaultWidth: 200,
+                  sortable: false,
+                  accessor: (r) => r.family_email ?? r.family_phone ?? "",
+                  cell: (r) => (
+                    <div className="space-y-0.5 text-sm text-muted-foreground">
+                      {r.family_email && <div className="flex items-center gap-1 text-xs"><Mail className="w-3 h-3" />{r.family_email}</div>}
+                      {r.family_phone && <div className="flex items-center gap-1 text-xs"><Phone className="w-3 h-3" />{r.family_phone}</div>}
+                      {!r.family_email && !r.family_phone && <span className="text-xs">—</span>}
+                    </div>
+                  ),
+                },
+                {
+                  key: "assigned_at",
+                  label: "Registrado",
+                  defaultWidth: 140,
+                  cell: (r) => (
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {format(new Date(r.assigned_at), "dd MMM yyyy", { locale: es })}
+                    </span>
+                  ),
+                },
+                {
+                  key: "updated_at",
+                  label: "Actualizado",
+                  defaultWidth: 140,
+                  cell: (r) => (
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {format(new Date(r.updated_at), "dd MMM, HH:mm", { locale: es })}
+                    </span>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "",
+                  sortable: false,
+                  resizable: false,
+                  defaultWidth: 60,
+                  cell: (r) => (
+                    <div onClick={e => e.stopPropagation()} data-no-row-click>
+                      <ActionsMenu item={r} onView={openDetail} onEdit={openEdit} onDelete={openDelete} onCopyLink={copyCode} />
+                    </div>
+                  ),
+                } satisfies SortableColumn<TrackingItem>,
+              ]}
+            />
           </div>
 
           {/* Mobile Cards */}

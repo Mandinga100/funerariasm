@@ -194,16 +194,100 @@ export default function AdminTracking() {
   };
 
   /* ─── Stats ─── */
-  const stats = useMemo(() => ({
-    total: items.length,
-    activos: items.filter(i => i.status !== "finalizado").length,
-    finalizados: items.filter(i => i.status === "finalizado").length,
-    hoy: items.filter(i => {
+  const stats = useMemo(() => {
+    const activos = items.filter(i => i.status !== "finalizado");
+    const finalizados = items.filter(i => i.status === "finalizado");
+    const hoy = items.filter(i => {
       const d = new Date(i.assigned_at);
       const now = new Date();
       return d.toDateString() === now.toDateString();
-    }).length,
-  }), [items]);
+    });
+    return {
+      total: items.length,
+      activos: activos.length,
+      activosRows: activos,
+      finalizados: finalizados.length,
+      finalizadosRows: finalizados,
+      hoy: hoy.length,
+      hoyRows: hoy,
+    };
+  }, [items]);
+
+  const exportColumns: ExportColumn<TrackingItem>[] = useMemo(() => [
+    { key: "family_name", label: "Familia", accessor: (r) => r.family_name },
+    { key: "family_code", label: "Código", accessor: (r) => r.family_code },
+    { key: "status", label: "Estado", accessor: (r) => STATUS_META[r.status]?.label ?? r.status },
+    { key: "family_email", label: "Email", accessor: (r) => r.family_email ?? "" },
+    { key: "family_phone", label: "Teléfono", accessor: (r) => r.family_phone ?? "" },
+    { key: "assigned_at", label: "Registrado", accessor: (r) => format(new Date(r.assigned_at), "yyyy-MM-dd HH:mm") },
+    { key: "updated_at", label: "Actualizado", accessor: (r) => format(new Date(r.updated_at), "yyyy-MM-dd HH:mm") },
+    { key: "notes", label: "Notas", accessor: (r) => r.notes ?? "" },
+  ], []);
+
+  const exportRows = (rows: TrackingItem[], kind: "csv" | "xlsx", base = "seguimientos") => {
+    if (rows.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para exportar." });
+      return;
+    }
+    const filename = `${base}-${todayStamp()}`;
+    if (kind === "csv") downloadCSV(rows, exportColumns, filename);
+    else downloadXLSX(rows, exportColumns, filename, "Seguimientos");
+    toast({ title: "Exportado", description: `${rows.length} seguimiento(s) exportado(s).` });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selection.selectedIds);
+    if (ids.length === 0) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from("family_tracking").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) {
+      toast({ title: "Error al eliminar", description: error.message, variant: "destructive" });
+      return;
+    }
+    logAudit({
+      action: "delete",
+      module: "tracking",
+      description: `Eliminó ${ids.length} seguimiento(s)`,
+      entity_type: "family_tracking",
+      new_data: { ids },
+    });
+    toast({ title: "Eliminados", description: `${ids.length} seguimiento(s) eliminados.` });
+    selection.clear();
+    setBulkDeleteOpen(false);
+    load();
+  };
+
+  const kpiModal = useMemo<{ title: string; description: string; rows: TrackingItem[] } | null>(() => {
+    if (!activeKpi) return null;
+    if (activeKpi === "total") return { title: "Todos los seguimientos", description: "Listado completo de casos familiares.", rows: items };
+    if (activeKpi === "activos") return { title: "Seguimientos activos", description: "Casos en curso (no finalizados).", rows: stats.activosRows };
+    if (activeKpi === "finalizados") return { title: "Seguimientos finalizados", description: "Servicios completados.", rows: stats.finalizadosRows };
+    if (activeKpi === "hoy") return { title: "Seguimientos registrados hoy", description: "Nuevos casos del día.", rows: stats.hoyRows };
+    return null;
+  }, [activeKpi, items, stats]);
+
+  const kpiColumns: KpiDetailColumn<TrackingItem>[] = [
+    { key: "family_name", label: "Familia", cell: (r) => <span className="font-medium">{r.family_name}</span> },
+    { key: "family_code", label: "Código", cell: (r) => <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{r.family_code}</code> },
+    {
+      key: "status",
+      label: "Estado",
+      cell: (r) => (
+        <Badge className={`text-[10px] ${STATUS_META[r.status]?.color ?? "bg-muted"}`} variant="secondary">
+          {STATUS_META[r.status]?.emoji} {STATUS_META[r.status]?.label ?? r.status}
+        </Badge>
+      ),
+    },
+    { key: "contact", label: "Contacto", cell: (r) => <span className="text-xs text-muted-foreground">{r.family_email ?? r.family_phone ?? "—"}</span> },
+    {
+      key: "assigned_at",
+      label: "Registrado",
+      cell: (r) => <span className="text-xs text-muted-foreground">{format(new Date(r.assigned_at), "dd MMM yyyy", { locale: es })}</span>,
+    },
+  ];
+
+  const headerState = selection.getSelectionStateFor(filtered);
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -233,24 +317,37 @@ export default function AdminTracking() {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
+      {/* KPIs interactivos */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "Total Casos", value: stats.total, icon: FileText, color: "text-foreground" },
-          { label: "Activos", value: stats.activos, icon: Activity, color: "text-amber-600" },
-          { label: "Finalizados", value: stats.finalizados, icon: CheckCircle, color: "text-green-600" },
-          { label: "Hoy", value: stats.hoy, icon: CalendarDays, color: "text-blue-600" },
-        ].map(s => (
-          <Card key={s.label} className="border">
-            <CardContent className="p-3 lg:p-4 flex items-center gap-3">
-              <s.icon className={`w-5 h-5 ${s.color} shrink-0`} />
-              <div>
-                <p className="text-lg lg:text-xl font-bold leading-none">{s.value}</p>
-                <p className="text-[11px] lg:text-xs text-muted-foreground">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard
+          label="Total Casos"
+          value={stats.total}
+          icon={FileText}
+          onClick={stats.total > 0 ? () => setActiveKpi("total") : undefined}
+          hint={stats.total > 0 ? "Ver todos" : undefined}
+        />
+        <KpiCard
+          label="Activos"
+          value={stats.activos}
+          icon={Activity}
+          accentClassName="bg-primary"
+          onClick={stats.activos > 0 ? () => setActiveKpi("activos") : undefined}
+          hint={stats.activos > 0 ? "Ver en curso" : undefined}
+        />
+        <KpiCard
+          label="Finalizados"
+          value={stats.finalizados}
+          icon={CheckCircle}
+          onClick={stats.finalizados > 0 ? () => setActiveKpi("finalizados") : undefined}
+          hint={stats.finalizados > 0 ? "Ver completados" : undefined}
+        />
+        <KpiCard
+          label="Hoy"
+          value={stats.hoy}
+          icon={CalendarDays}
+          onClick={stats.hoy > 0 ? () => setActiveKpi("hoy") : undefined}
+          hint={stats.hoy > 0 ? "Ver del día" : undefined}
+        />
       </div>
 
       {/* Filters */}

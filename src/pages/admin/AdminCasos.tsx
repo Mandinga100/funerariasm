@@ -288,6 +288,7 @@ export default function AdminCasos() {
               rows={paginatedRows}
               rowKey={(r) => r.id}
               onRowClick={(r) => setSelected(r)}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "case_number",

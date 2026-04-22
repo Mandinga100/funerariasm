@@ -37,6 +37,18 @@ const STATUS_META: Record<string, { label: string; emoji: string; color: string;
   finalizado: { label: "Finalizado", emoji: "🟢", color: "bg-green-100 text-green-800 border-green-300", desc: "Servicio completado satisfactoriamente" },
 };
 
+// Orden intuitivo de seguimiento funerario: servicios activos primero,
+// finalizados al final.
+const TRACKING_STATUS_PRIORITY: Record<string, number> = {
+  ceremonia: 1,
+  velatorio: 2,
+  traslado: 3,
+  en_preparación: 4,
+  recibido: 5,
+  finalizado: 6,
+};
+const trackingStatusRank = (s: string) => TRACKING_STATUS_PRIORITY[s] ?? 99;
+
 interface TrackingItem {
   id: string;
   family_code: string;

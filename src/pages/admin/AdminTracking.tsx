@@ -93,8 +93,13 @@ export default function AdminTracking() {
     });
   }, [items, searchQuery, filterStatus]);
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", filtered.length);
-  const paginated = useMemo(() => filtered.slice(from, to + 1), [filtered, from, to]);
+  const { sorted, sortHandled } = useSortedRows<TrackingItem>("admin_tracking", filtered, {
+    status: (r) => trackingStatusRank(r.status),
+    assigned_at: (r) => new Date(r.assigned_at).getTime(),
+    updated_at: (r) => new Date(r.updated_at).getTime(),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("tracking", sorted.length);
+  const paginated = useMemo(() => sorted.slice(from, to + 1), [sorted, from, to]);
   useEffect(() => { setPage(1); }, [searchQuery, filterStatus, setPage]);
 
   const updateStatus = async (id: string, status: string) => {

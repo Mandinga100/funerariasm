@@ -69,6 +69,25 @@ const PAYMENT_STATUSES = [
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
+// Orden intuitivo de prioridad (asc = más prioritario primero).
+// Pago: Pagado primero (revenue confirmado), luego Cotizado, Aprobado, Pendiente, Cancelado al final.
+const PAYMENT_PRIORITY: Record<string, number> = {
+  pagado: 1,
+  cotizado: 2,
+  aprobado: 3,
+  pendiente: 4,
+  cancelado: 5,
+};
+// Etapa: Contratado primero (cliente activo), Cotizado, Contactado, Cerrado al final.
+const PIPELINE_PRIORITY: Record<string, number> = {
+  contratado: 1,
+  cotizado: 2,
+  contactado: 3,
+  cerrado: 4,
+};
+const paymentRank = (s: string) => PAYMENT_PRIORITY[s] ?? 99;
+const pipelineRank = (s: string) => PIPELINE_PRIORITY[s] ?? 99;
+
 const STALE_MS = 48 * 60 * 60 * 1000;
 const isStale = (c: ServiceCase) =>
   !["cerrado"].includes(c.pipeline_stage) && (Date.now() - new Date(c.updated_at).getTime()) > STALE_MS;
@@ -298,12 +317,14 @@ export default function AdminCasos() {
                   key: "pipeline_stage",
                   label: "Etapa",
                   defaultWidth: 140,
+                  accessor: (r) => pipelineRank(r.pipeline_stage),
                   cell: (r) => getPipelineBadge(r.pipeline_stage),
                 },
                 {
                   key: "payment_status",
                   label: "Pago",
                   defaultWidth: 130,
+                  accessor: (r) => paymentRank(r.payment_status),
                   cell: (r) => getPaymentBadge(r.payment_status),
                 },
                 {

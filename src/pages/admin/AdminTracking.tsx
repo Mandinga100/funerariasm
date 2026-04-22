@@ -32,7 +32,7 @@ import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
 import { useRowSelection } from "@/hooks/use-row-selection";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 
 /* ─── Constants ─── */
 const STATUSES = ["recibido", "en_preparación", "velatorio", "ceremonia", "traslado", "finalizado"];
@@ -596,8 +596,14 @@ export default function AdminTracking() {
           rowKey={(r) => r.id}
           columns={kpiColumns}
           onRowClick={(r) => { setActiveKpi(null); openDetail(r); }}
-          onExportCSV={() => exportRows(kpiModal.rows, "csv", `seguimientos-${activeKpi}`)}
-          onExportXLSX={() => exportRows(kpiModal.rows, "xlsx", `seguimientos-${activeKpi}`)}
+          onExportCSV={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadCSV(kpiModal.rows, cols, `seguimientos_${activeKpi}_${todayStamp()}`);
+          }}
+          onExportXLSX={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadXLSX(kpiModal.rows, cols, `seguimientos_${activeKpi}_${todayStamp()}`, "Seguimientos");
+          }}
           totalLabel="seguimientos"
         />
       )}

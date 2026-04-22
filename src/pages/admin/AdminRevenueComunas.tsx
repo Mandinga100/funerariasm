@@ -15,7 +15,7 @@ import { ArrowUpDown, ExternalLink, Search, Trophy, DollarSign, Target, MapPin }
 import { subDays } from "date-fns";
 import KpiCard from "@/components/admin/KpiCard";
 import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
-import { downloadCSV, downloadXLSX, todayStamp } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport } from "@/lib/admin-export";
 import { useToast } from "@/hooks/use-toast";
 
 type Range = 30 | 90 | 365 | 0; // 0 = all-time
@@ -199,9 +199,7 @@ export default function AdminRevenueComunas() {
 
   const exportKpi = (format: "csv" | "xlsx") => {
     if (!kpiModal) return;
-    const exportColumns = kpiModal.columns
-      .filter((c: any) => c.exportAccessor)
-      .map((c: any) => ({ key: c.key, label: c.label, accessor: c.exportAccessor }));
+    const exportColumns = kpiColumnsToExport(kpiModal.columns as any);
     const filename = `${kpiModal.filename}_${todayStamp()}`;
     if (format === "csv") downloadCSV(kpiModal.rows, exportColumns, filename);
     else downloadXLSX(kpiModal.rows, exportColumns, filename, "ROI Comunas");

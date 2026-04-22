@@ -410,7 +410,57 @@ export default function AdminLeads() {
         </div>
       </div>
 
-      {/* Mobile: Accordion-style stacked stages */}
+      {/* KPIs interactivos (oculto en kanban desktop para no recargar UI) */}
+      {(isMobile || viewMode === "list") && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <KpiCard
+            label="Total leads"
+            value={stats.total}
+            icon={Inbox}
+            onClick={stats.total > 0 ? () => setActiveKpi("total") : undefined}
+            hint={stats.total > 0 ? "Ver todos" : undefined}
+          />
+          <KpiCard
+            label="Urgentes"
+            value={stats.urgent.length}
+            icon={Flame}
+            tone="danger"
+            onClick={stats.urgent.length > 0 ? () => setActiveKpi("urgent") : undefined}
+            hint={stats.urgent.length > 0 ? "Ver detalles" : undefined}
+          />
+          <KpiCard
+            label="Vencidos"
+            value={stats.overdue.length}
+            icon={AlarmClock}
+            tone="warning"
+            onClick={stats.overdue.length > 0 ? () => setActiveKpi("overdue") : undefined}
+            hint={stats.overdue.length > 0 ? "Ver detalles" : undefined}
+          />
+          <KpiCard
+            label="Cerrados"
+            value={stats.closed.length}
+            icon={CheckCircle2}
+            tone="success"
+            onClick={stats.closed.length > 0 ? () => setActiveKpi("closed") : undefined}
+            hint={stats.closed.length > 0 ? "Ver detalles" : undefined}
+          />
+        </div>
+      )}
+
+      {/* Bulk actions bar */}
+      {viewMode === "list" && !isMobile && (
+        <BulkActionsBar
+          count={selection.count}
+          onClear={selection.clear}
+          onExportCSV={() => exportRows(selection.getSelectedRows(filtered), "csv")}
+          onExportXLSX={() => exportRows(selection.getSelectedRows(filtered), "xlsx")}
+          onDelete={isCeo ? () => setConfirmDeleteOpen(true) : undefined}
+          canDelete={isCeo}
+          helperText={!isCeo ? "Solo CEO puede eliminar" : undefined}
+        />
+      )}
+
+
       {isMobile ? (
         <MobileStagesView
           leadsByStage={leadsByStage}

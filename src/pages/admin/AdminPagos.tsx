@@ -547,11 +547,11 @@ export default function AdminPagos() {
         columns={kpiColumns}
         onRowClick={(r) => { setSelected(r); setActiveKpi(null); }}
         onExportCSV={() => {
-          const cols = kpiColumns.filter(c => c.exportAccessor).map(c => ({ key: c.key, label: c.label, accessor: c.exportAccessor! }));
+          const cols = kpiColumnsToExport(kpiColumns);
           downloadCSV(kpiRows, cols, `pagos_${activeKpi}_${todayStamp()}`);
         }}
         onExportXLSX={() => {
-          const cols = kpiColumns.filter(c => c.exportAccessor).map(c => ({ key: c.key, label: c.label, accessor: c.exportAccessor! }));
+          const cols = kpiColumnsToExport(kpiColumns);
           downloadXLSX(kpiRows, cols, `pagos_${activeKpi}_${todayStamp()}`, "Pagos");
         }}
         totalLabel={kpiRows.length === 1 ? "transacción" : "transacciones"}
@@ -574,11 +574,11 @@ export default function AdminPagos() {
         rowKey={(r) => r.id}
         columns={caseRevenueColumns}
         onExportCSV={() => {
-          const cols = caseRevenueColumns.filter(c => c.exportAccessor).map(c => ({ key: c.key, label: c.label, accessor: c.exportAccessor! }));
+          const cols = kpiColumnsToExport(caseRevenueColumns);
           downloadCSV(casesRevenueRows, cols, `ingresos_casos_${todayStamp()}`);
         }}
         onExportXLSX={() => {
-          const cols = caseRevenueColumns.filter(c => c.exportAccessor).map(c => ({ key: c.key, label: c.label, accessor: c.exportAccessor! }));
+          const cols = kpiColumnsToExport(caseRevenueColumns);
           downloadXLSX(casesRevenueRows, cols, `ingresos_casos_${todayStamp()}`, "Ingresos por Casos");
         }}
         totalLabel={casesRevenueRows.length === 1 ? "caso" : "casos"}

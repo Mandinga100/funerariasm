@@ -199,9 +199,7 @@ export default function AdminRevenueComunas() {
 
   const exportKpi = (format: "csv" | "xlsx") => {
     if (!kpiModal) return;
-    const exportColumns = kpiModal.columns
-      .filter((c: any) => c.exportAccessor)
-      .map((c: any) => ({ key: c.key, label: c.label, accessor: c.exportAccessor }));
+    const exportColumns = kpiColumnsToExport(kpiModal.columns as any);
     const filename = `${kpiModal.filename}_${todayStamp()}`;
     if (format === "csv") downloadCSV(kpiModal.rows, exportColumns, filename);
     else downloadXLSX(kpiModal.rows, exportColumns, filename, "ROI Comunas");

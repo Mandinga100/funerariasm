@@ -18,6 +18,17 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { useAuth } from "@/hooks/useAuth";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { logAudit as logAuditEvent } from "@/hooks/useAuditLog";
+import { useToast as useToastHook } from "@/hooks/use-toast";
+import { Flame, Clock as ClockIcon, DollarSign, AlertCircle } from "lucide-react";
 import {
   PIPELINE_STAGES,
   URGENCY_LABELS,

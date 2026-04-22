@@ -89,7 +89,7 @@ export function useTablePreferences(tableKey: string, defaults?: Partial<TablePr
             {
               user_id: userId,
               table_key: tableKey,
-              preferences: next as unknown as Record<string, unknown>,
+              preferences: next as unknown as never,
             },
           ],
           { onConflict: "user_id,table_key" },

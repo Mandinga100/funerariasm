@@ -17,6 +17,7 @@ import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
+import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 
 interface ServiceCase {
   id: string;

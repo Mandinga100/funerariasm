@@ -185,7 +185,7 @@ const MemorialDetail = () => {
       donor_name: "Anónimo",
       created_at: new Date().toISOString(),
     };
-    setOfferings((prev) => [demoOffering, ...prev]);
+    setBaseOfferings((prev) => [demoOffering, ...prev]);
     toast.success(type === "candle" ? "🕯 Vela encendida con amor" : "🌸 Flor ofrecida con cariño");
   }, [memorial]);
 
@@ -193,21 +193,13 @@ const MemorialDetail = () => {
     if (!memorial) return;
 
     if (data.simulate) {
-      // Visual-only demo: temporarily REPLACE every existing crown (paid or demo)
-      // with the freshly selected tier. The next navigation/reload will refetch
-      // only payment_status='completed' crowns, so the demo automatically vanishes.
-      setOfferings((prev) => {
-        const withoutCrowns = prev.filter((o) => o.offering_type !== "flower_crown");
-        const demoCrown: Offering = {
-          id: `demo-crown-${Date.now()}`,
-          offering_type: "flower_crown",
-          crown_tier: data.tier,
-          donor_name: data.donorName,
-          donor_message: data.message,
-          amount: data.amount,
-          created_at: new Date().toISOString(),
-        };
-        return [demoCrown, ...withoutCrowns];
+      // Delegate to the centralized hook: replaces any previous simulated
+      // crown atomically and cancels stale rapid clicks via its token guard.
+      simulateCrown({
+        donorName: data.donorName,
+        message: data.message,
+        amount: data.amount,
+        tier: data.tier,
       });
       toast.success(`🌺 Vista previa: Corona Tier ${data.tier}`);
       setCrownModalOpen(false);
@@ -232,10 +224,10 @@ const MemorialDetail = () => {
       return;
     }
 
-    setOfferings((prev) => [inserted as Offering, ...prev]);
+    setBaseOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);
-  }, [memorial]);
+  }, [memorial, simulateCrown]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr + "T12:00:00").toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });

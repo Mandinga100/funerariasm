@@ -163,46 +163,54 @@ export default function AdminMemoriales() {
         </div>
       ) : (
         <>
-          <div className="rounded-md border hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Ciudad</TableHead>
-                  <TableHead>Fallecimiento</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginated.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.full_name}</TableCell>
-                    <TableCell>{item.city ?? "—"}</TableCell>
-                    <TableCell>{item.death_date}</TableCell>
-                    <TableCell>
-                      <Switch checked={item.published} onCheckedChange={() => togglePublished(item.id, item.published)} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(item)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={`/legados-eternos/${item.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item.id, item.full_name)}>
-                            <Trash2 className="w-4 h-4 mr-2" />Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="hidden md:block">
+            <SortableTable<Memorial>
+              tableKey="admin_memoriales"
+              rows={paginated}
+              rowKey={(r) => r.id}
+              columns={[
+                {
+                  key: "full_name",
+                  label: "Nombre",
+                  defaultWidth: 280,
+                  cell: (r) => <span className="font-medium">{r.full_name}</span>,
+                },
+                { key: "city", label: "Ciudad", defaultWidth: 160, cell: (r) => r.city ?? "—" },
+                { key: "death_date", label: "Fallecimiento", defaultWidth: 160, cell: (r) => r.death_date },
+                {
+                  key: "published",
+                  label: "Estado",
+                  defaultWidth: 110,
+                  accessor: (r) => r.published,
+                  cell: (r) => (
+                    <Switch checked={r.published} onCheckedChange={() => togglePublished(r.id, r.published)} />
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "",
+                  sortable: false,
+                  resizable: false,
+                  defaultWidth: 60,
+                  cell: (r) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(r)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <a href={`/legados-eternos/${r.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(r.id, r.full_name)}>
+                          <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                } satisfies SortableColumn<Memorial>,
+              ]}
+            />
           </div>
           <div className="space-y-2 md:hidden">
             {paginated.map(item => (

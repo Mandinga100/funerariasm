@@ -168,8 +168,14 @@ export default function AdminPagos() {
     return true;
   });
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("pagos", filtered.length);
-  const paginatedRows = filtered.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<Transaction>("admin_pagos", filtered, {
+    status: (r) => paymentStatusRank(r.status),
+    amount: (r) => r.amount,
+    created_at: (r) => new Date(r.created_at).getTime(),
+    payment_type: (r) => typeLabels[r.payment_type] ?? r.payment_type,
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("pagos", sorted.length);
+  const paginatedRows = sorted.slice(from, to + 1);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [filterStatus, filterType, searchQuery, setPage]);

@@ -25,7 +25,7 @@ import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDeta
 import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 import {
   PIPELINE_STAGES,
   URGENCY_LABELS,

@@ -23,7 +23,7 @@ import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDeta
 import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 
 interface Transaction {
   id: string;

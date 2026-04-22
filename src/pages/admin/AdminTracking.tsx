@@ -32,7 +32,7 @@ import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
 import { useRowSelection } from "@/hooks/use-row-selection";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 
 /* ─── Constants ─── */
 const STATUSES = ["recibido", "en_preparación", "velatorio", "ceremonia", "traslado", "finalizado"];

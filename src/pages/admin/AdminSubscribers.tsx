@@ -21,7 +21,7 @@ import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDeta
 import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import { useRowSelection } from "@/hooks/use-row-selection";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 
 interface Subscriber {
   id: string;

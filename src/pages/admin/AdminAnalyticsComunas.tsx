@@ -61,8 +61,8 @@ export default function AdminAnalyticsComunas() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof ComunaRow>("views");
-
-  useEffect(() => {
+  const [activeKpi, setActiveKpi] = useState<null | "views" | "conv" | "ctr" | "comunas">(null);
+  const { toast } = useToast();
     const load = async () => {
       setLoading(true);
       const since = subDays(new Date(), range).toISOString();

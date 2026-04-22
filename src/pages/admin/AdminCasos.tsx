@@ -487,14 +487,17 @@ export default function AdminCasos() {
             {paginatedRows.map(c => {
               const stale = isStale(c);
               return (
-              <div key={c.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", stale && "border-red-400 dark:border-red-800 bg-red-50 dark:bg-red-950/40")} onClick={() => setSelected(c)}>
+              <div key={c.id} className={cn("border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30", stale && "border-red-400 dark:border-red-800 bg-red-50 dark:bg-red-950/40", selection.isSelected(c.id) && "ring-2 ring-primary/40 border-primary/40")} onClick={() => setSelected(c)}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
-                      <p className="text-sm font-medium truncate">{c.client_name ?? "Sin nombre"}</p>
+                  <div className="flex items-start gap-2 min-w-0">
+                    <SelectionCheckbox state={selection.isSelected(c.id)} onChange={() => selection.toggle(c.id)} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        {stale && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+                        <p className="text-sm font-medium truncate">{c.client_name ?? "Sin nombre"}</p>
+                      </div>
+                      <code className="text-[10px] text-muted-foreground font-mono">{c.case_number}</code>
                     </div>
-                    <code className="text-[10px] text-muted-foreground font-mono">{c.case_number}</code>
                   </div>
                   <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                     {c.total_amount > 0 && <span className="text-sm font-bold">{fmt(c.total_amount)}</span>}

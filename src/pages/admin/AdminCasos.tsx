@@ -141,8 +141,14 @@ export default function AdminCasos() {
     return true;
   });
 
-  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", filtered.length);
-  const paginatedRows = filtered.slice(from, to + 1);
+  const { sorted, sortHandled } = useSortedRows<ServiceCase>("admin_casos", filtered, {
+    payment_status: (r) => paymentRank(r.payment_status),
+    pipeline_stage: (r) => pipelineRank(r.pipeline_stage),
+    total_amount: (r) => r.total_amount,
+    created_at: (r) => new Date(r.created_at).getTime(),
+  });
+  const { page, pageSize, totalPages, from, to, setPage, setPageSize } = usePagination("casos", sorted.length);
+  const paginatedRows = sorted.slice(from, to + 1);
 
   useEffect(() => { setPage(1); }, [filterPipeline, filterPayment, searchQuery, setPage]);
 

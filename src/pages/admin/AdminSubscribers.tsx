@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/hooks/useAuditLog";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Mail, Search, Users, RefreshCw } from "lucide-react";
+import { Download, Mail, Search, Users, RefreshCw, CalendarPlus, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SubscribersTrendChart } from "@/components/admin/SubscribersTrendChart";
@@ -16,6 +18,12 @@ import { getSourceLabel } from "@/lib/subscription-source";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import KpiCard from "@/components/admin/KpiCard";
+import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
+import BulkActionsBar from "@/components/admin/BulkActionsBar";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import { useRowSelection } from "@/hooks/use-row-selection";
+import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
 
 interface Subscriber {
   id: string;

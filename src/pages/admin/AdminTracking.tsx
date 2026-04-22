@@ -270,6 +270,7 @@ export default function AdminTracking() {
               tableKey="admin_tracking"
               rows={paginated}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               onRowClick={(r) => openDetail(r)}
               columns={[
                 {

@@ -182,7 +182,7 @@ export default function AdminPagos() {
   const paginatedRows = sorted.slice(from, to + 1);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [filterStatus, filterType, searchQuery, setPage]);
+  useEffect(() => { if (filtersHydrated) setPage(1); }, [filterStatus, filterType, searchQuery, filtersHydrated, setPage]);
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(true);

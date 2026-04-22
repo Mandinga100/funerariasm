@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import { Search } from "lucide-react";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
 
@@ -104,6 +105,9 @@ const Memoriales = () => {
 
       {/* Hero */}
       <section className="pt-28 pb-20 bg-primary text-primary-foreground">
+        <div className="container">
+          <Breadcrumbs items={[{ label: "Legados Eternos" }]} />
+        </div>
         <div className="container text-center">
           <span className="inline-block border border-[hsl(0,0%,30%)] rounded-full px-6 py-2 text-[11px] tracking-[0.25em] uppercase text-primary-foreground/60 mb-8">
             Muro de la Memoria

@@ -179,12 +179,66 @@ export default function AdminAnalyticsComunas() {
   const overallCtr = totalViews > 0 ? (totalConv / totalViews) * 100 : 0;
   const activeComunas = rows.length;
 
-  const kpis = [
-    { label: "Pageviews", value: totalViews.toLocaleString("es-CL"), icon: MapPin, color: "text-blue-500" },
-    { label: "Conversiones", value: totalConv.toLocaleString("es-CL"), icon: ArrowRightLeft, color: "text-emerald-500" },
-    { label: "CTR Global", value: `${overallCtr.toFixed(1)}%`, icon: Phone, color: "text-purple-500" },
-    { label: "Comunas activas", value: `${activeComunas}/52`, icon: FileText, color: "text-amber-500" },
-  ];
+  /* ─── KPI modal config ─── */
+  const kpiModal = useMemo(() => {
+    if (!activeKpi) return null;
+    if (activeKpi === "conv") {
+      const items = Object.entries(
+        conversions.reduce((acc: Record<string, number>, c: any) => {
+          acc[c.event_type] = (acc[c.event_type] ?? 0) + 1;
+          return acc;
+        }, {}),
+      ).map(([event_type, count]) => ({ event_type, count: count as number }));
+      const cols: KpiDetailColumn<{ event_type: string; count: number }>[] = [
+        { key: "event", label: "Tipo de evento", cell: (r) => <Badge variant="secondary" className="text-xs">{EVENT_LABELS[r.event_type] ?? r.event_type}</Badge>, exportAccessor: (r) => EVENT_LABELS[r.event_type] ?? r.event_type },
+        { key: "count", label: "Conversiones", align: "right", cell: (r) => <span className="font-semibold tabular-nums">{r.count}</span>, exportAccessor: (r) => r.count },
+      ];
+      return {
+        title: "Conversiones por tipo",
+        description: `Total: ${totalConv.toLocaleString("es-CL")} eventos en los últimos ${range} días.`,
+        rows: items.sort((a, b) => b.count - a.count),
+        rowKey: (r: { event_type: string }) => r.event_type,
+        columns: cols,
+        filename: "conversiones_por_tipo",
+      };
+    }
+    // views / ctr / comunas → mismo set de columnas con foco distinto
+    const sortFn =
+      activeKpi === "ctr"
+        ? (a: ComunaRow, b: ComunaRow) => b.ctr - a.ctr
+        : (a: ComunaRow, b: ComunaRow) => b.views - a.views;
+    const cols: KpiDetailColumn<ComunaRow>[] = [
+      { key: "comuna", label: "Comuna", cell: (r) => <span className="font-medium">{r.nombre}</span>, exportAccessor: (r) => r.nombre },
+      { key: "views", label: "Pageviews", align: "right", cell: (r) => <span className="tabular-nums font-semibold">{r.views}</span>, exportAccessor: (r) => r.views },
+      { key: "sessions", label: "Sesiones", align: "right", cell: (r) => <span className="tabular-nums text-muted-foreground">{r.uniqueSessions}</span>, exportAccessor: (r) => r.uniqueSessions },
+      { key: "conv", label: "Conversiones", align: "right", cell: (r) => <span className="tabular-nums">{r.totalConversions}</span>, exportAccessor: (r) => r.totalConversions },
+      { key: "ctr", label: "CTR", align: "right", cell: (r) => <Badge variant={r.ctr >= 5 ? "default" : "outline"} className="text-[10px] tabular-nums">{r.ctr.toFixed(1)}%</Badge>, exportAccessor: (r) => `${r.ctr.toFixed(2)}%` },
+    ];
+    const titles: Record<string, string> = {
+      views: "Pageviews por comuna",
+      ctr: "CTR por comuna",
+      comunas: "Comunas activas",
+    };
+    return {
+      title: titles[activeKpi],
+      description: `Datos de los últimos ${range} días.`,
+      rows: [...rows].sort(sortFn),
+      rowKey: (r: ComunaRow) => r.slug,
+      columns: cols,
+      filename: `analitica_${activeKpi}`,
+    };
+  }, [activeKpi, rows, conversions, range, totalConv]);
+
+  const exportKpi = (format: "csv" | "xlsx") => {
+    if (!kpiModal) return;
+    const exportColumns = kpiModal.columns
+      .filter((c: any) => c.exportAccessor)
+      .map((c: any) => ({ key: c.key, label: c.label, accessor: c.exportAccessor }));
+    const filename = `${kpiModal.filename}_${todayStamp()}`;
+    if (format === "csv") downloadCSV(kpiModal.rows as any[], exportColumns, filename);
+    else downloadXLSX(kpiModal.rows as any[], exportColumns, filename, "Analítica");
+    toast({ title: "Exportación completada", description: `${kpiModal.rows.length} filas exportadas.` });
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">

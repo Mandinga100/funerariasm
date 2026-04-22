@@ -219,6 +219,7 @@ export default function AdminBlog() {
               tableKey="admin_blog"
               rows={paginatedPosts}
               rowKey={(r) => r.id}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "title",

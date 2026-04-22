@@ -53,44 +53,12 @@ function getPriorityScore(lead: Lead): number | null {
 
 function PriorityBadge({ score }: { score: number | null }) {
   if (score === null) return null;
-  // Tonos basados en tokens semánticos: destructive (alto), accent (medio-alto),
-  // accent suave (medio), muted (bajo). Legibles en claro y oscuro sin hardcodes.
-  const color =
-    score >= 80 ? "bg-destructive text-destructive-foreground" :
-    score >= 60 ? "bg-accent text-accent-foreground" :
-    score >= 40 ? "bg-accent/70 text-accent-foreground" :
-    score >= 20 ? "bg-secondary text-secondary-foreground" :
-    "bg-muted text-muted-foreground";
   return (
-    <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
+    <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", getPriorityClasses(score))}>
       {score}
     </span>
   );
 }
-
-// Etapas del pipeline: usamos tonos semánticos con opacidad para que el color
-// del fondo se derive del token (claro: tinte suave; oscuro: misma intensidad invertida).
-const PIPELINE_STAGES = [
-  { id: "nuevo",      label: "Nuevo",      emoji: "🔵", color: "bg-primary/5 border-primary/20",        dotColor: "bg-primary" },
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-accent/10 border-accent/30",         dotColor: "bg-accent" },
-  { id: "cotizado",   label: "Cotizado",   emoji: "🟠", color: "bg-accent/15 border-accent/40",         dotColor: "bg-accent" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-accent/20 border-accent/50",         dotColor: "bg-accent" },
-  { id: "cerrado",    label: "Cerrado",    emoji: "⚫", color: "bg-muted/60 border-border",             dotColor: "bg-muted-foreground" },
-];
-
-const urgencyColor: Record<string, string> = {
-  inmediata: "bg-destructive/15 text-destructive border-destructive/40",
-  immediate: "bg-destructive/15 text-destructive border-destructive/40",
-  normal:    "bg-primary/10 text-primary border-primary/30",
-  "previsión": "bg-accent/15 text-accent border-accent/40",
-};
-
-const URGENCY_LABELS: Record<string, string> = {
-  inmediata: "Urgente",
-  immediate: "Urgente",
-  normal: "Normal",
-  "previsión": "Previsión",
-};
 
 export default function AdminLeads() {
   const [searchParams, setSearchParams] = useSearchParams();

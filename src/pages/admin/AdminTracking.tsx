@@ -397,6 +397,12 @@ export default function AdminTracking() {
               rowKey={(r) => r.id}
               externalSort={sortHandled}
               onRowClick={(r) => openDetail(r)}
+              selection={{
+                isSelected: selection.isSelected,
+                toggle: selection.toggle,
+                headerState: selection.getSelectionStateFor(paginated),
+                toggleAll: () => selection.toggleAll(paginated),
+              }}
               columns={[
                 {
                   key: "family_name",

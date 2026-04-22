@@ -12,6 +12,10 @@ import RoleBadge from "@/components/admin/RoleBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
+
+// Aplica el tema almacenado antes del primer render para evitar flash visual.
+bootstrapAdminTheme();
 
 type NavItem = {
   to: string;
@@ -46,6 +50,8 @@ export default function AdminLayout() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { playUrgentAlert } = useNotificationSound();
+  // Inicializa el tema una vez montado el layout (auto-aplica light/dark/system).
+  useAdminTheme();
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -245,7 +251,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen flex bg-muted/20 dark">
+    <div className="min-h-screen flex bg-muted/20">
       <aside className="hidden md:flex w-64 border-r bg-background flex-col">
         <div className="p-3 border-b flex items-center justify-between gap-2">
           <SidebarHeader />

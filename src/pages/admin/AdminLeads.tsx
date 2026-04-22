@@ -47,12 +47,14 @@ function getPriorityScore(lead: Lead): number | null {
 
 function PriorityBadge({ score }: { score: number | null }) {
   if (score === null) return null;
+  // Tonos basados en tokens semánticos: destructive (alto), accent (medio-alto),
+  // accent suave (medio), muted (bajo). Legibles en claro y oscuro sin hardcodes.
   const color =
-    score >= 80 ? "bg-red-500 text-white" :
-    score >= 60 ? "bg-orange-500 text-white" :
-    score >= 40 ? "bg-amber-400 text-amber-950" :
-    score >= 20 ? "bg-blue-400 text-white" :
-    "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-100";
+    score >= 80 ? "bg-destructive text-destructive-foreground" :
+    score >= 60 ? "bg-accent text-accent-foreground" :
+    score >= 40 ? "bg-accent/70 text-accent-foreground" :
+    score >= 20 ? "bg-secondary text-secondary-foreground" :
+    "bg-muted text-muted-foreground";
   return (
     <span className={cn("text-[8px] lg:text-[9px] font-bold px-1.5 py-0.5 rounded-md tabular-nums leading-none", color)}>
       {score}
@@ -60,19 +62,21 @@ function PriorityBadge({ score }: { score: number | null }) {
   );
 }
 
+// Etapas del pipeline: usamos tonos semánticos con opacidad para que el color
+// del fondo se derive del token (claro: tinte suave; oscuro: misma intensidad invertida).
 const PIPELINE_STAGES = [
-  { id: "nuevo", label: "Nuevo", emoji: "🔵", color: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800", dotColor: "bg-blue-500" },
-  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800", dotColor: "bg-amber-500" },
-  { id: "cotizado", label: "Cotizado", emoji: "🟠", color: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800", dotColor: "bg-orange-500" },
-  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800", dotColor: "bg-green-500" },
-  { id: "cerrado", label: "Cerrado", emoji: "⚫", color: "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700", dotColor: "bg-gray-500" },
+  { id: "nuevo",      label: "Nuevo",      emoji: "🔵", color: "bg-primary/5 border-primary/20",        dotColor: "bg-primary" },
+  { id: "contactado", label: "Contactado", emoji: "🟡", color: "bg-accent/10 border-accent/30",         dotColor: "bg-accent" },
+  { id: "cotizado",   label: "Cotizado",   emoji: "🟠", color: "bg-accent/15 border-accent/40",         dotColor: "bg-accent" },
+  { id: "contratado", label: "Contratado", emoji: "🟢", color: "bg-accent/20 border-accent/50",         dotColor: "bg-accent" },
+  { id: "cerrado",    label: "Cerrado",    emoji: "⚫", color: "bg-muted/60 border-border",             dotColor: "bg-muted-foreground" },
 ];
 
 const urgencyColor: Record<string, string> = {
-  inmediata: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800",
-  immediate: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800",
-  normal: "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800",
-  "previsión": "bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800",
+  inmediata: "bg-destructive/15 text-destructive border-destructive/40",
+  immediate: "bg-destructive/15 text-destructive border-destructive/40",
+  normal:    "bg-primary/10 text-primary border-primary/30",
+  "previsión": "bg-accent/15 text-accent border-accent/40",
 };
 
 const URGENCY_LABELS: Record<string, string> = {
@@ -348,8 +352,8 @@ export default function AdminLeads() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               className={cn(
-                                "bg-background rounded-md border p-2 lg:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
-                                snapshot.isDragging && "shadow-lg ring-2 ring-primary rotate-2"
+                                "bg-card text-card-foreground rounded-md border border-border p-2 lg:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
+                                snapshot.isDragging && "shadow-lg ring-2 ring-ring rotate-2"
                               )}
                               onClick={() => setSelectedLead(lead)}
                             >
@@ -435,7 +439,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
 
   return (
     <div
-      className="bg-background rounded-lg border p-2.5 shadow-sm active:shadow-md transition-shadow"
+      className="bg-card text-card-foreground rounded-lg border border-border p-2.5 shadow-sm active:shadow-md transition-shadow"
       onClick={() => onSelect(lead)}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -458,7 +462,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
       </div>
 
       {lead.ai_summary && (
-        <p className="text-[10px] text-muted-foreground bg-violet-50 dark:bg-violet-950/30 rounded px-2 py-1 line-clamp-2 mb-1.5">
+        <p className="text-[10px] text-muted-foreground bg-accent/10 border border-accent/20 rounded px-2 py-1 line-clamp-2 mb-1.5">
           🤖 {lead.ai_summary}
         </p>
       )}
@@ -479,7 +483,7 @@ function MobileLeadCard({ lead, onSelect, onStageChange }: { lead: Lead; onSelec
           </SelectContent>
         </Select>
         {lead.estimated_value ? (
-          <span className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</span>
+          <span className="text-xs font-semibold text-accent">${lead.estimated_value.toLocaleString("es-CL")}</span>
         ) : (
           <span className="text-[10px] text-muted-foreground">{lead.source ?? ""}</span>
         )}
@@ -513,19 +517,19 @@ function LeadCard({ lead }: { lead: Lead }) {
         </div>
       )}
       {lead.ai_summary && (
-        <p className="text-[9px] lg:text-[10px] text-muted-foreground bg-violet-50 dark:bg-violet-950/30 rounded px-1.5 py-1 line-clamp-2">
+        <p className="text-[9px] lg:text-[10px] text-muted-foreground bg-accent/10 border border-accent/20 rounded px-1.5 py-1 line-clamp-2">
           🤖 {lead.ai_summary}
         </p>
       )}
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground truncate">{lead.source ?? "—"}</span>
-        <span className={cn("text-[10px] flex-shrink-0", isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" ? "text-red-600 font-bold" : "text-muted-foreground")}>
+        <span className={cn("text-[10px] flex-shrink-0", isOverdue && (lead.pipeline_stage ?? "nuevo") === "nuevo" ? "text-destructive font-bold" : "text-muted-foreground")}>
           <Clock className="w-3 h-3 inline mr-0.5" />
           {hours}h
         </span>
       </div>
       {lead.estimated_value ? (
-        <p className="text-xs font-semibold text-green-700 dark:text-green-400">${lead.estimated_value.toLocaleString("es-CL")}</p>
+        <p className="text-xs font-semibold text-accent">${lead.estimated_value.toLocaleString("es-CL")}</p>
       ) : null}
     </div>
   );

@@ -17,6 +17,7 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import type { Tables } from "@/integrations/supabase/types";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 
 type BlogPost = Tables<"blog_posts">;
 

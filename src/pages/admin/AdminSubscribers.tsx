@@ -123,10 +123,10 @@ export default function AdminSubscribers() {
   };
 
   const clearFilters = () => {
-    setSearch("");
-    setSourceFilter("all");
-    setDateFrom("");
-    setDateTo("");
+    setFilter("search", "");
+    setFilter("sourceFilter", "all");
+    setFilter("dateFrom", "");
+    setFilter("dateTo", "");
   };
 
   return (
@@ -190,7 +190,7 @@ export default function AdminSubscribers() {
         <SubscribersTrendChart
           subscribedDates={subscribers.map((s) => s.subscribed_at)}
           days={rangeDays}
-          onRangeChange={setRangeDays}
+          onRangeChange={(d) => setFilter("rangeDays", d)}
           rangeOptions={[7, 30, 90]}
         />
         <SubscribersSourceChart
@@ -216,11 +216,11 @@ export default function AdminSubscribers() {
               <Input
                 placeholder="Buscar por email o nombre…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setFilter("search", e.target.value)}
                 className="pl-9"
               />
             </div>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <Select value={sourceFilter} onValueChange={(v) => setFilter("sourceFilter", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Origen" />
               </SelectTrigger>
@@ -238,11 +238,11 @@ export default function AdminSubscribers() {
             </Button>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Desde</label>
-              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <Input type="date" value={dateFrom} onChange={(e) => setFilter("dateFrom", e.target.value)} />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Hasta</label>
-              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <Input type="date" value={dateTo} onChange={(e) => setFilter("dateTo", e.target.value)} />
             </div>
           </div>
         </CardContent>

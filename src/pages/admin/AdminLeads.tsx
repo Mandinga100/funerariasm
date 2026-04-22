@@ -300,48 +300,59 @@ export default function AdminLeads() {
         />
       ) : viewMode === "kanban" ? (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-5 gap-2 lg:gap-3" style={{ minHeight: "calc(100vh - 240px)" }}>
-            {PIPELINE_STAGES.map(stage => (
-              <Droppable key={stage.id} droppableId={stage.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn(
-                      "rounded-lg border-2 p-1.5 lg:p-2 transition-colors min-w-0",
-                      stage.color,
-                      snapshot.isDraggingOver && "ring-2 ring-ring"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1.5 px-1">
-                      <span className="text-xs lg:text-sm font-semibold truncate">{stage.emoji} {stage.label}</span>
-                      <Badge variant="secondary" className="text-[10px] h-5 flex-shrink-0">{leadsByStage[stage.id]?.length ?? 0}</Badge>
+          {/* En pantallas <xl mostramos scroll horizontal para que las 5 columnas no se compriman.
+              A partir de xl usamos el grid completo. */}
+          <div className="overflow-x-auto -mx-2 px-2 pb-2">
+            <div
+              className="grid grid-flow-col xl:grid-flow-row auto-cols-[minmax(220px,1fr)] xl:auto-cols-auto xl:grid-cols-5 gap-2 lg:gap-3"
+              style={{ minHeight: "calc(100vh - 240px)" }}
+            >
+              {PIPELINE_STAGES.map(stage => (
+                <Droppable key={stage.id} droppableId={stage.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        "flex flex-col rounded-lg border-2 p-1.5 lg:p-2 transition-colors min-w-0",
+                        stage.color,
+                        snapshot.isDraggingOver && "ring-2 ring-ring"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1.5 px-1 min-w-0">
+                        <span className="text-xs lg:text-sm font-semibold truncate flex-1 min-w-0">
+                          <span className="mr-1">{stage.emoji}</span>{stage.label}
+                        </span>
+                        <Badge variant="secondary" className="text-[10px] h-5 flex-shrink-0 tabular-nums">
+                          {leadsByStage[stage.id]?.length ?? 0}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1.5 min-h-[80px] flex-1">
+                        {(leadsByStage[stage.id] ?? []).map((lead, index) => (
+                          <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={cn(
+                                  "bg-card text-card-foreground rounded-md border border-border p-2 lg:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow min-w-0",
+                                  snapshot.isDragging && "shadow-lg ring-2 ring-ring rotate-2"
+                                )}
+                                onClick={() => setSelectedLead(lead)}
+                              >
+                                <LeadCard lead={lead} />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
                     </div>
-                    <div className="space-y-1.5 min-h-[80px]">
-                      {(leadsByStage[stage.id] ?? []).map((lead, index) => (
-                        <Draggable key={lead.id} draggableId={lead.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={cn(
-                                "bg-card text-card-foreground rounded-md border border-border p-2 lg:p-3 shadow-sm cursor-grab hover:shadow-md transition-shadow",
-                                snapshot.isDragging && "shadow-lg ring-2 ring-ring rotate-2"
-                              )}
-                              onClick={() => setSelectedLead(lead)}
-                            >
-                              <LeadCard lead={lead} />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </div>
-                )}
-              </Droppable>
-            ))}
+                  )}
+                </Droppable>
+              ))}
+            </div>
           </div>
         </DragDropContext>
       ) : (

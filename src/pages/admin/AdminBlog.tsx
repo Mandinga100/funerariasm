@@ -208,50 +208,68 @@ export default function AdminBlog() {
         </div>
       ) : (
         <>
-          <div className="rounded-md border hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedPosts.map(post => (
-                  <TableRow key={post.id}>
-                    <TableCell className="font-medium max-w-[300px] truncate">{post.title}</TableCell>
-                    <TableCell>
-                      {post.category && <Badge variant="secondary">{post.category}</Badge>}
-                    </TableCell>
-                    <TableCell>
-                      <Switch checked={post.published} onCheckedChange={v => togglePublished(post.id, v)} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(post.created_at).toLocaleDateString("es-CL")}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(post)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(post.id, post.title)}>
-                            <Trash2 className="w-4 h-4 mr-2" />Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="hidden md:block">
+            <SortableTable<BlogPost>
+              tableKey="admin_blog"
+              rows={paginatedPosts}
+              rowKey={(r) => r.id}
+              columns={[
+                {
+                  key: "title",
+                  label: "Título",
+                  defaultWidth: 360,
+                  cell: (r) => <span className="font-medium truncate block">{r.title}</span>,
+                },
+                {
+                  key: "category",
+                  label: "Categoría",
+                  defaultWidth: 160,
+                  cell: (r) => (r.category ? <Badge variant="secondary">{r.category}</Badge> : "—"),
+                },
+                {
+                  key: "published",
+                  label: "Estado",
+                  defaultWidth: 110,
+                  accessor: (r) => r.published,
+                  cell: (r) => (
+                    <Switch checked={r.published} onCheckedChange={v => togglePublished(r.id, v)} />
+                  ),
+                },
+                {
+                  key: "created_at",
+                  label: "Fecha",
+                  defaultWidth: 140,
+                  cell: (r) => (
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString("es-CL")}
+                    </span>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "",
+                  sortable: false,
+                  resizable: false,
+                  defaultWidth: 60,
+                  cell: (r) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(r)}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <a href={`/blog/${r.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" />Ver en web</a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(r.id, r.title)}>
+                          <Trash2 className="w-4 h-4 mr-2" />Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                } satisfies SortableColumn<BlogPost>,
+              ]}
+            />
           </div>
           <div className="space-y-2 md:hidden">
             {paginatedPosts.map(post => (

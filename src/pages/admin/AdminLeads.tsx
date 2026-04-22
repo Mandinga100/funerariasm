@@ -103,6 +103,104 @@ export default function AdminLeads() {
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { isCeo } = useAuth();
+  const selection = useRowSelection<Lead>((l) => l.id);
+  const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const urgent = leads.filter((l) => l.urgency === "inmediata" || l.urgency === "immediate");
+    const overdue = leads.filter((l) => {
+      if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
+      const hours = differenceInHours(now, new Date(l.created_at));
+      if (l.urgency === "inmediata" || l.urgency === "immediate") return hours >= 2;
+      if (l.urgency === "normal") return hours >= 24;
+      return hours >= 72;
+    });
+    const closed = leads.filter((l) => (l.pipeline_stage ?? "") === "cerrado" || l.status === "closed");
+    return { total: leads.length, urgent, overdue, closed };
+  }, [leads]);
+
+  const kpiRows = useMemo(() => {
+    if (activeKpi === "total") return leads;
+    if (activeKpi === "urgent") return stats.urgent;
+    if (activeKpi === "overdue") return stats.overdue;
+    if (activeKpi === "closed") return stats.closed;
+    return [] as Lead[];
+  }, [activeKpi, leads, stats]);
+
+  const kpiMeta: Record<KpiKey, { title: string; description: string }> = {
+    total: { title: "Todos los leads", description: "Listado completo de contactos recibidos." },
+    urgent: { title: "Leads urgentes", description: "Contactos marcados como urgencia inmediata." },
+    overdue: { title: "Leads vencidos sin contactar", description: "Leads en etapa 'Nuevo' que superaron su SLA." },
+    closed: { title: "Leads cerrados", description: "Contactos cuyo proceso ya finalizó." },
+  };
+
+  const kpiColumns: KpiDetailColumn<Lead>[] = useMemo(() => [
+    { key: "name", label: "Nombre", cell: (l) => <span className="font-medium">{l.name ?? "—"}</span>, exportAccessor: (l) => l.name ?? "" },
+    { key: "phone", label: "Teléfono", cell: (l) => <span className="tabular-nums">{l.phone ?? "—"}</span>, exportAccessor: (l) => l.phone ?? "" },
+    {
+      key: "urgency",
+      label: "Urgencia",
+      cell: (l) => l.urgency ? (
+        <Badge variant="secondary" className={cn("text-[10px]", getUrgencyClasses(l.urgency))}>
+          {URGENCY_LABELS[l.urgency] ?? l.urgency}
+        </Badge>
+      ) : <span className="text-muted-foreground">—</span>,
+      exportAccessor: (l) => l.urgency ?? "",
+    },
+    { key: "stage", label: "Etapa", cell: (l) => l.pipeline_stage ?? "nuevo", exportAccessor: (l) => l.pipeline_stage ?? "nuevo" },
+    {
+      key: "created",
+      label: "Recibido",
+      cell: (l) => <span className="text-xs text-muted-foreground">{format(new Date(l.created_at), "dd/MM HH:mm", { locale: es })}</span>,
+      exportAccessor: (l) => l.created_at,
+      align: "right",
+    },
+  ], []);
+
+  const exportRows = (rows: Lead[], fmt: "csv" | "xlsx") => {
+    const fname = `leads-${todayStamp()}`;
+    if (fmt === "csv") downloadCSV(rows, LEAD_EXPORT_COLUMNS, fname);
+    else downloadXLSX(rows, LEAD_EXPORT_COLUMNS, fname, "Leads");
+  };
+
+  const exportKpi = (fmt: "csv" | "xlsx") => {
+    const cols: ExportColumn<Lead>[] = kpiColumns.map((c) => ({
+      key: c.key,
+      label: c.label,
+      accessor: c.exportAccessor ?? (() => ""),
+    }));
+    const fname = `leads-${activeKpi ?? "kpi"}-${todayStamp()}`;
+    if (fmt === "csv") downloadCSV(kpiRows, cols, fname);
+    else downloadXLSX(kpiRows, cols, fname, "Leads");
+  };
+
+  const handleBulkDelete = async () => {
+    if (!isCeo) return;
+    const ids = Array.from(selection.selectedIds);
+    if (ids.length === 0) return;
+    setDeleting(true);
+    const { error } = await supabase.from("contact_leads").delete().in("id", ids);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    logAudit({
+      action: "delete",
+      module: "leads",
+      description: `Eliminó ${ids.length} lead(s) en bloque`,
+      entity_type: "contact_lead",
+      new_data: { ids },
+    });
+    toast({ title: "Eliminados", description: `${ids.length} lead(s) eliminados` });
+    selection.clear();
+    setConfirmDeleteOpen(false);
+    loadLeads();
+  };
 
   useEffect(() => {
     const openId = searchParams.get("open");

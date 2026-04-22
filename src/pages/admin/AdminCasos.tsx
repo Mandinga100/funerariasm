@@ -317,12 +317,14 @@ export default function AdminCasos() {
                   key: "pipeline_stage",
                   label: "Etapa",
                   defaultWidth: 140,
+                  accessor: (r) => pipelineRank(r.pipeline_stage),
                   cell: (r) => getPipelineBadge(r.pipeline_stage),
                 },
                 {
                   key: "payment_status",
                   label: "Pago",
                   defaultWidth: 130,
+                  accessor: (r) => paymentRank(r.payment_status),
                   cell: (r) => getPaymentBadge(r.payment_status),
                 },
                 {

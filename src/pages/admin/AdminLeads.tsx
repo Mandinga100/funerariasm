@@ -18,6 +18,12 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
+import {
+  PIPELINE_STAGES,
+  URGENCY_LABELS,
+  getUrgencyClasses,
+  getPriorityClasses,
+} from "@/lib/crm-tokens";
 
 interface Lead {
   id: string;

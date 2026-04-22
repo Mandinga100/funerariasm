@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import OptimizedImage from "@/components/ui/optimized-image";
 import { Link } from "react-router-dom";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +64,13 @@ const MemorialesSection = () => {
                   className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-primary-foreground/5"
                 >
                   {mem.photo_url ? (
-                    <OptimizedImage src={mem.photo_url} alt={`Retrato de ${mem.full_name}`} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img
+                      src={mem.photo_url}
+                      alt={`Retrato de ${mem.full_name}`}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-4xl font-playfair text-gold/30">

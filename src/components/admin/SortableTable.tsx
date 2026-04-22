@@ -98,6 +98,11 @@ export function SortableTable<T>({
       <Table style={{ tableLayout: "fixed", width: "100%" }}>
         <TableHeader>
           <TableRow>
+            {selection && (
+              <TableHead style={{ width: "40px" }} className="border-r border-border/60">
+                <SelectionCheckbox state={selection.headerState} onChange={selection.toggleAll} label="Seleccionar todos" />
+              </TableHead>
+            )}
             {columns.map((col, idx) => {
               const width = prefs.columnWidths[col.key] ?? col.defaultWidth;
               const isSorted = prefs.sortKey === col.key;
@@ -161,44 +166,65 @@ export function SortableTable<T>({
           {displayRows.length === 0 ? (
             <TableRow>
               <td
-                colSpan={columns.length}
+                colSpan={columns.length + (selection ? 1 : 0)}
                 className="h-32 text-center text-sm text-muted-foreground"
               >
                 {emptyMessage ?? "Sin resultados"}
               </td>
             </TableRow>
           ) : (
-            displayRows.map((row) => (
-              <TableRow
-                key={rowKey(row)}
-                className={cn(onRowClick && "cursor-pointer")}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-              >
-                {columns.map((col, idx) => (
-                  <td
-                    key={col.key}
-                    className={cn(
-                      "p-2 align-middle border-r border-border/40 last:border-r-0",
-                      col.cellClassName,
-                    )}
-                    style={
-                      idx === columns.length - 1
-                        ? undefined
-                        : { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }
-                    }
-                    onClick={(e) => {
-                      // Prevent row click on interactive cells (button, switch, dropdown, link)
-                      const target = e.target as HTMLElement;
-                      if (target.closest("button, [role='switch'], a, input, [data-no-row-click]")) {
-                        e.stopPropagation();
+            displayRows.map((row) => {
+              const id = rowKey(row);
+              const isSel = selection?.isSelected(id);
+              return (
+                <TableRow
+                  key={id}
+                  data-state={isSel ? "selected" : undefined}
+                  className={cn(
+                    onRowClick && "cursor-pointer",
+                    isSel && "bg-primary/5 hover:bg-primary/10",
+                  )}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                >
+                  {selection && (
+                    <td
+                      className="p-2 align-middle border-r border-border/40"
+                      style={{ width: "40px" }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SelectionCheckbox
+                        state={!!isSel}
+                        onChange={() => selection.toggle(id)}
+                        label={`Seleccionar fila`}
+                      />
+                    </td>
+                  )}
+                  {columns.map((col, idx) => (
+                    <td
+                      key={col.key}
+                      className={cn(
+                        "p-2 align-middle border-r border-border/40 last:border-r-0",
+                        col.cellClassName,
+                      )}
+                      style={
+                        idx === columns.length - 1
+                          ? undefined
+                          : { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }
                       }
-                    }}
-                  >
-                    {col.cell(row)}
-                  </td>
-                ))}
-              </TableRow>
-            ))
+                      onClick={(e) => {
+                        // Prevent row click on interactive cells (button, switch, dropdown, link)
+                        const target = e.target as HTMLElement;
+                        if (target.closest("button, [role='switch'], a, input, [data-no-row-click]")) {
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      {col.cell(row)}
+                    </td>
+                  ))}
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

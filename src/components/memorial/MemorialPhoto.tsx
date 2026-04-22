@@ -107,16 +107,8 @@ const MemorialPhoto = ({ photoUrl, fullName, offerings }: MemorialPhotoProps) =>
             transformOrigin: "50% 50%",
           }}
         >
-          {/* Soft golden halo that pulses outward as the crown lands */}
-          <div
-            aria-hidden
-            className="absolute inset-0 animate-crown-halo rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, hsl(var(--gold) / 0.32) 0%, hsl(var(--gold) / 0.12) 38%, transparent 62%)",
-              filter: "blur(8px)",
-            }}
-          />
+          {/* Soft golden halo — pulses once during placement, then unmounts to free GPU */}
+          <CrownHalo />
           <img
             src={CROWN_IMAGES[bestCrown.crown_tier]}
             alt="Corona de flores"

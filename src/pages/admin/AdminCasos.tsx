@@ -203,28 +203,58 @@ export default function AdminCasos() {
     }
   };
 
-  // Stats
-  const stats = {
+  const staleList = useMemo(() => cases.filter(isStale), [cases]);
+  const stats = useMemo(() => ({
     total: cases.length,
     active: cases.filter(c => ["contactado", "cotizado", "contratado"].includes(c.pipeline_stage)).length,
     pagados: cases.filter(c => c.payment_status === "pagado").length,
     totalRevenue: cases.filter(c => c.payment_status === "pagado" && c.pipeline_stage === "contratado").reduce((sum, c) => sum + c.total_amount, 0),
+    revenueRows: cases.filter(c => c.payment_status === "pagado" && c.pipeline_stage === "contratado"),
+    activeRows: cases.filter(c => ["contactado", "cotizado", "contratado"].includes(c.pipeline_stage)),
+    pagadosRows: cases.filter(c => c.payment_status === "pagado"),
+    staleRows: staleList,
+  }), [cases, staleList]);
+
+  const selection = useRowSelection<ServiceCase>((r) => r.id);
+  const headerState = selection.getSelectionStateFor(sorted);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { selection.clear(); }, [filterPipeline, filterPayment, searchQuery]);
+
+  const exportColumns: ExportColumn<ServiceCase>[] = [
+    { key: "case_number", label: "Caso", accessor: (r) => r.case_number },
+    { key: "client_name", label: "Cliente", accessor: (r) => r.client_name ?? "" },
+    { key: "client_phone", label: "Teléfono", accessor: (r) => r.client_phone ?? "" },
+    { key: "client_email", label: "Email", accessor: (r) => r.client_email ?? "" },
+    { key: "comuna", label: "Comuna", accessor: (r) => r.comuna ?? "" },
+    { key: "selected_plan", label: "Plan", accessor: (r) => r.selected_plan ?? "" },
+    { key: "pipeline_stage", label: "Etapa", accessor: (r) => PIPELINE_STAGES.find(s => s.id === r.pipeline_stage)?.label ?? r.pipeline_stage },
+    { key: "payment_status", label: "Pago", accessor: (r) => PAYMENT_STATUSES.find(s => s.id === r.payment_status)?.label ?? r.payment_status },
+    { key: "total_amount", label: "Monto (CLP)", accessor: (r) => r.total_amount },
+    { key: "created_at", label: "Creado", accessor: (r) => format(new Date(r.created_at), "dd/MM/yyyy HH:mm", { locale: es }) },
+  ];
+
+  const exportRows = (rows: ServiceCase[], fmtType: "csv" | "xlsx") => {
+    const fname = `casos_${todayStamp()}`;
+    if (fmtType === "csv") downloadCSV(rows, exportColumns, fname);
+    else downloadXLSX(rows, exportColumns, fname, "Casos");
   };
 
-  const exportCSV = () => {
-    const headers = ["Caso", "Cliente", "Teléfono", "Plan", "Etapa", "Pago", "Monto", "Fecha"];
-    const rows = filtered.map(c => [
-      c.case_number, c.client_name ?? "", c.client_phone ?? "", c.selected_plan ?? "",
-      PIPELINE_STAGES.find(s => s.id === c.pipeline_stage)?.label ?? c.pipeline_stage,
-      PAYMENT_STATUSES.find(s => s.id === c.payment_status)?.label ?? c.payment_status,
-      c.total_amount, format(new Date(c.created_at), "dd/MM/yyyy", { locale: es }),
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `casos_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
+  const handleBulkDelete = async () => {
+    if (!isCeo) return;
+    const ids = Array.from(selection.selectedIds);
+    if (ids.length === 0) return;
+    setDeleting(true);
+    const { error } = await supabase.from("service_cases").delete().in("id", ids);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    await logAudit({ action: "bulk_delete", module: "casos", description: `${ids.length} casos eliminados`, entity_type: "service_case" });
+    toast({ title: `${ids.length} casos eliminados` });
+    selection.clear();
+    setConfirmDeleteOpen(false);
+    load();
   };
 
   const getPipelineBadge = (stage: string) => {
@@ -237,31 +267,50 @@ export default function AdminCasos() {
     return s ? <Badge variant="secondary" className={cn("text-xs", s.color)}>{s.label}</Badge> : <Badge variant="secondary">{status}</Badge>;
   };
 
+  const kpiRows: ServiceCase[] = useMemo(() => {
+    if (!activeKpi) return [];
+    if (activeKpi === "active") return stats.activeRows;
+    if (activeKpi === "pagados") return stats.pagadosRows;
+    if (activeKpi === "totalRevenue") return stats.revenueRows;
+    return stats.staleRows;
+  }, [activeKpi, stats]);
+
+  const kpiColumns: KpiDetailColumn<ServiceCase>[] = [
+    { key: "case_number", label: "Caso", cell: (r) => <code className="text-xs font-mono">{r.case_number}</code>, exportAccessor: (r) => r.case_number },
+    { key: "client", label: "Cliente", cell: (r) => (
+      <div>
+        <p className="font-medium text-sm">{r.client_name ?? "Sin nombre"}</p>
+        {r.client_phone && <p className="text-xs text-muted-foreground">{r.client_phone}</p>}
+      </div>
+    ), exportAccessor: (r) => r.client_name ?? "" },
+    { key: "plan", label: "Plan", cell: (r) => r.selected_plan ?? "—", exportAccessor: (r) => r.selected_plan ?? "" },
+    { key: "stage", label: "Etapa", cell: (r) => getPipelineBadge(r.pipeline_stage), exportAccessor: (r) => r.pipeline_stage },
+    { key: "payment", label: "Pago", cell: (r) => getPaymentBadge(r.payment_status), exportAccessor: (r) => r.payment_status },
+    { key: "amount", label: "Monto", align: "right", cell: (r) => <span className="font-semibold tabular-nums">{r.total_amount > 0 ? fmt(r.total_amount) : "—"}</span>, exportAccessor: (r) => r.total_amount },
+    { key: "created", label: "Fecha", cell: (r) => format(new Date(r.created_at), "dd/MM/yy", { locale: es }), exportAccessor: (r) => r.created_at },
+  ];
+
+  const kpiSummary = activeKpi === "totalRevenue"
+    ? <p className="text-xs text-muted-foreground">Total: <span className="font-semibold text-foreground tabular-nums">{fmt(stats.totalRevenue)}</span></p>
+    : activeKpi === "stale" && kpiRows.length > 0
+      ? <p className="text-xs text-muted-foreground">Promedio sin movimiento: <span className="font-semibold text-foreground">{Math.round(kpiRows.reduce((a, c) => a + staleHours(c), 0) / kpiRows.length)} h</span></p>
+      : null;
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Casos y Servicios</h1>
-        <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
-          <FileDown className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Exportar</span>
+        <Button variant="outline" size="sm" onClick={() => exportRows(filtered, "csv")} disabled={filtered.length === 0}>
+          <FileDown className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Exportar visibles</span>
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Total Casos", value: stats.total, icon: Briefcase, color: "text-primary" },
-          { label: "Activos", value: stats.active, icon: Clock, color: "text-amber-600" },
-          { label: "Pagados", value: stats.pagados, icon: CheckCircle2, color: "text-green-600" },
-          { label: "Ingresos", value: fmt(stats.totalRevenue), icon: DollarSign, color: "text-emerald-600", isString: true },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-              <s.icon className={cn("w-5 h-5", s.color)} />
-            </CardHeader>
-            <CardContent><p className="text-2xl font-bold">{s.value}</p></CardContent>
-          </Card>
-        ))}
+      {/* KPIs interactivas */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+        <KpiCard label="Total" value={stats.total} icon={Briefcase} iconClassName="bg-primary/10 text-primary" valueSize="md" />
+        <KpiCard label="Activos" value={stats.active} icon={Clock} iconClassName="bg-amber-500/10 text-amber-600 dark:text-amber-400" hint="Ver detalle" valueSize="md" onClick={() => setActiveKpi("active")} accentClassName="bg-amber-500/60" />
+        <KpiCard label="Pagados" value={stats.pagados} icon={CheckCircle2} iconClassName="bg-green-500/10 text-green-600 dark:text-green-400" hint="Ver detalle" valueSize="md" onClick={() => setActiveKpi("pagados")} accentClassName="bg-green-500/60" />
+        <KpiCard label="Ingresos" value={fmt(stats.totalRevenue)} icon={DollarSign} iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" hint="Casos contratados pagados" valueSize="md" onClick={() => setActiveKpi("totalRevenue")} accentClassName="bg-emerald-500/60" />
       </div>
 
       {/* Filters */}

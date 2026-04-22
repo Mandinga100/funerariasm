@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react"
 import type { Tables } from "@/integrations/supabase/types";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { SortableTable, type SortableColumn } from "@/components/admin/SortableTable";
 
 type Obituary = Tables<"obituaries">;
 

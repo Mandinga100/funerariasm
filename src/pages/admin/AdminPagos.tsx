@@ -310,6 +310,7 @@ export default function AdminPagos() {
               rows={paginatedRows}
               rowKey={(r) => r.id}
               onRowClick={(r) => setSelected(r)}
+              externalSort={sortHandled}
               columns={[
                 {
                   key: "transaction_ref",

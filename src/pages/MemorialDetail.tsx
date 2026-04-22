@@ -11,6 +11,7 @@ import MemorialPhoto from "@/components/memorial/MemorialPhoto";
 import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
+import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
 
 interface Memorial {
   id: string;
@@ -66,7 +67,8 @@ const MemorialDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [memorial, setMemorial] = useState<Memorial | null>(null);
   const [condolences, setCondolences] = useState<Condolence[]>([]);
-  const [offerings, setOfferings] = useState<Offering[]>([]);
+  // Non-crown demo offerings (candles, flowers) + paid crowns from DB.
+  const [baseOfferings, setBaseOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
@@ -74,6 +76,13 @@ const MemorialDetail = () => {
   const [crownModalOpen, setCrownModalOpen] = useState(false);
   const [tributesModalOpen, setTributesModalOpen] = useState(false);
   const [crownSending, setCrownSending] = useState(false);
+
+  // Centralized simulated-crown state — auto-resets on memorial change/unmount
+  // and guarantees a single visible tier across rapid clicks.
+  const { simulate: simulateCrown, mergeWithPaid } = useSimulatedCrown(memorial?.id ?? null);
+
+  // Final list shown in UI: simulated crown (if any) replaces all other crowns.
+  const offerings = useMemo(() => mergeWithPaid(baseOfferings), [baseOfferings, mergeWithPaid]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -119,7 +128,7 @@ const MemorialDetail = () => {
         setCondolences((condsRes.data as Condolence[]) || []);
         // Only crowns with completed payment persist across navigation.
         // Demo/simulated crowns live only in local state for the current session.
-        setOfferings((offeringsRes.data as Offering[]) || []);
+        setBaseOfferings((offeringsRes.data as Offering[]) || []);
       }
       setLoading(false);
     };

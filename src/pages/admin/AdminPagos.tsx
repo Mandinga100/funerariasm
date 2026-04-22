@@ -15,6 +15,7 @@ import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSortedRows } from "@/hooks/use-sorted-rows";
 
 interface Transaction {
   id: string;

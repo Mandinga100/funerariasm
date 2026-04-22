@@ -168,12 +168,8 @@ export default function AdminLeads() {
   };
 
   const exportKpi = (fmt: "csv" | "xlsx") => {
-    const cols: ExportColumn<Lead>[] = kpiColumns.map((c) => ({
-      key: c.key,
-      label: c.label,
-      accessor: c.exportAccessor ?? (() => ""),
-    }));
-    const fname = `leads-${activeKpi ?? "kpi"}-${todayStamp()}`;
+    const cols = kpiColumnsToExport(kpiColumns);
+    const fname = `leads_${activeKpi ?? "kpi"}_${todayStamp()}`;
     if (fmt === "csv") downloadCSV(kpiRows, cols, fname);
     else downloadXLSX(kpiRows, cols, fname, "Leads");
   };

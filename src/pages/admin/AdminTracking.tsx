@@ -596,8 +596,14 @@ export default function AdminTracking() {
           rowKey={(r) => r.id}
           columns={kpiColumns}
           onRowClick={(r) => { setActiveKpi(null); openDetail(r); }}
-          onExportCSV={() => exportRows(kpiModal.rows, "csv", `seguimientos-${activeKpi}`)}
-          onExportXLSX={() => exportRows(kpiModal.rows, "xlsx", `seguimientos-${activeKpi}`)}
+          onExportCSV={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadCSV(kpiModal.rows, cols, `seguimientos_${activeKpi}_${todayStamp()}`);
+          }}
+          onExportXLSX={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadXLSX(kpiModal.rows, cols, `seguimientos_${activeKpi}_${todayStamp()}`, "Seguimientos");
+          }}
           totalLabel="seguimientos"
         />
       )}

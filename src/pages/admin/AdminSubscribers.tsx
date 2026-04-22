@@ -419,8 +419,14 @@ export default function AdminSubscribers() {
           rows={kpiModal.rows}
           rowKey={(r) => r.id}
           columns={kpiColumns}
-          onExportCSV={() => exportRows(kpiModal.rows, "csv", `suscriptores-${activeKpi}`)}
-          onExportXLSX={() => exportRows(kpiModal.rows, "xlsx", `suscriptores-${activeKpi}`)}
+          onExportCSV={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadCSV(kpiModal.rows, cols, `suscriptores_${activeKpi}_${todayStamp()}`);
+          }}
+          onExportXLSX={() => {
+            const cols = kpiColumnsToExport(kpiColumns);
+            downloadXLSX(kpiModal.rows, cols, `suscriptores_${activeKpi}_${todayStamp()}`, "Suscriptores");
+          }}
           totalLabel="suscriptores"
         />
       )}

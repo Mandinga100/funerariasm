@@ -24,7 +24,7 @@ import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDeta
 import BulkActionsBar from "@/components/admin/BulkActionsBar";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import SelectionCheckbox from "@/components/admin/SelectionCheckbox";
-import { downloadCSV, downloadXLSX, todayStamp, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, todayStamp, kpiColumnsToExport, type ExportColumn } from "@/lib/admin-export";
 
 interface ServiceCase {
   id: string;
@@ -570,8 +570,16 @@ export default function AdminCasos() {
         columns={kpiColumns}
         summary={kpiSummary}
         onRowClick={(r) => { setSelected(r); setActiveKpi(null); }}
-        onExportCSV={() => activeKpi && exportRows(kpiRows, "csv")}
-        onExportXLSX={() => activeKpi && exportRows(kpiRows, "xlsx")}
+        onExportCSV={() => {
+          if (!activeKpi) return;
+          const cols = kpiColumnsToExport(kpiColumns);
+          downloadCSV(kpiRows, cols, `casos_${activeKpi}_${todayStamp()}`);
+        }}
+        onExportXLSX={() => {
+          if (!activeKpi) return;
+          const cols = kpiColumnsToExport(kpiColumns);
+          downloadXLSX(kpiRows, cols, `casos_${activeKpi}_${todayStamp()}`, "Casos");
+        }}
         emptyMessage="No hay casos en esta categoría."
         totalLabel="casos"
       />

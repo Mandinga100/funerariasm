@@ -66,3 +66,26 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 export const todayStamp = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Convierte las columnas de un KpiDetailModal en columnas de exportación
+ * unificadas: respeta el orden original, incluye SIEMPRE todas las columnas
+ * (incluso las que no definen `exportAccessor`) y usa `""` como valor por
+ * defecto para garantizar encabezados y celdas consistentes en CSV/XLSX.
+ *
+ * Esto evita que cada módulo aplique su propio `.filter(...).map(...)` y
+ * termine con archivos exportados con distintos encabezados u órdenes.
+ */
+export function kpiColumnsToExport<T>(
+  columns: Array<{
+    key: string;
+    label: string;
+    exportAccessor?: (row: T) => string | number | null | undefined;
+  }>,
+): ExportColumn<T>[] {
+  return columns.map((c) => ({
+    key: c.key,
+    label: c.label,
+    accessor: c.exportAccessor ?? (() => ""),
+  }));
+}

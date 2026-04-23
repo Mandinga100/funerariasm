@@ -137,27 +137,27 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     } else {
       const start = defaultStart ?? new Date(Date.now() + 60 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      setTitle("");
-      setDescription("");
-      setEventType("reunion");
+      setTitle(prefill?.title ?? "");
+      setDescription(prefill?.description ?? "");
+      setEventType(prefill?.eventType ?? "reunion");
       setStatus(defaultStatus ?? "programado");
-      setPriority("normal");
+      setPriority(prefill?.priority ?? "normal");
       setStartAt(toLocalInput(start));
       setEndAt(toLocalInput(end));
       setLocationName("");
       setAddress("");
-      setComuna("");
-      setContactName("");
-      setContactPhone("");
-      setContactEmail("");
+      setComuna(prefill?.comuna ?? "");
+      setContactName(prefill?.contactName ?? "");
+      setContactPhone(prefill?.contactPhone ?? "");
+      setContactEmail(prefill?.contactEmail ?? "");
       setAssignedTo(user?.id ?? "");
-      setServiceCaseId("");
-      setLeadId("");
+      setServiceCaseId(prefill?.serviceCaseId ?? "");
+      setLeadId(prefill?.leadId ?? "");
       setReminder(60);
-      setInternalNotes("");
+      setInternalNotes(prefill?.internalNotes ?? "");
     }
     setConflicts([]);
-  }, [open, event, defaultStatus, defaultStart, user?.id]);
+  }, [open, event, defaultStatus, defaultStart, prefill, user?.id]);
 
   // Auto-ajustar end al cambiar tipo (si es nuevo)
   useEffect(() => {

@@ -156,9 +156,9 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
 
   const createPayment = async () => {
     const amt = parseInt(fAmount);
-    const error = validatePayment(amt);
-    if (error) {
-      toast({ title: "Validación", description: error, variant: "destructive" });
+    const validationError = validatePayment(amt);
+    if (validationError) {
+      toast({ title: "Validación", description: validationError, variant: "destructive" });
       return;
     }
     setCreating(true);

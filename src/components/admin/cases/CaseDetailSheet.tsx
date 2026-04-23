@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Phone, Mail, MapPin, Calendar, Save, ExternalLink, User, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { normalizeClPhone, openWhatsAppChat } from "@/lib/whatsapp";
 import CaseDeceasedTab from "./CaseDeceasedTab";
 import CaseStatusTab from "./CaseStatusTab";
 import CaseChecklistTab from "./CaseChecklistTab";

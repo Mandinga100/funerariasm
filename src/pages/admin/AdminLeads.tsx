@@ -96,12 +96,14 @@ export default function AdminLeads() {
     filterUrgency: searchParams.get("urgency") ?? "all",
     filterStage: searchParams.get("stage") ?? "all",
     filterOverdue: searchParams.get("filter") === "overdue",
+    categoryTab: (searchParams.get("category") ?? "all") as "all" | LeadCategory,
   });
-  const { viewMode, filterUrgency, filterStage, filterOverdue } = filters;
+  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab } = filters;
   const setViewMode = (v: "kanban" | "list") => setFilter("viewMode", v);
   const setFilterUrgency = (v: string) => setFilter("filterUrgency", v);
   const setFilterStage = (v: string) => setFilter("filterStage", v);
   const setFilterOverdue = (v: boolean) => setFilter("filterOverdue", v);
+  const setCategoryTab = (v: "all" | LeadCategory) => setFilter("categoryTab", v);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });

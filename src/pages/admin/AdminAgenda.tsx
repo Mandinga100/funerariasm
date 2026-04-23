@@ -194,13 +194,16 @@ export default function AdminAgenda() {
         end_at: r.end_at,
       }));
       if (!error && list.length > 0) {
+        const durationMin = Math.max(15, Math.round((new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime()) / 60_000));
         setConflictDlg({
           open: true,
           conflicts: list,
           pending: {
             eventId: ev.id,
             newStatus: status,
+            assigneeId: ev.assigned_to,
             assigneeName: userMap.get(ev.assigned_to) ?? null,
+            durationMin,
           },
         });
         return; // Bloquear hasta confirmación explícita

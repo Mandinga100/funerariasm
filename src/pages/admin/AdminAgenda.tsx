@@ -53,6 +53,13 @@ export default function AdminAgenda() {
   const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [defaultStatusForNew, setDefaultStatusForNew] = useState<AgendaStatus | undefined>();
 
+  // Drag conflict confirmation
+  const [conflictDlg, setConflictDlg] = useState<{
+    open: boolean;
+    conflicts: ConflictItem[];
+    pending: { eventId: string; newStatus: AgendaStatus; assigneeName: string | null } | null;
+  }>({ open: false, conflicts: [], pending: null });
+
   // Cargar datos
   const fetchAll = useCallback(async () => {
     setLoading(true);

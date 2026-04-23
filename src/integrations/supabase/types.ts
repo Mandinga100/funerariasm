@@ -579,6 +579,142 @@ export type Database = {
           },
         ]
       }
+      case_quote_items: {
+        Row: {
+          catalog_ref: string | null
+          category: string | null
+          created_at: string
+          description: string
+          discount: number
+          id: string
+          line_total: number
+          notes: string | null
+          position: number
+          quantity: number
+          quote_id: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          catalog_ref?: string | null
+          category?: string | null
+          created_at?: string
+          description: string
+          discount?: number
+          id?: string
+          line_total?: number
+          notes?: string | null
+          position?: number
+          quantity?: number
+          quote_id: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          catalog_ref?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string
+          discount?: number
+          id?: string
+          line_total?: number
+          notes?: string | null
+          position?: number
+          quantity?: number
+          quote_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "case_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_quotes: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          case_id: string
+          client_notes: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          discount: number
+          id: string
+          internal_notes: string | null
+          metadata: Json | null
+          quote_number: string
+          rejected_at: string | null
+          rejection_reason: string | null
+          sent_at: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          case_id: string
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          discount?: number
+          id?: string
+          internal_notes?: string | null
+          metadata?: Json | null
+          quote_number?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          case_id?: string
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          discount?: number
+          id?: string
+          internal_notes?: string | null
+          metadata?: Json | null
+          quote_number?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_quotes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_status_log: {
         Row: {
           case_id: string

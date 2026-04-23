@@ -478,9 +478,27 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
         open={showConflictDlg}
         onOpenChange={setShowConflictDlg}
         conflicts={conflicts}
+        assigneeId={assignedTo || null}
+        assigneeName={assignedTo ? users.find(u => u.user_id === assignedTo)?.display_name ?? null : null}
+        durationMin={
+          startAt && endAt
+            ? Math.max(15, Math.round((new Date(endAt).getTime() - new Date(startAt).getTime()) / 60_000))
+            : eventTypeOf(eventType).defaultDurationMin
+        }
+        excludeEventId={event?.id ?? null}
+        searchFrom={startAt ? new Date(startAt) : new Date()}
         context="save"
         onConfirm={handleConflictConfirm}
         onCancel={() => setShowConflictDlg(false)}
+        onReschedule={(start, end) => {
+          setStartAt(toLocalInput(start));
+          setEndAt(toLocalInput(end));
+          setShowConflictDlg(false);
+          toast({
+            title: "📅 Horario actualizado",
+            description: "Revisa los nuevos horarios y guarda para confirmar.",
+          });
+        }}
       />
     </Dialog>
   );

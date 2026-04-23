@@ -285,3 +285,7 @@ function NotificationCenterImpl(_props: Record<string, never>, _ref: React.Ref<H
     </Popover>
   );
 }
+
+const NotificationCenter = forwardRef<HTMLButtonElement, Record<string, never>>(NotificationCenterImpl);
+NotificationCenter.displayName = "NotificationCenter";
+export default NotificationCenter;

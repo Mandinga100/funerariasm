@@ -116,9 +116,9 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
   const resolvedPlan = resolvePlanName(planName);
 
   return (
-    <div className="rounded-lg border border-violet-200 bg-gradient-to-br from-violet-50 to-white overflow-hidden">
+    <div className="rounded-lg border border-violet-300 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 to-white dark:from-violet-950/40 dark:to-background overflow-hidden">
       {/* Header — urgency + score */}
-      <div className="px-3 py-2.5 border-b border-violet-100 flex items-center justify-between gap-2">
+      <div className="px-3 py-2.5 border-b border-violet-200 dark:border-violet-800/60 flex items-center justify-between gap-2 bg-violet-50/60 dark:bg-violet-950/30">
         <Badge className={cn("text-xs font-semibold border", urgency.color)}>
           {urgency.emoji} {urgency.label}
         </Badge>
@@ -130,11 +130,11 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
       <div className="p-3 space-y-3">
         {/* Plan — highlighted first when available */}
         {resolvedPlan && (
-          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2.5 border border-amber-200 dark:border-amber-800">
+          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/40 rounded-md p-2.5 border border-amber-200 dark:border-amber-800/70">
             <span className="text-lg leading-none mt-0.5">🌟</span>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-amber-700/70 font-medium">Plan contratado</p>
-              <p className="text-sm font-bold text-amber-900">{resolvedPlan}</p>
+              <p className="text-[10px] uppercase tracking-wider text-amber-800 dark:text-amber-300 font-semibold">Plan contratado</p>
+              <p className="text-sm font-bold text-amber-900 dark:text-amber-100">{resolvedPlan}</p>
             </div>
           </div>
         )}
@@ -143,15 +143,15 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
         <div className="flex items-start gap-2">
           <span className="text-lg leading-none mt-0.5">{intent.emoji}</span>
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo de servicio</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tipo de servicio</p>
             <p className="text-sm font-semibold text-foreground">{intent.label}</p>
           </div>
         </div>
 
         {/* Summary */}
         {c.summary && (
-          <div className="bg-white/80 rounded-md p-2.5 border border-violet-100">
-            <p className="text-xs leading-relaxed text-foreground/90">{c.summary}</p>
+          <div className="bg-card dark:bg-background/60 rounded-md p-2.5 border border-violet-200 dark:border-violet-800/50">
+            <p className="text-xs leading-relaxed text-foreground">{c.summary}</p>
           </div>
         )}
 
@@ -173,8 +173,8 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
 
         {/* Next step */}
         {c.next_step && (
-          <div className="bg-primary/5 rounded-md p-2.5 border border-primary/10">
-            <p className="text-[10px] uppercase tracking-wider text-primary/70 font-medium mb-0.5">📋 Próximo paso</p>
+          <div className="bg-primary/10 dark:bg-primary/15 rounded-md p-2.5 border border-primary/20 dark:border-primary/30">
+            <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-0.5">📋 Próximo paso</p>
             <p className="text-xs font-medium text-foreground">{c.next_step}</p>
           </div>
         )}
@@ -183,7 +183,7 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
         {c.tags && c.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {c.tags.map((tag, i) => (
-              <Badge key={i} variant="outline" className="text-[10px] font-normal">
+              <Badge key={i} variant="outline" className="text-[10px] font-normal text-foreground border-border">
                 {tag}
               </Badge>
             ))}
@@ -196,11 +196,11 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
 
 function InfoChip({ emoji, label, value }: { emoji: string; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-1.5 bg-muted/40 rounded-md px-2 py-1.5">
+    <div className="flex items-start gap-1.5 bg-muted dark:bg-muted/60 rounded-md px-2 py-1.5 border border-border/50">
       <span className="text-sm leading-none mt-0.5">{emoji}</span>
       <div className="min-w-0">
-        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="text-[11px] font-medium truncate">{value}</p>
+        <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+        <p className="text-[11px] font-medium text-foreground truncate">{value}</p>
       </div>
     </div>
   );

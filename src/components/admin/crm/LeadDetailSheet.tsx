@@ -156,7 +156,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
   const openWhatsApp = () => {
     const v = validateClPhone(lead?.phone);
-    if (!v.ok) {
+    if (v.ok !== true) {
       toast({
         title: "No se puede abrir WhatsApp",
         description: v.reason,

@@ -311,7 +311,7 @@ export default function CaseQuoteTab({ caseId, onSaved }: { caseId: string; onSa
       patch.rejected_at = new Date().toISOString();
       patch.rejection_reason = rejectionReason || null;
     }
-    const { error } = await supabase.from("case_quotes").update(patch).eq("id", active.id);
+    const { error } = await supabase.from("case_quotes").update(patch as never).eq("id", active.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {

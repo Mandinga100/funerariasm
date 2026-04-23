@@ -1304,8 +1304,8 @@ export default function AdminSettings() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
-                {profileAvatarUrl ? (
-                  <img src={profileAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                {profileAvatarPreview ? (
+                  <img src={profileAvatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <UserCog className="w-8 h-8 text-[#C5A059]" />
                 )}

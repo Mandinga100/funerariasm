@@ -198,6 +198,51 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     }
   };
 
+  const callLead = async () => {
+    const v = validateClPhone(lead?.phone);
+    if (v.ok !== true) {
+      toast({ title: "Teléfono inválido", description: v.reason, variant: "destructive" });
+      return;
+    }
+    window.location.href = `tel:${v.number}`;
+    // Log activity
+    if (user) {
+      await supabase.from("lead_activities").insert({
+        lead_id: lead.id,
+        activity_type: "llamada",
+        description: `Llamada iniciada desde CRM a ${v.pretty}`,
+        performed_by: user.id,
+      });
+      loadActivities();
+    }
+  };
+
+  const scheduleMeeting = async () => {
+    if (!lead || !user) return;
+    // Avanza el pipeline a "contactado" si está en "nuevo" y registra nota
+    const updates: Record<string, any> = { last_contacted_at: new Date().toISOString() };
+    if (!lead.pipeline_stage || lead.pipeline_stage === "nuevo") {
+      updates.pipeline_stage = "contactado";
+    }
+    await supabase.from("contact_leads").update(updates).eq("id", lead.id);
+    await supabase.from("lead_notes").insert({
+      lead_id: lead.id,
+      author_id: user.id,
+      content: `Reunión a programar con ${lead.name ?? "el lead"}. Coordinar fecha y enviar confirmación.`,
+      note_type: "nota",
+    });
+    await supabase.from("lead_activities").insert({
+      lead_id: lead.id,
+      activity_type: "schedule_meeting",
+      description: "Solicitud de programación de reunión generada desde resumen de re-contactos",
+      performed_by: user.id,
+    });
+    toast({ title: "📅 Reunión marcada para programar", description: "Lead movido a 'Contactado' y nota creada." });
+    onUpdate();
+    loadNotes();
+    loadActivities();
+  };
+
   const urgencyLabels: Record<string, string> = {
     immediate: "Inmediato",
     inmediata: "Inmediato",

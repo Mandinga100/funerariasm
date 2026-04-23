@@ -63,12 +63,66 @@ export const submitContact = async (data: ContactData) => {
     metadata.attribution_source = "comuna_landing";
   }
 
-  // 1. Persist to DB — auto-rellena comuna desde la landing si el formulario no la pidió.
+  // 1. Deduplicación inteligente — evita registrar el mismo lead dos veces si
+  // el visitante reenvía el formulario o el chatbox se reabre en sesiones cercanas.
+  // Ventana: últimas 6 horas. Match por teléfono O email normalizados.
+  // Si hay duplicado: agrega una actividad al lead existente y devuelve sin crear uno nuevo.
+  const DEDUPE_WINDOW_HOURS = 6;
+  const sinceIso = new Date(Date.now() - DEDUPE_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const phoneNorm = data.phone?.trim() || null;
+  const emailNorm = data.email?.trim().toLowerCase() || null;
+
+  let duplicateLeadId: string | null = null;
+  if (phoneNorm || emailNorm) {
+    try {
+      const orFilters: string[] = [];
+      if (phoneNorm) orFilters.push(`phone.eq.${phoneNorm}`);
+      if (emailNorm) orFilters.push(`email.eq.${emailNorm}`);
+
+      const { data: recent } = await (supabase
+        .from("contact_leads")
+        .select("id, created_at, urgency, pipeline_stage")
+        .gte("created_at", sinceIso)
+        .or(orFilters.join(","))
+        .order("created_at", { ascending: false })
+        .limit(1) as any);
+
+      if (recent && recent.length > 0) {
+        duplicateLeadId = recent[0].id as string;
+      }
+    } catch (dedupeError) {
+      // Si la búsqueda falla, no bloqueamos el flujo: mejor un lead extra que perderlo.
+      console.warn("Dedupe lookup failed, continuing with insert:", dedupeError);
+    }
+  }
+
+  if (duplicateLeadId) {
+    // Re-contacto: anotamos actividad en el lead existente y salimos.
+    try {
+      await (supabase.from("lead_activities").insert as any)({
+        lead_id: duplicateLeadId,
+        activity_type: "duplicate_contact",
+        description: `Re-contacto detectado (${data.contactType}). Mensaje: ${(data.message || "—").slice(0, 200)}`,
+        metadata: {
+          contact_type: data.contactType,
+          source: data.source || "web",
+          urgency: data.urgency || "normal",
+          selected_plan: data.selectedPlan || null,
+          window_hours: DEDUPE_WINDOW_HOURS,
+        },
+      });
+    } catch (activityError) {
+      console.warn("Could not log duplicate activity (non-blocking):", activityError);
+    }
+    return { success: true, whatsappMessage, deduplicated: true, leadId: duplicateLeadId };
+  }
+
+  // 2. Persist to DB — auto-rellena comuna desde la landing si el formulario no la pidió.
   const insertPayload = {
     contact_type: data.contactType,
     name: data.name || null,
-    email: data.email || null,
-    phone: data.phone || null,
+    email: emailNorm,
+    phone: phoneNorm,
     message: data.message || null,
     intent: data.intent || null,
     source: data.source || "web",

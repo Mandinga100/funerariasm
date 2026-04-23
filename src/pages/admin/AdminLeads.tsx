@@ -403,9 +403,10 @@ export default function AdminLeads() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="inmediata">🔴 Urgente</SelectItem>
+              <SelectItem value="inmediata">🚨 Urgente</SelectItem>
+              <SelectItem value="cotizacion">💰 Cotización</SelectItem>
               <SelectItem value="normal">🔵 Normal</SelectItem>
-              <SelectItem value="previsión">🟢 Previsión</SelectItem>
+              <SelectItem value="previsión">🌿 Previsión</SelectItem>
             </SelectContent>
           </Select>
           {!isMobile && (

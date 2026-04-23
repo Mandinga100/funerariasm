@@ -82,22 +82,103 @@ export const buildWhatsAppUrlDirect = (message: string): string =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 /**
- * Normaliza un teléfono chileno a formato wa.me (sin +, sin espacios).
- * - Quita todo lo no-numérico.
- * - Si empieza con 9 y tiene 9 dígitos → antepone 56.
- * - Si tiene 8 dígitos → antepone 569.
- * - Si ya empieza con 56 → lo deja.
- * Devuelve null si no es válido.
+ * Resultado detallado de validación de teléfono chileno.
+ * - ok=true → number tiene formato wa.me (E.164 sin '+').
+ * - ok=false → reason describe el problema para mostrar al usuario.
+ */
+export type PhoneValidation =
+  | { ok: true; number: string; pretty: string; isMobile: boolean }
+  | { ok: false; reason: string };
+
+/**
+ * Formatea un teléfono CL en formato legible: +56 9 1234 5678 / +56 2 2345 6789.
+ */
+export const prettyClPhone = (e164: string): string => {
+  if (e164.length === 11 && e164.startsWith("569")) {
+    return `+56 9 ${e164.slice(3, 7)} ${e164.slice(7)}`;
+  }
+  if (e164.length === 11 && e164.startsWith("56")) {
+    return `+56 ${e164.slice(2, 3)} ${e164.slice(3, 7)} ${e164.slice(7)}`;
+  }
+  return `+${e164}`;
+};
+
+/**
+ * Valida y normaliza un teléfono chileno con razón de error específica.
+ * Reglas:
+ *  - Móvil CL: 9 dígitos comenzando con 9  → 569XXXXXXXX (11 dígitos)
+ *  - Fijo CL:  8 dígitos                   → 56XXXXXXXX  (10 dígitos, no contactable WhatsApp)
+ *  - Acepta prefijos +56 / 56 / 0056.
+ *  - Rechaza dígitos repetidos triviales (000000000, 999999999).
+ */
+export const validateClPhone = (raw?: string | null): PhoneValidation => {
+  if (!raw || !raw.trim()) {
+    return { ok: false, reason: "No se ha registrado un número de teléfono." };
+  }
+  let d = raw.replace(/\D/g, "");
+  if (!d) return { ok: false, reason: "El teléfono no contiene dígitos válidos." };
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("56")) d = d.slice(2);
+
+  // Trivial: todos iguales
+  if (/^(\d)\1+$/.test(d)) {
+    return { ok: false, reason: "El número parece inválido (dígitos repetidos)." };
+  }
+
+  // Móvil chileno
+  if (d.length === 9 && d.startsWith("9")) {
+    const number = "56" + d;
+    return { ok: true, number, pretty: prettyClPhone(number), isMobile: true };
+  }
+  // Móvil sin el 9 inicial (8 dígitos asumiendo móvil viejo) → asumimos fijo
+  if (d.length === 8) {
+    return {
+      ok: false,
+      reason: "El número parece de teléfono fijo (8 dígitos). WhatsApp solo contacta móviles que comienzan con 9.",
+    };
+  }
+  if (d.length < 9) {
+    return { ok: false, reason: `Faltan dígitos (${d.length}/9). Un móvil chileno tiene 9 dígitos comenzando con 9.` };
+  }
+  if (d.length > 9) {
+    return { ok: false, reason: "El número tiene demasiados dígitos para un móvil chileno." };
+  }
+  return { ok: false, reason: "Formato no reconocido. Usa un móvil chileno: 9 XXXX XXXX." };
+};
+
+/**
+ * Compatibilidad retro: devuelve el E.164 sin '+' o null.
  */
 export const normalizeClPhone = (raw?: string | null): string | null => {
-  if (!raw) return null;
-  let d = raw.replace(/\D/g, "");
-  if (d.startsWith("00")) d = d.slice(2);
-  if (d.startsWith("56")) return d.length >= 11 ? d : null;
-  if (d.length === 9 && d.startsWith("9")) return "56" + d;
-  if (d.length === 8) return "569" + d;
-  if (d.length === 11 && d.startsWith("569")) return d;
-  return d.length >= 10 ? d : null;
+  const v = validateClPhone(raw);
+  return v.ok ? v.number : null;
+};
+
+/**
+ * Limpia y formatea un nombre: trim, colapsa espacios, capitaliza por palabra,
+ * descarta caracteres extraños y limita a 80 chars.
+ */
+export const formatPersonName = (raw?: string | null): string => {
+  if (!raw) return "";
+  const cleaned = raw
+    .replace(/[^\p{L}\p{M}\s'-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  if (!cleaned) return "";
+  return cleaned
+    .toLowerCase()
+    .split(" ")
+    .map((w) => (w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+};
+
+/**
+ * Devuelve el primer nombre formateado, o cadena vacía.
+ */
+export const firstName = (raw?: string | null): string => {
+  const full = formatPersonName(raw);
+  return full ? full.split(" ")[0] : "";
 };
 
 /**

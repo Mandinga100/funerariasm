@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,6 +124,7 @@ export default function AdminCasos() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [agendaPrefill, setAgendaPrefill] = useState<AgendaPrefill | null>(null);
+  const notifiedAgendaIdsRef = useRef<Set<string>>(new Set());
   const { isCeo } = useAuth();
   const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_casos", {
     filterPipeline: "all",
@@ -634,8 +635,10 @@ export default function AdminCasos() {
         onSaved={(createdId) => {
           setAgendaPrefill(null);
           load();
-          if (createdId) {
+          if (createdId && !notifiedAgendaIdsRef.current.has(createdId)) {
+            notifiedAgendaIdsRef.current.add(createdId);
             sonnerToast.success("Evento creado en la agenda", {
+              id: `agenda-created-${createdId}`,
               description: "Puedes abrirlo directamente para revisar o editar.",
               action: {
                 label: "Ver en agenda",

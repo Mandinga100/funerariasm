@@ -78,20 +78,21 @@ const PAYMENT_STATUSES = [
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
-// Orden intuitivo de prioridad (asc = más prioritario primero).
-// Pago: Pagado primero (revenue confirmado), luego Cotizado, Aprobado, Pendiente, Cancelado al final.
+// Orden intuitivo siguiendo el flujo natural del proceso funerario.
+// Asc = primer estado del flujo arriba; Desc = último estado arriba.
+// Pago: Pendiente → Cotizado → Aprobado → Pagado → Cancelado.
 const PAYMENT_PRIORITY: Record<string, number> = {
-  pagado: 1,
+  pendiente: 1,
   cotizado: 2,
   aprobado: 3,
-  pendiente: 4,
+  pagado: 4,
   cancelado: 5,
 };
-// Etapa: Contratado primero (cliente activo), Cotizado, Contactado, Cerrado al final.
+// Etapa: Contactado → Cotizado → Contratado → Cerrado.
 const PIPELINE_PRIORITY: Record<string, number> = {
-  contratado: 1,
+  contactado: 1,
   cotizado: 2,
-  contactado: 3,
+  contratado: 3,
   cerrado: 4,
 };
 const paymentRank = (s: string) => PAYMENT_PRIORITY[s] ?? 99;

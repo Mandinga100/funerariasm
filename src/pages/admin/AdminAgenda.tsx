@@ -181,10 +181,16 @@ export default function AdminAgenda() {
         _end: ev.end_at,
         _exclude_event_id: ev.id,
       });
-      if (!error && data && (data as ConflictItem[]).length > 0) {
+      const list: ConflictItem[] = (data ?? []).map((r) => ({
+        id: r.event_id,
+        title: r.title,
+        start_at: r.start_at,
+        end_at: r.end_at,
+      }));
+      if (!error && list.length > 0) {
         setConflictDlg({
           open: true,
-          conflicts: data as ConflictItem[],
+          conflicts: list,
           pending: {
             eventId: ev.id,
             newStatus: status,

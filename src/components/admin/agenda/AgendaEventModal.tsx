@@ -59,7 +59,7 @@ const toLocalInput = (iso: string | Date) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, onSaved }: Props) {
+export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, prefill, onSaved }: Props) {
   const { user, isCeo } = useAuth();
   const { toast } = useToast();
   const isEdit = !!event;

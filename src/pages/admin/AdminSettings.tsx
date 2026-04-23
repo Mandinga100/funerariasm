@@ -170,8 +170,25 @@ export default function AdminSettings() {
       .maybeSingle();
     setProfileName(data?.display_name ?? "");
     setProfileAvatarUrl(data?.avatar_url ?? null);
+    setProfileAvatarPreview(await signAvatarUrl(data?.avatar_url));
     setProfileDialog(true);
   };
+
+  /* ── Subir avatar al bucket 'avatars' (privado, URL firmada) ── */
+  const handleAvatarUpload = async (file: File) => {
+    if (!user?.id) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600", upsert: true,
+      });
+      if (upErr) throw upErr;
+      // Guardamos el path (no URL pública); para mostrar usamos un signed URL
+      setProfileAvatarUrl(path);
+      const signed = await signAvatarUrl(path);
+      setProfileAvatarPreview(signed);
 
   /* ── Subir avatar al bucket 'avatars' ── */
   const handleAvatarUpload = async (file: File) => {

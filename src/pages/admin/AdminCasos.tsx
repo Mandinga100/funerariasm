@@ -631,7 +631,20 @@ export default function AdminCasos() {
         onOpenChange={(v) => { if (!v) setAgendaPrefill(null); }}
         event={null}
         prefill={agendaPrefill ?? undefined}
-        onSaved={() => { setAgendaPrefill(null); load(); }}
+        onSaved={(createdId) => {
+          setAgendaPrefill(null);
+          load();
+          if (createdId) {
+            sonnerToast.success("Evento creado en la agenda", {
+              description: "Puedes abrirlo directamente para revisar o editar.",
+              action: {
+                label: "Ver en agenda",
+                onClick: () => navigate(`/admin/agenda?event=${createdId}`),
+              },
+              duration: 8000,
+            });
+          }
+        }}
       />
     </div>
   );

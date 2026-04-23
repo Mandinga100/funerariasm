@@ -13,6 +13,14 @@ interface Classification {
   sla_hours?: number;
   tags?: string[];
   _source?: "ai" | "heuristic";
+  historical_stats?: {
+    sample_size?: number;
+    avg_priority?: number | null;
+    avg_sla_hours?: number | null;
+    avg_value?: number | null;
+    conversion_rate?: number | null;
+    basis?: string;
+  } | null;
 }
 
 const urgencyMap: Record<string, { label: string; emoji: string; color: string }> = {
@@ -188,6 +196,29 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
           <div className="bg-primary/10 dark:bg-primary/15 rounded-md p-2.5 border border-primary/20 dark:border-primary/30">
             <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-0.5">📋 Próximo paso</p>
             <p className="text-xs font-medium text-foreground">{c.next_step}</p>
+          </div>
+        )}
+
+        {/* Calibración histórica (solo cuando hay muestra suficiente) */}
+        {c.historical_stats && (c.historical_stats.sample_size ?? 0) >= 3 && (
+          <div className="rounded-md p-2.5 border border-border bg-muted/40 dark:bg-muted/20">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+              📊 Calibrado con histórico ({c.historical_stats.sample_size} casos · {c.historical_stats.basis})
+            </p>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-foreground/80">
+              {c.historical_stats.avg_priority != null && (
+                <div className="flex justify-between"><span>Prioridad media:</span><span className="font-medium tabular-nums">{c.historical_stats.avg_priority}/100</span></div>
+              )}
+              {c.historical_stats.avg_sla_hours != null && (
+                <div className="flex justify-between"><span>SLA medio:</span><span className="font-medium tabular-nums">{c.historical_stats.avg_sla_hours}h</span></div>
+              )}
+              {c.historical_stats.conversion_rate != null && (
+                <div className="flex justify-between"><span>Conversión:</span><span className="font-medium tabular-nums">{c.historical_stats.conversion_rate}%</span></div>
+              )}
+              {(c.historical_stats.avg_value ?? 0) > 0 && (
+                <div className="flex justify-between"><span>Valor medio:</span><span className="font-medium tabular-nums">{fmt(c.historical_stats.avg_value!)}</span></div>
+              )}
+            </div>
           </div>
         )}
 

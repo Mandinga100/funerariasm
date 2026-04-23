@@ -1675,6 +1675,21 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_classification_stats: {
+        Row: {
+          avg_priority: number | null
+          avg_sla_hours: number | null
+          avg_value: number | null
+          computed_at: string | null
+          conversion_rate: number | null
+          intent: string | null
+          sample_size: number | null
+          top_channel: string | null
+          top_emotion: string | null
+          urgency: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       case_is_eligible_for_auto_tracking: {
@@ -1695,6 +1710,18 @@ export type Database = {
           title: string
         }[]
       }
+      get_lead_stats: {
+        Args: { _intent: string; _urgency: string }
+        Returns: {
+          avg_priority: number
+          avg_sla_hours: number
+          avg_value: number
+          conversion_rate: number
+          sample_size: number
+          top_channel: string
+          top_emotion: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1702,6 +1729,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_lead_classification_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "family" | "ceo" | "moderator"

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { clearAvatarCache } from "@/lib/avatar-url";
 
 interface AuthContextType {
   user: User | null;
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearAvatarCache();
     setUser(null);
     setSession(null);
     setIsAdmin(false);

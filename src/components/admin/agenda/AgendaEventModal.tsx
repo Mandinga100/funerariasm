@@ -246,7 +246,13 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       if (error) {
         toast({ title: "Error al crear", description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "✅ Evento creado", description: "Se notificó al responsable asignado." });
+        const reminderTxt = reminder > 0
+          ? ` Recordatorio en ${reminder >= 1440 ? `${reminder / 1440} día(s)` : reminder >= 60 ? `${reminder / 60} h` : `${reminder} min`} (sonora + WhatsApp + correo + CRM).`
+          : "";
+        toast({
+          title: "✅ Evento agendado",
+          description: `Notificación enviada al responsable.${reminderTxt}`,
+        });
         onSaved();
         onOpenChange(false);
       }
@@ -367,6 +373,11 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
                   ))}
                 </SelectContent>
               </Select>
+              {reminder > 0 && (
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                  🔔 Alertas activas: sonora · WhatsApp · correo · CRM
+                </p>
+              )}
             </div>
           </div>
 

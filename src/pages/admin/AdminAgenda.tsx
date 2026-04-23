@@ -367,6 +367,16 @@ export default function AdminAgenda() {
         defaultStatus={defaultStatusForNew}
         onSaved={fetchAll}
       />
+
+      <AgendaConflictDialog
+        open={conflictDlg.open}
+        onOpenChange={(v) => !v && setConflictDlg({ open: false, conflicts: [], pending: null })}
+        conflicts={conflictDlg.conflicts}
+        assigneeName={conflictDlg.pending?.assigneeName}
+        context="drag"
+        onConfirm={confirmConflictAndMove}
+        onCancel={() => setConflictDlg({ open: false, conflicts: [], pending: null })}
+      />
     </div>
   );
 }

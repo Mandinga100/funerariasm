@@ -452,6 +452,174 @@ export type Database = {
         }
         Relationships: []
       }
+      case_documents: {
+        Row: {
+          case_id: string
+          created_at: string
+          document_name: string
+          document_type: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          notes: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+          updated_at: string
+          uploaded_by: string | null
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          document_name: string
+          document_type: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          notes?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          notes?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_milestones: {
+        Row: {
+          assigned_to: string | null
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          due_at: string | null
+          id: string
+          metadata: Json | null
+          milestone_key: string
+          notes: string | null
+          position: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          metadata?: Json | null
+          milestone_key: string
+          notes?: string | null
+          position?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          metadata?: Json | null
+          milestone_key?: string
+          notes?: string | null
+          position?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_milestones_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_status_log: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          new_value: string
+          old_value: string | null
+          performed_by: string | null
+          reason: string | null
+          status_area: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          new_value: string
+          old_value?: string | null
+          performed_by?: string | null
+          reason?: string | null
+          status_area: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          new_value?: string
+          old_value?: string | null
+          performed_by?: string | null
+          reason?: string | null
+          status_area?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_status_log_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comuna_conversion_events: {
         Row: {
           comuna_nombre: string | null
@@ -1132,8 +1300,12 @@ export type Database = {
         Row: {
           ai_classification: Json | null
           ai_summary: string | null
+          amount_paid: number
           assigned_to: string | null
+          body_pickup_at: string | null
+          branch: string | null
           case_number: string
+          cemetery_name: string | null
           ceremony_date: string | null
           ceremony_location: string | null
           client_email: string | null
@@ -1141,20 +1313,32 @@ export type Database = {
           client_phone: string | null
           client_rut: string | null
           closed_at: string | null
+          commercial_status: string
           comuna: string | null
           created_at: string
+          currency: string
+          death_cause: string | null
+          death_place: string | null
           deceased_birth_date: string | null
           deceased_death_date: string | null
+          deceased_gender: string | null
           deceased_name: string | null
+          deceased_relationship: string | null
+          deceased_rut: string | null
+          disposition_type: string | null
+          documental_status: string
           documents: string[] | null
+          financial_status: string
           id: string
           intent: string | null
           internal_notes: string | null
           lead_id: string | null
           notes: string | null
+          operational_status: string
           original_message: string | null
           payment_status: string
           pipeline_stage: string
+          requires_autopsy: boolean
           selected_plan: string | null
           service_description: string | null
           service_type: string | null
@@ -1162,12 +1346,17 @@ export type Database = {
           total_amount: number
           updated_at: string
           urgency: string | null
+          wake_room: string | null
         }
         Insert: {
           ai_classification?: Json | null
           ai_summary?: string | null
+          amount_paid?: number
           assigned_to?: string | null
+          body_pickup_at?: string | null
+          branch?: string | null
           case_number?: string
+          cemetery_name?: string | null
           ceremony_date?: string | null
           ceremony_location?: string | null
           client_email?: string | null
@@ -1175,20 +1364,32 @@ export type Database = {
           client_phone?: string | null
           client_rut?: string | null
           closed_at?: string | null
+          commercial_status?: string
           comuna?: string | null
           created_at?: string
+          currency?: string
+          death_cause?: string | null
+          death_place?: string | null
           deceased_birth_date?: string | null
           deceased_death_date?: string | null
+          deceased_gender?: string | null
           deceased_name?: string | null
+          deceased_relationship?: string | null
+          deceased_rut?: string | null
+          disposition_type?: string | null
+          documental_status?: string
           documents?: string[] | null
+          financial_status?: string
           id?: string
           intent?: string | null
           internal_notes?: string | null
           lead_id?: string | null
           notes?: string | null
+          operational_status?: string
           original_message?: string | null
           payment_status?: string
           pipeline_stage?: string
+          requires_autopsy?: boolean
           selected_plan?: string | null
           service_description?: string | null
           service_type?: string | null
@@ -1196,12 +1397,17 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           urgency?: string | null
+          wake_room?: string | null
         }
         Update: {
           ai_classification?: Json | null
           ai_summary?: string | null
+          amount_paid?: number
           assigned_to?: string | null
+          body_pickup_at?: string | null
+          branch?: string | null
           case_number?: string
+          cemetery_name?: string | null
           ceremony_date?: string | null
           ceremony_location?: string | null
           client_email?: string | null
@@ -1209,20 +1415,32 @@ export type Database = {
           client_phone?: string | null
           client_rut?: string | null
           closed_at?: string | null
+          commercial_status?: string
           comuna?: string | null
           created_at?: string
+          currency?: string
+          death_cause?: string | null
+          death_place?: string | null
           deceased_birth_date?: string | null
           deceased_death_date?: string | null
+          deceased_gender?: string | null
           deceased_name?: string | null
+          deceased_relationship?: string | null
+          deceased_rut?: string | null
+          disposition_type?: string | null
+          documental_status?: string
           documents?: string[] | null
+          financial_status?: string
           id?: string
           intent?: string | null
           internal_notes?: string | null
           lead_id?: string | null
           notes?: string | null
+          operational_status?: string
           original_message?: string | null
           payment_status?: string
           pipeline_stage?: string
+          requires_autopsy?: boolean
           selected_plan?: string | null
           service_description?: string | null
           service_type?: string | null
@@ -1230,6 +1448,7 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           urgency?: string | null
+          wake_room?: string | null
         }
         Relationships: [
           {

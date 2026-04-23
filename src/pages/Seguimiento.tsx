@@ -49,7 +49,7 @@ const STATUS_PRIORITY: Record<string, number> = {
 
 const GROUP_META: Record<"alta" | "media" | "baja", { label: string; tone: string; icon: typeof AlertTriangle }> = {
   alta: { label: "Alta prioridad", tone: "text-destructive", icon: AlertTriangle },
-  media: { label: "Prioridad media", tone: "text-amber-600", icon: Clock },
+  media: { label: "Prioridad media", tone: "text-accent", icon: Clock },
   baja: { label: "Complementarios", tone: "text-muted-foreground", icon: FileText },
 };
 

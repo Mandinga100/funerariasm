@@ -236,11 +236,51 @@ export default function AdminAgenda() {
     setConflictDlg({ open: false, conflicts: [], pending: null });
     if (error) {
       toast({ title: "No se pudo reprogramar", description: error.message, variant: "destructive" });
-    } else {
-      toast({
-        title: "📅 Evento reprogramado",
-        description: `${ev?.title ?? "Evento"} → ${start.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}`,
-      });
+      return;
+    }
+
+    const niceWhen = start.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+    toast({
+      title: "📅 Evento reprogramado",
+      description: `${ev?.title ?? "Evento"} → ${niceWhen}`,
+    });
+
+    // Notificar al responsable + admins/CEO sobre la reprogramación inteligente
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const actorId = user?.id ?? null;
+      const actorName = actorId ? (userMap.get(actorId) ?? user?.email ?? "Operador") : "Sistema";
+      const evTitle = ev?.title ?? "Evento";
+
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "ceo"]);
+
+      const recipients = new Set<string>();
+      if (p.assigneeId) recipients.add(p.assigneeId);
+      (roleRows ?? []).forEach(r => { if (r.user_id) recipients.add(r.user_id); });
+      // Evitar notificar al propio operador que ejecuta la acción
+      if (actorId) recipients.delete(actorId);
+
+      if (recipients.size > 0) {
+        const isForAssignee = (uid: string) => uid === p.assigneeId;
+        const rows = Array.from(recipients).map(uid => ({
+          user_id: uid,
+          title: isForAssignee(uid)
+            ? "🔄 Tu evento fue reprogramado automáticamente"
+            : "🔄 Reprogramación inteligente aplicada",
+          message: isForAssignee(uid)
+            ? `${evTitle} se movió al primer horario libre disponible: ${niceWhen}. Resolución de conflicto aplicada por ${actorName}.`
+            : `${actorName} aceptó la sugerencia inteligente y reprogramó "${evTitle}" (${p.assigneeName ?? "sin responsable"}) a ${niceWhen}.`,
+          type: "info",
+          reference_id: p.eventId,
+          reference_type: "agenda_event",
+        }));
+        await supabase.from("admin_notifications").insert(rows);
+      }
+    } catch (e) {
+      console.error("[agenda] reschedule notify error:", e);
     }
   };
 

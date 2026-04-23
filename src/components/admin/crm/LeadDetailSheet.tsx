@@ -155,48 +155,39 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   };
 
   const openWhatsApp = () => {
-    if (!lead?.phone) return;
-    const phone = lead.phone.replace(/\D/g, "");
-    const nombre = lead.name?.split(" ")[0] ?? "";
-    const saludo = nombre ? `Estimado/a ${nombre}` : "Estimado/a";
+    const phone = normalizeClPhone(lead?.phone);
+    if (!phone) {
+      toast({ title: "Sin teléfono válido", description: "Este lead no tiene un número chileno válido.", variant: "destructive" });
+      return;
+    }
+    const nombre = lead.name?.split(" ")[0]?.trim() ?? "";
+    const saludo = nombre ? `Hola ${nombre}` : "Hola, buenos días";
 
     let contexto = "";
     if (lead.selected_plan) {
-      contexto = ` en relación a su consulta sobre el ${lead.selected_plan}`;
+      contexto = ` por su consulta sobre el ${lead.selected_plan}`;
     } else if (lead.intent === "servicio_funerario_urgente" || lead.urgency === "inmediata") {
-      contexto = " en relación a su solicitud de servicio funerario";
+      contexto = " por su solicitud de servicio funerario";
     } else if (lead.intent === "cremacion") {
-      contexto = " en relación a su consulta sobre servicios de cremación";
+      contexto = " por su consulta sobre cremación";
     } else if (lead.intent === "traslado") {
-      contexto = " en relación a su consulta sobre traslado de restos";
+      contexto = " por su consulta sobre traslado";
     } else if (lead.intent === "cotizacion") {
-      contexto = " en relación a su solicitud de cotización";
+      contexto = " por su solicitud de cotización";
     } else if (lead.intent === "prevision_funeraria") {
-      contexto = " en relación a su consulta sobre previsión funeraria";
+      contexto = " por su consulta sobre previsión funeraria";
     } else if (lead.intent === "memorial_legado") {
-      contexto = " en relación a su consulta sobre memorial y legado eterno";
+      contexto = " por su consulta sobre memoriales";
     } else if (lead.message) {
-      contexto = " en relación a su consulta reciente";
+      contexto = " por su mensaje reciente";
     }
 
-    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos con usted${contexto}. Estamos a su disposición para acompañarle y resolver cualquier inquietud.\n\n¿En qué podemos ayudarle?`;
+    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nLe escribimos${contexto}. Estamos a su disposición para acompañarle con respeto y cariño en este momento.\n\n¿En qué podemos ayudarle?`;
 
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`;
-    // Open in a real browser window (bypasses iframe restrictions in preview)
-    const win = window.open(url, "_blank", "noopener,noreferrer");
-    if (!win) {
-      // Fallback: copy message and notify
-      navigator.clipboard.writeText(mensaje).then(() => {
-        toast({ title: "📋 Mensaje copiado", description: "No se pudo abrir WhatsApp automáticamente. El mensaje fue copiado al portapapeles." });
-      });
-      // Try navigation as last resort
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    const ok = openWhatsAppChat(phone, mensaje);
+    if (!ok) {
+      navigator.clipboard.writeText(mensaje).catch(() => {});
+      toast({ title: "📋 Mensaje copiado", description: "Tu navegador bloqueó la apertura. Pega el mensaje en WhatsApp." });
     }
   };
 

@@ -51,7 +51,9 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [conflicts, setConflicts] = useState<{ id: string; title: string; start_at: string; end_at: string }[]>([]);
+  const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
+  const [conflictAcknowledged, setConflictAcknowledged] = useState(false);
+  const [showConflictDlg, setShowConflictDlg] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");

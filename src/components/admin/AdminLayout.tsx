@@ -12,6 +12,7 @@ import RoleBadge from "@/components/admin/RoleBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { useLeadRealtimeAlerts } from "@/hooks/use-lead-notifications";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
 import { signAvatarUrl } from "@/lib/avatar-url";
 
@@ -54,6 +55,8 @@ export default function AdminLayout() {
   const { playUrgentAlert } = useNotificationSound();
   // Inicializa el tema una vez montado el layout (auto-aplica light/dark/system).
   useAdminTheme();
+  // Suscripción global a leads nuevos: alerta sonora + toast con WhatsApp Business.
+  useLeadRealtimeAlerts({ enabled: !!user?.id });
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);

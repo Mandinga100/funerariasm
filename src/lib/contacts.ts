@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ContactIntent, buildWhatsAppMessage } from "./whatsapp";
 import { getComunaAttribution } from "./comuna-tracking";
+import { validateFullName, validateChileanPhone, validateEmail } from "./lead-validation";
 
 interface ContactData {
   contactType: string;
@@ -13,9 +14,36 @@ interface ContactData {
   comuna?: string;
   selectedPlan?: string;
   urgency?: "immediate" | "high" | "normal" | "cotizacion" | "prevision";
+  /**
+   * Si es true, se omiten validaciones estrictas (caso pre-lead anónimo
+   * registrado al primer click del chatbox antes de pedir datos).
+   */
+  skipValidation?: boolean;
 }
 
 export const submitContact = async (data: ContactData) => {
+  // Validación de defensa en profundidad: si vienen nombre/teléfono/email,
+  // se exige que sean reales. Esto bloquea bots y formularios mal armados
+  // antes de tocar la base de datos. El chatbox ya valida paso a paso,
+  // pero los formularios tradicionales también pasan por aquí.
+  if (!data.skipValidation) {
+    if (data.name) {
+      const r = validateFullName(data.name);
+      if (!r.ok) throw new Error(r.error);
+      data.name = r.value;
+    }
+    if (data.phone) {
+      const r = validateChileanPhone(data.phone);
+      if (!r.ok) throw new Error(r.error);
+      data.phone = r.value;
+    }
+    if (data.email) {
+      const r = validateEmail(data.email, { required: false });
+      if (!r.ok) throw new Error(r.error);
+      data.email = r.value;
+    }
+  }
+
   const whatsappMessage = buildWhatsAppMessage({
     intent: data.intent || "general",
     name: data.name,

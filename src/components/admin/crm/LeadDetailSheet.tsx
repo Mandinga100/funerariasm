@@ -224,7 +224,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     if (!lead.pipeline_stage || lead.pipeline_stage === "nuevo") {
       updates.pipeline_stage = "contactado";
     }
-    await supabase.from("contact_leads").update(updates).eq("id", lead.id);
+    await supabase.from("contact_leads").update(updates as any).eq("id", lead.id);
     await supabase.from("lead_notes").insert({
       lead_id: lead.id,
       author_id: user.id,

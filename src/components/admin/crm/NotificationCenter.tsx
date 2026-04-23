@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,7 +43,7 @@ const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
   return true;
 };
 
-export default function NotificationCenter() {
+function NotificationCenterImpl(_props: Record<string, never>, _ref: React.Ref<HTMLButtonElement>) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -285,3 +285,7 @@ export default function NotificationCenter() {
     </Popover>
   );
 }
+
+const NotificationCenter = forwardRef<HTMLButtonElement, Record<string, never>>(NotificationCenterImpl);
+NotificationCenter.displayName = "NotificationCenter";
+export default NotificationCenter;

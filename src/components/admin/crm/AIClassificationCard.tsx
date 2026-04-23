@@ -173,8 +173,10 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
           {channel && (
             <InfoChip emoji={channel.emoji} label="Contactar vía" value={channel.label} />
           )}
-          {(c.estimated_value ?? 0) > 0 && (
+          {(c.estimated_value ?? 0) > 0 ? (
             <InfoChip emoji="💎" label="Valor estimado" value={fmt(c.estimated_value!)} />
+          ) : (
+            <InfoChip emoji="❓" label="Valor estimado" value="Sin info de plan" />
           )}
           {c.sla_hours != null && (
             <InfoChip emoji="⏱️" label="Tiempo máx. de respuesta" value={`${c.sla_hours}h`} />

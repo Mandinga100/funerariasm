@@ -635,8 +635,10 @@ export default function AdminCasos() {
         onSaved={(createdId) => {
           setAgendaPrefill(null);
           load();
-          if (createdId) {
+          if (createdId && !notifiedAgendaIdsRef.current.has(createdId)) {
+            notifiedAgendaIdsRef.current.add(createdId);
             sonnerToast.success("Evento creado en la agenda", {
+              id: `agenda-created-${createdId}`,
               description: "Puedes abrirlo directamente para revisar o editar.",
               action: {
                 label: "Ver en agenda",

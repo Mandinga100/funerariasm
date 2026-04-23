@@ -193,11 +193,8 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     return null;
   };
 
-  const save = async () => {
-    const err = validate();
-    if (err) { toast({ title: "Datos incompletos", description: err, variant: "destructive" }); return; }
+  const performSave = async () => {
     if (!user?.id) return;
-
     setSaving(true);
     const payload = {
       title: title.trim(),
@@ -240,6 +237,28 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       }
     }
     setSaving(false);
+  };
+
+  const save = async () => {
+    const err = validate();
+    if (err) { toast({ title: "Datos incompletos", description: err, variant: "destructive" }); return; }
+    // Bloquear si hay conflictos no reconocidos para un estado activo
+    if (
+      conflicts.length > 0 &&
+      !conflictAcknowledged &&
+      ACTIVE_STATUSES.includes(status) &&
+      assignedTo
+    ) {
+      setShowConflictDlg(true);
+      return;
+    }
+    await performSave();
+  };
+
+  const handleConflictConfirm = async () => {
+    setShowConflictDlg(false);
+    setConflictAcknowledged(true);
+    await performSave();
   };
 
   const remove = async () => {

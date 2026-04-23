@@ -276,7 +276,21 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[11px] font-medium text-muted-foreground">Monto (CLP) *</label>
-                <Input type="number" min={0} className="h-8 text-xs mt-1" value={fAmount} onChange={e => setFAmount(e.target.value)} placeholder="0" />
+                <Input
+                  type="number"
+                  min={1}
+                  max={totalAmount > 0 ? totals.balance : undefined}
+                  step={1000}
+                  className="h-8 text-xs mt-1"
+                  value={fAmount}
+                  onChange={e => setFAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="0"
+                />
+                {totalAmount > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Saldo pendiente: <span className="font-medium">{fmt(totals.balance)}</span>
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-[11px] font-medium text-muted-foreground">Tipo</label>

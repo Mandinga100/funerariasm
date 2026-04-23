@@ -25,12 +25,27 @@ import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agen
 
 const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
+export interface AgendaPrefill {
+  title?: string;
+  description?: string;
+  eventType?: AgendaEventType;
+  priority?: AgendaPriority;
+  serviceCaseId?: string;
+  leadId?: string;
+  contactName?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  comuna?: string;
+  internalNotes?: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   event: AgendaEvent | null;
   defaultStatus?: AgendaStatus;
   defaultStart?: Date;
+  prefill?: AgendaPrefill;
   onSaved: () => void;
 }
 

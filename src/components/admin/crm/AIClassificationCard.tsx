@@ -116,13 +116,22 @@ export default function AIClassificationCard({ classification: c, planName }: Pr
   const emotional = emotionalMap[c.emotional_context ?? ""];
   const resolvedPlan = resolvePlanName(planName);
 
+  const isHeuristic = c._source === "heuristic";
+
   return (
     <div className="rounded-lg border border-violet-300 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 to-white dark:from-violet-950/40 dark:to-background overflow-hidden">
       {/* Header — urgency + score */}
       <div className="px-3 py-2.5 border-b border-violet-200 dark:border-violet-800/60 flex items-center justify-between gap-2 bg-violet-50/60 dark:bg-violet-950/30">
-        <Badge className={cn("text-xs font-semibold border", urgency.color)}>
-          {urgency.emoji} {urgency.label}
-        </Badge>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge className={cn("text-xs font-semibold border", urgency.color)}>
+            {urgency.emoji} {urgency.label}
+          </Badge>
+          {isHeuristic && (
+            <Badge variant="outline" className="text-[9px] font-medium border-amber-400 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30">
+              🧠 Heurístico
+            </Badge>
+          )}
+        </div>
         <div className="w-28">
           <ScoreBadge score={c.priority_score ?? 0} />
         </div>

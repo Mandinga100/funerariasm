@@ -189,20 +189,6 @@ export default function AdminSettings() {
       setProfileAvatarUrl(path);
       const signed = await signAvatarUrl(path);
       setProfileAvatarPreview(signed);
-
-  /* ── Subir avatar al bucket 'avatars' ── */
-  const handleAvatarUpload = async (file: File) => {
-    if (!user?.id) return;
-    setUploadingAvatar(true);
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
-        cacheControl: "3600", upsert: true,
-      });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      setProfileAvatarUrl(pub.publicUrl);
       toast({ title: "Foto cargada", description: "Recuerde guardar para aplicar el cambio." });
     } catch (e: any) {
       toast({ title: "Error subiendo foto", description: e.message, variant: "destructive" });

@@ -236,11 +236,20 @@ export default function AdminLeads() {
     setLoading(false);
   };
 
+  // Conteo por categoría comercial — alimenta los badges de las pestañas.
+  const categoryCounts = useMemo(() => {
+    const counts: Record<LeadCategory, number> = { urgencia: 0, cotizacion: 0, prevision: 0 };
+    leads.forEach((l) => { counts[getLeadCategory(l.urgency)] += 1; });
+    return counts;
+  }, [leads]);
+
   // For kanban mode, ignore filterStage so cards don't disappear when dragged
   const filtered = useMemo(() => {
     const now = new Date();
     const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
+      // Filtro por pestaña de categoría comercial (Urgencias / Cotizaciones / Previsión).
+      if (categoryTab !== "all" && getLeadCategory(l.urgency) !== categoryTab) return false;
       if (filterUrgency !== "all") {
         const normalizedUrgency = l.urgency === "immediate" ? "inmediata" : l.urgency;
         if (normalizedUrgency !== filterUrgency) return false;
@@ -256,7 +265,7 @@ export default function AdminLeads() {
       }
       return true;
     });
-  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile]);
+  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};

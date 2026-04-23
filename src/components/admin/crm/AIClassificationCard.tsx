@@ -12,6 +12,7 @@ interface Classification {
   estimated_value?: number;
   sla_hours?: number;
   tags?: string[];
+  _source?: "ai" | "heuristic";
 }
 
 const urgencyMap: Record<string, { label: string; emoji: string; color: string }> = {

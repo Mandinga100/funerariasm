@@ -21,6 +21,9 @@ import {
   STATUS_COLUMNS,
   eventTypeOf,
 } from "@/lib/agenda-config";
+import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agenda/AgendaConflictDialog";
+
+const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 interface Props {
   open: boolean;
@@ -48,7 +51,9 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [conflicts, setConflicts] = useState<{ id: string; title: string; start_at: string; end_at: string }[]>([]);
+  const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
+  const [conflictAcknowledged, setConflictAcknowledged] = useState(false);
+  const [showConflictDlg, setShowConflictDlg] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -148,8 +153,9 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     setEndAt(toLocalInput(end));
   }, [eventType, event, startAt]);
 
-  // Detectar conflictos (debounce básico)
+  // Detectar conflictos (debounce básico). Cualquier cambio invalida la confirmación previa.
   useEffect(() => {
+    setConflictAcknowledged(false);
     if (!assignedTo || !startAt || !endAt) { setConflicts([]); return; }
     const handle = setTimeout(async () => {
       const { data, error } = await supabase.rpc("detect_agenda_conflicts", {
@@ -158,7 +164,12 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
         _end: new Date(endAt).toISOString(),
         _exclude_event_id: event?.id ?? null,
       });
-      if (!error) setConflicts((data as any[]) ?? []);
+      if (!error) {
+        const list: ConflictItem[] = (data ?? []).map((r: any) => ({
+          id: r.event_id, title: r.title, start_at: r.start_at, end_at: r.end_at,
+        }));
+        setConflicts(list);
+      }
     }, 350);
     return () => clearTimeout(handle);
   }, [assignedTo, startAt, endAt, event?.id]);
@@ -182,11 +193,8 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     return null;
   };
 
-  const save = async () => {
-    const err = validate();
-    if (err) { toast({ title: "Datos incompletos", description: err, variant: "destructive" }); return; }
+  const performSave = async () => {
     if (!user?.id) return;
-
     setSaving(true);
     const payload = {
       title: title.trim(),
@@ -229,6 +237,28 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       }
     }
     setSaving(false);
+  };
+
+  const save = async () => {
+    const err = validate();
+    if (err) { toast({ title: "Datos incompletos", description: err, variant: "destructive" }); return; }
+    // Bloquear si hay conflictos no reconocidos para un estado activo
+    if (
+      conflicts.length > 0 &&
+      !conflictAcknowledged &&
+      ACTIVE_STATUSES.includes(status) &&
+      assignedTo
+    ) {
+      setShowConflictDlg(true);
+      return;
+    }
+    await performSave();
+  };
+
+  const handleConflictConfirm = async () => {
+    setShowConflictDlg(false);
+    setConflictAcknowledged(true);
+    await performSave();
   };
 
   const remove = async () => {
@@ -443,6 +473,15 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AgendaConflictDialog
+        open={showConflictDlg}
+        onOpenChange={setShowConflictDlg}
+        conflicts={conflicts}
+        context="save"
+        onConfirm={handleConflictConfirm}
+        onCancel={() => setShowConflictDlg(false)}
+      />
     </Dialog>
   );
 }

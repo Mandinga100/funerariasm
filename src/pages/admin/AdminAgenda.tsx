@@ -23,7 +23,10 @@ import {
 } from "@/lib/agenda-config";
 import AgendaCard from "@/components/admin/agenda/AgendaCard";
 import AgendaEventModal from "@/components/admin/agenda/AgendaEventModal";
+import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agenda/AgendaConflictDialog";
 import { downloadCSV, downloadXLSX, type ExportColumn } from "@/lib/admin-export";
+
+const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 type DateRange = "today" | "tomorrow" | "week" | "month" | "all";
 
@@ -49,6 +52,13 @@ export default function AdminAgenda() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [defaultStatusForNew, setDefaultStatusForNew] = useState<AgendaStatus | undefined>();
+
+  // Drag conflict confirmation
+  const [conflictDlg, setConflictDlg] = useState<{
+    open: boolean;
+    conflicts: ConflictItem[];
+    pending: { eventId: string; newStatus: AgendaStatus; assigneeName: string | null } | null;
+  }>({ open: false, conflicts: [], pending: null });
 
   // Cargar datos
   const fetchAll = useCallback(async () => {
@@ -147,18 +157,59 @@ export default function AdminAgenda() {
     e.dataTransfer.setData("text/event-id", ev.id);
     e.dataTransfer.effectAllowed = "move";
   };
+  const applyStatusChange = useCallback(async (id: string, newStatus: AgendaStatus, title: string) => {
+    const { error } = await supabase.from("agenda_events").update({ status: newStatus }).eq("id", id);
+    if (error) {
+      toast({ title: "No se pudo mover", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ Estado actualizado", description: `${title} → ${statusOf(newStatus).label}` });
+    }
+  }, [toast]);
+
   const onDropToColumn = async (e: React.DragEvent, status: AgendaStatus) => {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/event-id");
     if (!id) return;
     const ev = events.find(x => x.id === id);
     if (!ev || ev.status === status) return;
-    const { error } = await supabase.from("agenda_events").update({ status }).eq("id", id);
-    if (error) {
-      toast({ title: "No se pudo mover", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "✅ Estado actualizado", description: `${ev.title} → ${statusOf(status).label}` });
+
+    // Si el evento pasa a un estado ACTIVO y tiene responsable, validar conflictos
+    if (ev.assigned_to && ACTIVE_STATUSES.includes(status)) {
+      const { data, error } = await supabase.rpc("detect_agenda_conflicts", {
+        _user_id: ev.assigned_to,
+        _start: ev.start_at,
+        _end: ev.end_at,
+        _exclude_event_id: ev.id,
+      });
+      const list: ConflictItem[] = (data ?? []).map((r) => ({
+        id: r.event_id,
+        title: r.title,
+        start_at: r.start_at,
+        end_at: r.end_at,
+      }));
+      if (!error && list.length > 0) {
+        setConflictDlg({
+          open: true,
+          conflicts: list,
+          pending: {
+            eventId: ev.id,
+            newStatus: status,
+            assigneeName: userMap.get(ev.assigned_to) ?? null,
+          },
+        });
+        return; // Bloquear hasta confirmación explícita
+      }
     }
+
+    await applyStatusChange(ev.id, status, ev.title);
+  };
+
+  const confirmConflictAndMove = async () => {
+    const p = conflictDlg.pending;
+    setConflictDlg({ open: false, conflicts: [], pending: null });
+    if (!p) return;
+    const ev = events.find(x => x.id === p.eventId);
+    await applyStatusChange(p.eventId, p.newStatus, ev?.title ?? "Evento");
   };
 
   const exportCols: ExportColumn<AgendaEvent>[] = [
@@ -315,6 +366,16 @@ export default function AdminAgenda() {
         event={editingEvent}
         defaultStatus={defaultStatusForNew}
         onSaved={fetchAll}
+      />
+
+      <AgendaConflictDialog
+        open={conflictDlg.open}
+        onOpenChange={(v) => !v && setConflictDlg({ open: false, conflicts: [], pending: null })}
+        conflicts={conflictDlg.conflicts}
+        assigneeName={conflictDlg.pending?.assigneeName}
+        context="drag"
+        onConfirm={confirmConflictAndMove}
+        onCancel={() => setConflictDlg({ open: false, conflicts: [], pending: null })}
       />
     </div>
   );

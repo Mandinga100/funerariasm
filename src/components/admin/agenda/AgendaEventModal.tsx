@@ -473,6 +473,15 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AgendaConflictDialog
+        open={showConflictDlg}
+        onOpenChange={setShowConflictDlg}
+        conflicts={conflicts}
+        context="save"
+        onConfirm={handleConflictConfirm}
+        onCancel={() => setShowConflictDlg(false)}
+      />
     </Dialog>
   );
 }

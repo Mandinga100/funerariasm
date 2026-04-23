@@ -57,7 +57,13 @@ export default function AdminAgenda() {
   const [conflictDlg, setConflictDlg] = useState<{
     open: boolean;
     conflicts: ConflictItem[];
-    pending: { eventId: string; newStatus: AgendaStatus; assigneeName: string | null } | null;
+    pending: {
+      eventId: string;
+      newStatus: AgendaStatus;
+      assigneeId: string | null;
+      assigneeName: string | null;
+      durationMin: number;
+    } | null;
   }>({ open: false, conflicts: [], pending: null });
 
   // Cargar datos

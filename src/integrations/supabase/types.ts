@@ -53,6 +53,207 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda_event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_event_history: {
+        Row: {
+          change_type: string
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          change_type: string
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_event_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_events: {
+        Row: {
+          address: string | null
+          all_day: boolean
+          assigned_to: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          comuna: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_at: string
+          event_type: string
+          id: string
+          internal_notes: string | null
+          lead_id: string | null
+          location_name: string | null
+          memorial_id: string | null
+          metadata: Json | null
+          obituary_id: string | null
+          priority: string
+          reminded_at: string | null
+          reminder_minutes_before: number | null
+          service_case_id: string | null
+          start_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          all_day?: boolean
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          comuna?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_at: string
+          event_type?: string
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location_name?: string | null
+          memorial_id?: string | null
+          metadata?: Json | null
+          obituary_id?: string | null
+          priority?: string
+          reminded_at?: string | null
+          reminder_minutes_before?: number | null
+          service_case_id?: string | null
+          start_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          all_day?: boolean
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          comuna?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_at?: string
+          event_type?: string
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location_name?: string | null
+          memorial_id?: string | null
+          metadata?: Json | null
+          obituary_id?: string | null
+          priority?: string
+          reminded_at?: string | null
+          reminder_minutes_before?: number | null
+          service_case_id?: string | null
+          start_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contact_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_events_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_events_obituary_id_fkey"
+            columns: ["obituary_id"]
+            isOneToOne: false
+            referencedRelation: "obituaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_events_service_case_id_fkey"
+            columns: ["service_case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_action_invocations: {
         Row: {
           action_key: string
@@ -1090,6 +1291,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      detect_agenda_conflicts: {
+        Args: {
+          _end: string
+          _exclude_event_id?: string
+          _start: string
+          _user_id: string
+        }
+        Returns: {
+          end_at: string
+          event_id: string
+          start_at: string
+          title: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

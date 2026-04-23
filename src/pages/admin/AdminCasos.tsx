@@ -9,7 +9,7 @@ import { SortableTable, type SortableColumn } from "@/components/admin/SortableT
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, Briefcase, FileDown, AlertCircle } from "lucide-react";
+import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, Briefcase, FileDown, AlertCircle, CalendarPlus } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";

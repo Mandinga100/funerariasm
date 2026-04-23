@@ -126,7 +126,7 @@ export default function CaseTrackingWidget({ caseId }: Props) {
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Código</span>
         <code className="text-xs font-mono font-semibold tracking-widest">{tracking.family_code}</code>
         <Button size="sm" variant="ghost" className="ml-auto h-6 w-6 p-0" onClick={copyCode}>
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
         </Button>
         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={openPublic} title="Ver vista pública">
           <ExternalLink className="w-3.5 h-3.5" />

@@ -223,6 +223,10 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
 
             <Separator />
 
+            <CaseTrackingWidget caseId={serviceCase.id} />
+
+            <Separator />
+
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><User className="w-3 h-3" />Lugar de ceremonia</label>
               <Input className="h-8 text-sm" placeholder="Lugar de ceremonia" value={ceremonyLocation} onChange={e => setCeremonyLocation(e.target.value)} />

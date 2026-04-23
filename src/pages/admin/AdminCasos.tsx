@@ -13,6 +13,7 @@ import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, 
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
+import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";

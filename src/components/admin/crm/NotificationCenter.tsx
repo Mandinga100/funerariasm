@@ -43,7 +43,7 @@ const matchesFilter = (n: Notification, filter: FilterKey): boolean => {
   return true;
 };
 
-export default function NotificationCenter() {
+function NotificationCenterImpl(_props: Record<string, never>, _ref: React.Ref<HTMLButtonElement>) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);

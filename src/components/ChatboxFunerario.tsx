@@ -336,6 +336,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           intent,
           source: "chatbox",
           urgency: INTENT_TO_URGENCY[intent] ?? "normal",
+          skipValidation: true, // pre-lead anónimo: aún no hay datos para validar
         });
       } catch { /* non-blocking */ }
     }

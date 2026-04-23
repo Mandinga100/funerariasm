@@ -57,7 +57,13 @@ export default function AdminAgenda() {
   const [conflictDlg, setConflictDlg] = useState<{
     open: boolean;
     conflicts: ConflictItem[];
-    pending: { eventId: string; newStatus: AgendaStatus; assigneeName: string | null } | null;
+    pending: {
+      eventId: string;
+      newStatus: AgendaStatus;
+      assigneeId: string | null;
+      assigneeName: string | null;
+      durationMin: number;
+    } | null;
   }>({ open: false, conflicts: [], pending: null });
 
   // Cargar datos
@@ -188,13 +194,16 @@ export default function AdminAgenda() {
         end_at: r.end_at,
       }));
       if (!error && list.length > 0) {
+        const durationMin = Math.max(15, Math.round((new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime()) / 60_000));
         setConflictDlg({
           open: true,
           conflicts: list,
           pending: {
             eventId: ev.id,
             newStatus: status,
+            assigneeId: ev.assigned_to,
             assigneeName: userMap.get(ev.assigned_to) ?? null,
+            durationMin,
           },
         });
         return; // Bloquear hasta confirmación explícita
@@ -210,6 +219,29 @@ export default function AdminAgenda() {
     if (!p) return;
     const ev = events.find(x => x.id === p.eventId);
     await applyStatusChange(p.eventId, p.newStatus, ev?.title ?? "Evento");
+  };
+
+  const rescheduleFromConflict = async (start: Date, end: Date) => {
+    const p = conflictDlg.pending;
+    if (!p) return;
+    const ev = events.find(x => x.id === p.eventId);
+    const { error } = await supabase
+      .from("agenda_events")
+      .update({
+        status: p.newStatus,
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+      })
+      .eq("id", p.eventId);
+    setConflictDlg({ open: false, conflicts: [], pending: null });
+    if (error) {
+      toast({ title: "No se pudo reprogramar", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "📅 Evento reprogramado",
+        description: `${ev?.title ?? "Evento"} → ${start.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}`,
+      });
+    }
   };
 
   const exportCols: ExportColumn<AgendaEvent>[] = [
@@ -373,9 +405,13 @@ export default function AdminAgenda() {
         onOpenChange={(v) => !v && setConflictDlg({ open: false, conflicts: [], pending: null })}
         conflicts={conflictDlg.conflicts}
         assigneeName={conflictDlg.pending?.assigneeName}
+        assigneeId={conflictDlg.pending?.assigneeId ?? null}
+        durationMin={conflictDlg.pending?.durationMin}
+        excludeEventId={conflictDlg.pending?.eventId ?? null}
         context="drag"
         onConfirm={confirmConflictAndMove}
         onCancel={() => setConflictDlg({ open: false, conflicts: [], pending: null })}
+        onReschedule={rescheduleFromConflict}
       />
     </div>
   );

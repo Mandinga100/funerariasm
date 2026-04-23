@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";

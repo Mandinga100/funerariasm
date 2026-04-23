@@ -48,6 +48,7 @@ export const URGENCY_COLOR: Record<string, string> = {
   immediate:   "bg-destructive/15 text-destructive border-destructive/40",
   alta:        "bg-destructive/10 text-destructive border-destructive/30",
   high:        "bg-destructive/10 text-destructive border-destructive/30",
+  cotizacion:  "bg-primary/10 text-primary border-primary/30",
   normal:      "bg-primary/10 text-primary border-primary/30",
   baja:        "bg-muted text-muted-foreground border-border",
   low:         "bg-muted text-muted-foreground border-border",
@@ -60,11 +61,34 @@ export const URGENCY_LABELS: Record<string, string> = {
   immediate: "Urgente",
   alta: "Alta",
   high: "Alta",
-  normal: "Normal",
+  cotizacion: "Cotización",
+  normal: "Cotización",
   baja: "Baja",
   low: "Baja",
   "previsión": "Previsión",
   prevision: "Previsión",
+};
+
+/**
+ * Categorías comerciales del lead — agrupan urgency en 3 buckets para pestañas CRM.
+ * - urgencia: necesita servicio funerario inmediato (fallecimiento)
+ * - cotizacion: interés activo frío, pidiendo precios/planes
+ * - prevision: planificación a futuro, sin urgencia
+ */
+export type LeadCategory = "urgencia" | "cotizacion" | "prevision";
+
+export function getLeadCategory(urgency: string | null | undefined): LeadCategory {
+  if (!urgency) return "cotizacion";
+  const u = urgency.toLowerCase();
+  if (u === "immediate" || u === "inmediata" || u === "alta" || u === "high") return "urgencia";
+  if (u === "previsión" || u === "prevision") return "prevision";
+  return "cotizacion"; // normal, cotizacion, low, baja, etc → todo lo "frío activo"
+}
+
+export const LEAD_CATEGORY_META: Record<LeadCategory, { label: string; emoji: string; description: string }> = {
+  urgencia:   { label: "Urgencias",   emoji: "🚨", description: "Servicios funerarios inmediatos por fallecimiento" },
+  cotizacion: { label: "Cotizaciones", emoji: "💰", description: "Consultas de precios y planes activos" },
+  prevision:  { label: "Previsión",   emoji: "🌿", description: "Planificación a futuro, en vida" },
 };
 
 export function getUrgencyClasses(urgency: string | null | undefined): string {

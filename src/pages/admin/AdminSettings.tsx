@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
+import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
   Users, Shield, Bell, Moon, Sun, Monitor, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,

@@ -16,7 +16,7 @@ import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
 import AIClassificationHistory from "./AIClassificationHistory";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
-import { normalizeClPhone, openWhatsAppChat } from "@/lib/whatsapp";
+import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
 
 interface LeadDetailSheetProps {
   lead: any | null;

@@ -128,14 +128,37 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
     setShowForm(false);
   };
 
+  // Reglas: tipos que exigen comprobante adjunto en notas (referencia)
+  const requiresProofRef = ["transferencia", "deposito", "cheque"].includes(fSubtype);
+  const requiresMethod = true; // método siempre obligatorio
+
+  const validatePayment = (amt: number): string | null => {
+    if (isNaN(amt)) return "Ingresa un monto válido";
+    if (amt <= 0) return "El monto debe ser mayor a 0";
+    if (amt < 1000) return "El monto mínimo es $1.000";
+    // No permitir superar saldo pendiente (suma de confirmados + nuevo)
+    // Tolerancia: si total_amount es 0 (no cotizado), permitimos cualquier monto
+    if (totalAmount > 0 && amt > totals.balance) {
+      return `El monto supera el saldo pendiente (${fmt(totals.balance)}). Ajusta o registra como abono parcial.`;
+    }
+    if (!fName.trim()) return "Falta nombre del pagador";
+    if (fName.trim().length < 3) return "El nombre debe tener al menos 3 caracteres";
+    if (requiresMethod && !fSubtype) return "Selecciona un método de pago";
+    if (!fType) return "Selecciona el tipo de pago";
+    if (requiresProofRef && !fNotes.trim()) {
+      return "Para transferencia/depósito/cheque indica la referencia o N° de comprobante en Notas";
+    }
+    if (fEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fEmail.trim())) {
+      return "Email inválido";
+    }
+    return null;
+  };
+
   const createPayment = async () => {
     const amt = parseInt(fAmount);
-    if (!amt || amt <= 0) {
-      toast({ title: "Monto inválido", variant: "destructive" });
-      return;
-    }
-    if (!fName.trim()) {
-      toast({ title: "Falta nombre del pagador", variant: "destructive" });
+    const error = validatePayment(amt);
+    if (error) {
+      toast({ title: "Validación", description: error, variant: "destructive" });
       return;
     }
     setCreating(true);

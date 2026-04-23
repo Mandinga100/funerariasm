@@ -206,6 +206,25 @@ export default function AdminCasos() {
     }
   };
 
+  /** Deriva un caso a la agenda abriendo el modal con datos precargados. */
+  const openAgendaForCase = (c: ServiceCase) => {
+    const planLabel = c.selected_plan ? ` — Plan ${c.selected_plan}` : "";
+    const subject = c.deceased_name ? `${c.deceased_name}` : (c.client_name ?? "cliente");
+    setAgendaPrefill({
+      title: `Coordinación caso ${c.case_number} — ${subject}`,
+      description: c.service_description ?? c.original_message ?? undefined,
+      eventType: "reunion",
+      priority: c.urgency === "inmediata" ? "critica" : c.urgency === "urgente" ? "alta" : "normal",
+      serviceCaseId: c.id,
+      leadId: c.lead_id ?? undefined,
+      contactName: c.client_name ?? undefined,
+      contactPhone: c.client_phone ?? undefined,
+      contactEmail: c.client_email ?? undefined,
+      comuna: c.comuna ?? undefined,
+      internalNotes: `Caso ${c.case_number}${planLabel}. Etapa: ${c.pipeline_stage}. Pago: ${c.payment_status}.`,
+    });
+  };
+
   const staleList = useMemo(() => cases.filter(isStale), [cases]);
   const stats = useMemo(() => ({
     total: cases.length,

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Phone, Mail, MapPin, Calendar, Save, ExternalLink, User, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { normalizeClPhone, openWhatsAppChat } from "@/lib/whatsapp";
 import CaseDeceasedTab from "./CaseDeceasedTab";
 import CaseStatusTab from "./CaseStatusTab";
 import CaseChecklistTab from "./CaseChecklistTab";
@@ -102,11 +103,19 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   };
 
   const openWhatsApp = () => {
-    if (!serviceCase?.client_phone) return;
-    const phone = serviceCase.client_phone.replace(/\D/g, "");
-    const nombre = serviceCase.client_name?.split(" ")[0] ?? "";
-    const mensaje = `Estimado/a ${nombre}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos en relación a su caso ${serviceCase.case_number}. Estamos a su disposición.\n\n¿En qué podemos ayudarle?`;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`, "_blank", "noopener,noreferrer");
+    const phone = normalizeClPhone(serviceCase?.client_phone);
+    if (!phone) {
+      toast({ title: "Sin teléfono válido", description: "Este caso no tiene un número chileno válido.", variant: "destructive" });
+      return;
+    }
+    const nombre = serviceCase.client_name?.split(" ")[0]?.trim() ?? "";
+    const saludo = nombre ? `Hola ${nombre}` : "Hola, buenos días";
+    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos en relación a su caso ${serviceCase.case_number}. Estamos a su disposición para acompañarle con respeto en este momento.\n\n¿En qué podemos ayudarle?`;
+    const ok = openWhatsAppChat(phone, mensaje);
+    if (!ok) {
+      navigator.clipboard.writeText(mensaje).catch(() => {});
+      toast({ title: "📋 Mensaje copiado", description: "Tu navegador bloqueó la apertura. Pega el mensaje en WhatsApp." });
+    }
   };
 
   if (!serviceCase) return null;

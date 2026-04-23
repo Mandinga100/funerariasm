@@ -81,4 +81,49 @@ export const buildWhatsAppUrl = (params: WhatsAppMessageParams): string => {
 export const buildWhatsAppUrlDirect = (message: string): string =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
+/**
+ * Normaliza un teléfono chileno a formato wa.me (sin +, sin espacios).
+ * - Quita todo lo no-numérico.
+ * - Si empieza con 9 y tiene 9 dígitos → antepone 56.
+ * - Si tiene 8 dígitos → antepone 569.
+ * - Si ya empieza con 56 → lo deja.
+ * Devuelve null si no es válido.
+ */
+export const normalizeClPhone = (raw?: string | null): string | null => {
+  if (!raw) return null;
+  let d = raw.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("56")) return d.length >= 11 ? d : null;
+  if (d.length === 9 && d.startsWith("9")) return "56" + d;
+  if (d.length === 8) return "569" + d;
+  if (d.length === 11 && d.startsWith("569")) return d;
+  return d.length >= 10 ? d : null;
+};
+
+/**
+ * Construye URL wa.me hacia un destinatario externo (cliente/lead).
+ */
+export const buildWhatsAppUrlTo = (phone: string, message: string): string =>
+  `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+/**
+ * Abre WhatsApp en una nueva pestaña/ventana sin requerir API.
+ * Funciona con WhatsApp Web (desktop) y app móvil. Sin fricción.
+ * Devuelve true si pudo abrir, false si fue bloqueado por el navegador.
+ */
+export const openWhatsAppChat = (phone: string, message: string): boolean => {
+  const url = buildWhatsAppUrlTo(phone, message);
+  const win = window.open(url, "_blank", "noopener,noreferrer");
+  if (win) return true;
+  // Fallback: anchor click (sortea bloqueos en algunos iframes)
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  return false;
+};
+
 export { WHATSAPP_NUMBER };

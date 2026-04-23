@@ -46,7 +46,7 @@ interface Props {
   defaultStatus?: AgendaStatus;
   defaultStart?: Date;
   prefill?: AgendaPrefill;
-  onSaved: () => void;
+  onSaved: (createdEventId?: string) => void;
 }
 
 interface UserOption { user_id: string; display_name: string | null; }

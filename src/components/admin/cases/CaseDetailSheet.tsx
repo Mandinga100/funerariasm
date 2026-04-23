@@ -18,6 +18,7 @@ import CaseStatusTab from "./CaseStatusTab";
 import CaseChecklistTab from "./CaseChecklistTab";
 import CaseDocumentsTab from "./CaseDocumentsTab";
 import CaseHistoryTab from "./CaseHistoryTab";
+import CaseTrackingWidget from "./CaseTrackingWidget";
 
 interface CaseDetailSheetProps {
   serviceCase: any | null;

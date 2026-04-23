@@ -143,9 +143,10 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
         </SheetHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-4">
-          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 h-auto gap-0.5">
+          <TabsList className="w-full grid grid-cols-4 sm:grid-cols-7 h-auto gap-0.5">
             <TabsTrigger value="resumen" className="text-[11px] sm:text-xs px-1.5 py-1.5">Resumen</TabsTrigger>
             <TabsTrigger value="fallecido" className="text-[11px] sm:text-xs px-1.5 py-1.5">Fallecido</TabsTrigger>
+            <TabsTrigger value="cotizacion" className="text-[11px] sm:text-xs px-1.5 py-1.5">Cotización</TabsTrigger>
             <TabsTrigger value="estados" className="text-[11px] sm:text-xs px-1.5 py-1.5">Estados</TabsTrigger>
             <TabsTrigger value="checklist" className="text-[11px] sm:text-xs px-1.5 py-1.5">Hitos</TabsTrigger>
             <TabsTrigger value="docs" className="text-[11px] sm:text-xs px-1.5 py-1.5">Docs</TabsTrigger>

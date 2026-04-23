@@ -193,6 +193,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       setContactData(finalData);
       setContactStep("done");
 
+      // Decidir urgency desde el intent — clasificación determinista del lead
+      const urgency = INTENT_TO_URGENCY[currentIntent] ?? "normal";
+
       try {
         await submitContact({
           contactType: "chatbox",
@@ -201,7 +204,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           intent: currentIntent,
           source: "chatbox",
           message: `RUT: ${finalData.rut}`,
-          urgency: currentIntent === "fallecimiento" ? "immediate" : "normal",
+          urgency,
         });
       } catch { /* non-blocking */ }
 
@@ -222,6 +225,47 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
             { label: "💬 Abrir WhatsApp", action: () => window.open(buildWhatsAppUrlDirect(whatsappMsg), "_blank") },
             { label: "📞 Llamar ahora", action: () => window.open("tel:+56964333760") },
             { label: "↩️ Nueva consulta", action: resetChat },
+          ],
+        },
+      ]);
+    }
+  };
+
+  /**
+   * Cuando el usuario eligió "Cotizar servicio", primero le preguntamos si es urgente.
+   * Esto reclasifica el lead: si dice sí → urgency=immediate (Urgencias),
+   * si dice no → urgency=cotizacion (Cotizaciones frías).
+   */
+  const handleUrgencyAnswer = (isUrgent: boolean) => {
+    const newIntent: ContactIntent = isUrgent ? "fallecimiento" : "cotizacion";
+    setCurrentIntent(newIntent);
+    const label = isUrgent ? "🚨 Sí, es urgente" : "🕒 No, solo evaluar";
+    setMessages((prev) => [...prev, { role: "user", content: label }]);
+
+    if (isUrgent) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Entendido, lo trataremos como prioridad máxima. Para que un asesor lo contacte de inmediato, necesito sus datos.",
+          chips: [
+            { label: "✅ Dejar mis datos", action: () => startContactCollection("fallecimiento") },
+            { label: "📞 Llamar ahora", action: () => window.open("tel:+56964333760") },
+          ],
+        },
+      ]);
+    } else {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Perfecto. Tenemos planes desde $1.290.000 hasta servicios premium. Le preparamos una cotización personalizada sin compromiso.",
+          chips: [
+            { label: "✅ Recibir cotización", action: () => startContactCollection("cotizacion") },
+            { label: "🔗 Ver planes", action: () => (window.location.href = "/planes") },
+            { label: "↩️ Volver al inicio", action: resetChat },
           ],
         },
       ]);

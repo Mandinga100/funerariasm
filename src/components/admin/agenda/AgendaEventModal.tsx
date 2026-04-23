@@ -46,7 +46,7 @@ interface Props {
   defaultStatus?: AgendaStatus;
   defaultStart?: Date;
   prefill?: AgendaPrefill;
-  onSaved: () => void;
+  onSaved: (createdEventId?: string) => void;
 }
 
 interface UserOption { user_id: string; display_name: string | null; }
@@ -242,7 +242,11 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
         onOpenChange(false);
       }
     } else {
-      const { error } = await supabase.from("agenda_events").insert({ ...payload, created_by: user.id });
+      const { data: inserted, error } = await supabase
+        .from("agenda_events")
+        .insert({ ...payload, created_by: user.id })
+        .select("id")
+        .single();
       if (error) {
         toast({ title: "Error al crear", description: error.message, variant: "destructive" });
       } else {
@@ -253,7 +257,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
           title: "✅ Evento agendado",
           description: `Notificación enviada al responsable.${reminderTxt}`,
         });
-        onSaved();
+        onSaved(inserted?.id);
         onOpenChange(false);
       }
     }

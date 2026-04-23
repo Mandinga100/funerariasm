@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
 import { Badge } from "@/components/ui/badge";
@@ -130,6 +132,7 @@ export default function AdminCasos() {
   });
   const { filterPipeline, filterPayment, searchQuery } = filters;
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -628,7 +631,20 @@ export default function AdminCasos() {
         onOpenChange={(v) => { if (!v) setAgendaPrefill(null); }}
         event={null}
         prefill={agendaPrefill ?? undefined}
-        onSaved={() => { setAgendaPrefill(null); load(); }}
+        onSaved={(createdId) => {
+          setAgendaPrefill(null);
+          load();
+          if (createdId) {
+            sonnerToast.success("Evento creado en la agenda", {
+              description: "Puedes abrirlo directamente para revisar o editar.",
+              action: {
+                label: "Ver en agenda",
+                onClick: () => navigate(`/admin/agenda?event=${createdId}`),
+              },
+              duration: 8000,
+            });
+          }
+        }}
       />
     </div>
   );

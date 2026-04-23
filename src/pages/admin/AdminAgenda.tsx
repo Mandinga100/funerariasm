@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,6 +82,23 @@ export default function AdminAgenda() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Abrir evento desde URL (?event=<id>) — usado al derivar un caso desde Casos.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const id = searchParams.get("event");
+    if (!id || events.length === 0) return;
+    const found = events.find(e => e.id === id);
+    if (found) {
+      setEditingEvent(found);
+      setDefaultStatusForNew(undefined);
+      setModalOpen(true);
+      // Limpia el query param para no reabrirlo en navegaciones internas.
+      const next = new URLSearchParams(searchParams);
+      next.delete("event");
+      setSearchParams(next, { replace: true });
+    }
+  }, [events, searchParams, setSearchParams]);
 
   // Realtime
   useEffect(() => {

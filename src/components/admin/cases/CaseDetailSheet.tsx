@@ -269,6 +269,11 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
             <CaseDeceasedTab caseId={serviceCase.id} initial={serviceCase} onSaved={onUpdate} />
           </TabsContent>
 
+          {/* ----- COTIZACIÓN ----- */}
+          <TabsContent value="cotizacion" className="mt-4">
+            <CaseQuoteTab caseId={serviceCase.id} onSaved={onUpdate} />
+          </TabsContent>
+
           {/* ----- ESTADOS MÚLTIPLES ----- */}
           <TabsContent value="estados" className="mt-4">
             <CaseStatusTab caseId={serviceCase.id} initial={serviceCase} onSaved={onUpdate} />

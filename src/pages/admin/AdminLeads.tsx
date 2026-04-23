@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -31,6 +32,9 @@ import {
   URGENCY_LABELS,
   getUrgencyClasses,
   getPriorityClasses,
+  getLeadCategory,
+  LEAD_CATEGORY_META,
+  type LeadCategory,
 } from "@/lib/crm-tokens";
 
 type KpiKey = "total" | "urgent" | "overdue" | "closed";
@@ -92,12 +96,14 @@ export default function AdminLeads() {
     filterUrgency: searchParams.get("urgency") ?? "all",
     filterStage: searchParams.get("stage") ?? "all",
     filterOverdue: searchParams.get("filter") === "overdue",
+    categoryTab: (searchParams.get("category") ?? "all") as "all" | LeadCategory,
   });
-  const { viewMode, filterUrgency, filterStage, filterOverdue } = filters;
+  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab } = filters;
   const setViewMode = (v: "kanban" | "list") => setFilter("viewMode", v);
   const setFilterUrgency = (v: string) => setFilter("filterUrgency", v);
   const setFilterStage = (v: string) => setFilter("filterStage", v);
   const setFilterOverdue = (v: boolean) => setFilter("filterOverdue", v);
+  const setCategoryTab = (v: "all" | LeadCategory) => setFilter("categoryTab", v);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
@@ -230,11 +236,20 @@ export default function AdminLeads() {
     setLoading(false);
   };
 
+  // Conteo por categoría comercial — alimenta los badges de las pestañas.
+  const categoryCounts = useMemo(() => {
+    const counts: Record<LeadCategory, number> = { urgencia: 0, cotizacion: 0, prevision: 0 };
+    leads.forEach((l) => { counts[getLeadCategory(l.urgency)] += 1; });
+    return counts;
+  }, [leads]);
+
   // For kanban mode, ignore filterStage so cards don't disappear when dragged
   const filtered = useMemo(() => {
     const now = new Date();
     const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
+      // Filtro por pestaña de categoría comercial (Urgencias / Cotizaciones / Previsión).
+      if (categoryTab !== "all" && getLeadCategory(l.urgency) !== categoryTab) return false;
       if (filterUrgency !== "all") {
         const normalizedUrgency = l.urgency === "immediate" ? "inmediata" : l.urgency;
         if (normalizedUrgency !== filterUrgency) return false;
@@ -250,7 +265,7 @@ export default function AdminLeads() {
       }
       return true;
     });
-  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile]);
+  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
@@ -342,7 +357,7 @@ export default function AdminLeads() {
     setExpandedStages(prev => ({ ...prev, [stageId]: !prev[stageId] }));
   };
 
-  const hasActiveFilters = filterStage !== "all" || filterOverdue || filterUrgency !== "all";
+  const hasActiveFilters = filterStage !== "all" || filterOverdue || filterUrgency !== "all" || categoryTab !== "all";
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
@@ -359,7 +374,7 @@ export default function AdminLeads() {
             {hasActiveFilters && (
               <button
                 className="ml-2 text-primary hover:underline"
-                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); }}
+                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); setCategoryTab("all"); }}
               >
                 Limpiar filtros
               </button>
@@ -388,9 +403,10 @@ export default function AdminLeads() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="inmediata">🔴 Urgente</SelectItem>
+              <SelectItem value="inmediata">🚨 Urgente</SelectItem>
+              <SelectItem value="cotizacion">💰 Cotización</SelectItem>
               <SelectItem value="normal">🔵 Normal</SelectItem>
-              <SelectItem value="previsión">🟢 Previsión</SelectItem>
+              <SelectItem value="previsión">🌿 Previsión</SelectItem>
             </SelectContent>
           </Select>
           {!isMobile && (
@@ -405,6 +421,39 @@ export default function AdminLeads() {
           )}
         </div>
       </div>
+
+      {/* Pestañas por categoría comercial — separan urgencias de cotizaciones frías y previsiones.
+          Cada pestaña muestra el conteo total (no afectado por otros filtros activos),
+          para que el ejecutivo vea de un vistazo cuántos leads de cada tipo existen. */}
+      <Tabs value={categoryTab} onValueChange={(v) => setCategoryTab(v as "all" | LeadCategory)}>
+        <TabsList className="w-full grid grid-cols-4 h-auto">
+          <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs">
+            <span>📂 Todos</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{leads.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="urgencia"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-destructive/10 data-[state=active]:text-destructive"
+          >
+            <span>{LEAD_CATEGORY_META.urgencia.emoji} {LEAD_CATEGORY_META.urgencia.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.urgencia}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="cotizacion"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+          >
+            <span>{LEAD_CATEGORY_META.cotizacion.emoji} {LEAD_CATEGORY_META.cotizacion.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.cotizacion}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="prevision"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-accent/10 data-[state=active]:text-accent"
+          >
+            <span>{LEAD_CATEGORY_META.prevision.emoji} {LEAD_CATEGORY_META.prevision.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.prevision}</Badge>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* KPIs interactivos (oculto en kanban desktop para no recargar UI) */}
       {(isMobile || viewMode === "list") && (

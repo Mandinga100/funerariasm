@@ -165,10 +165,10 @@ DATOS DEL LEAD:
 
 INSTRUCCIONES DE CLASIFICACIÓN:
 
-URGENCIA:
-- "immediate" = Fallecimiento reciente o inminente, necesita servicio YA. Palabras clave: fallecimiento, murió, velatorio, urgente, hoy, ahora, cremación urgente.
-- "normal" = Consulta activa sobre precios, planes, cotización. Interés real pero no emergencia.
-- "previsión" = Planificación futura en vida, consulta informativa, memorial, legado.
+URGENCIA (categoría comercial del lead — define en qué pestaña del CRM aparecerá):
+- "immediate" = Fallecimiento reciente o inminente, necesita servicio YA. Palabras clave: fallecimiento, murió, velatorio, urgente, hoy, ahora, cremación urgente. → Pestaña "Urgencias".
+- "cotizacion" = Consulta activa de precios/planes/cotización SIN fallecimiento reciente. Interés real pero no emergencia. → Pestaña "Cotizaciones".
+- "prevision" = Planificación a futuro en vida, consulta informativa, memorial, legado, plan preventivo. → Pestaña "Previsión".
 
 INTENCIÓN (detectar la verdadera necesidad):
 - "servicio_funerario_urgente" = Necesita servicio funerario completo inmediatamente
@@ -226,8 +226,8 @@ VALOR ESTIMADO en CLP:
                 },
                 suggested_urgency: {
                   type: "string",
-                  enum: ["immediate", "normal", "previsión"],
-                  description: "Nivel de urgencia del servicio requerido",
+                  enum: ["immediate", "cotizacion", "prevision"],
+                  description: "Categoría comercial: immediate=urgencia funeraria, cotizacion=interés activo frío, prevision=planificación futura",
                 },
                 intent: {
                   type: "string",
@@ -343,8 +343,9 @@ function buildUpdates(lead: any, c: any) {
     intent: c.intent,
   };
 
-  // Update urgency — AI knows the funeral context
-  if (!lead.urgency || lead.urgency === "normal" || lead.urgency === "immediate") {
+  // Update urgency — solo si no viene ya con una categoría comercial válida del chatbot/formulario
+  const validUrgencies = ["immediate", "cotizacion", "prevision"];
+  if (!lead.urgency || !validUrgencies.includes(lead.urgency)) {
     updates.urgency = c.suggested_urgency;
   }
 

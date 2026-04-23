@@ -37,7 +37,18 @@ const MAIN_OPTIONS = [
   { label: "🤖 Asistente virtual", intent: "general" as ContactIntent },
 ];
 
-const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; link?: string }> = {
+/**
+ * Mapeo determinista intent → urgency, para que la categoría comercial del lead
+ * se decida desde el primer click del usuario en el chat (no requiere IA posterior).
+ */
+const INTENT_TO_URGENCY: Record<string, "immediate" | "cotizacion" | "prevision" | "normal"> = {
+  fallecimiento: "immediate",
+  cotizacion: "cotizacion",
+  planificacion: "prevision",
+  general: "normal",
+};
+
+const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; link?: string; askUrgency?: boolean }> = {
   fallecimiento: {
     message:
       "Entendemos lo difícil de este momento. Nuestro equipo está disponible ahora mismo para acompañarle.\n\n¿Desea que un asesor le contacte de inmediato por WhatsApp?",
@@ -45,8 +56,8 @@ const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; l
   },
   cotizacion: {
     message:
-      "Con gusto le ayudamos. Tenemos planes desde $1.290.000 hasta servicios premium personalizados.\n\n¿Le gustaría recibir una cotización personalizada por WhatsApp?",
-    showContact: true,
+      "Con gusto le ayudamos. Antes de cotizar: ¿es para una situación urgente (fallecimiento reciente) o para evaluar planes con calma?",
+    askUrgency: true,
   },
   planificacion: {
     message:
@@ -182,6 +193,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
       setContactData(finalData);
       setContactStep("done");
 
+      // Decidir urgency desde el intent — clasificación determinista del lead
+      const urgency = INTENT_TO_URGENCY[currentIntent] ?? "normal";
+
       try {
         await submitContact({
           contactType: "chatbox",
@@ -190,7 +204,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           intent: currentIntent,
           source: "chatbox",
           message: `RUT: ${finalData.rut}`,
-          urgency: currentIntent === "fallecimiento" ? "immediate" : "normal",
+          urgency,
         });
       } catch { /* non-blocking */ }
 
@@ -217,10 +231,52 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
+  /**
+   * Cuando el usuario eligió "Cotizar servicio", primero le preguntamos si es urgente.
+   * Esto reclasifica el lead: si dice sí → urgency=immediate (Urgencias),
+   * si dice no → urgency=cotizacion (Cotizaciones frías).
+   */
+  const handleUrgencyAnswer = (isUrgent: boolean) => {
+    const newIntent: ContactIntent = isUrgent ? "fallecimiento" : "cotizacion";
+    setCurrentIntent(newIntent);
+    const label = isUrgent ? "🚨 Sí, es urgente" : "🕒 No, solo evaluar";
+    setMessages((prev) => [...prev, { role: "user", content: label }]);
+
+    if (isUrgent) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Entendido, lo trataremos como prioridad máxima. Para que un asesor lo contacte de inmediato, necesito sus datos.",
+          chips: [
+            { label: "✅ Dejar mis datos", action: () => startContactCollection("fallecimiento") },
+            { label: "📞 Llamar ahora", action: () => window.open("tel:+56964333760") },
+          ],
+        },
+      ]);
+    } else {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Perfecto. Tenemos planes desde $1.290.000 hasta servicios premium. Le preparamos una cotización personalizada sin compromiso.",
+          chips: [
+            { label: "✅ Recibir cotización", action: () => startContactCollection("cotizacion") },
+            { label: "🔗 Ver planes", action: () => (window.location.href = "/planes") },
+            { label: "↩️ Volver al inicio", action: resetChat },
+          ],
+        },
+      ]);
+    }
+  };
+
   const handleTreeOption = async (label: string, intent: ContactIntent) => {
     const isAI = label.includes("Asistente");
     setMessages((prev) => [...prev, { role: "user", content: label }]);
     setShowMainOptions(false);
+    setCurrentIntent(intent);
 
     if (isAI) {
       setMode("ai");
@@ -232,16 +288,31 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
 
     const response = TREE_RESPONSES[intent] || TREE_RESPONSES.fallecimiento;
-    try {
-      await submitContact({ contactType: "chatbox", intent, source: "chatbox", urgency: intent === "fallecimiento" ? "immediate" : "normal" });
-    } catch { /* non-blocking */ }
+
+    // Solo registrar pre-lead anónimo si NO vamos a preguntar urgencia primero
+    // (para evitar duplicar leads cuando luego se reclasifica).
+    if (!response.askUrgency) {
+      try {
+        await submitContact({
+          contactType: "chatbox",
+          intent,
+          source: "chatbox",
+          urgency: INTENT_TO_URGENCY[intent] ?? "normal",
+        });
+      } catch { /* non-blocking */ }
+    }
 
     const chips: ChatChip[] = [];
-    if (response.showContact) {
+
+    if (response.askUrgency) {
+      // Pregunta de urgencia: clasifica el lead en Urgencias o Cotizaciones
+      chips.push({ label: "🚨 Sí, es urgente", action: () => handleUrgencyAnswer(true) });
+      chips.push({ label: "🕒 No, evaluar", action: () => handleUrgencyAnswer(false) });
+    } else if (response.showContact) {
       chips.push({ label: "✅ Sí, contactarme", action: () => startContactCollection(intent) });
       chips.push({ label: "📞 Llamar directo", action: () => window.open("tel:+56964333760") });
     }
-    if (response.link) {
+    if (response.link && !response.askUrgency) {
       chips.push({ label: "🔗 Ver planes", action: () => (window.location.href = response.link!) });
     }
     chips.push({ label: "↩️ Volver al inicio", action: resetChat });

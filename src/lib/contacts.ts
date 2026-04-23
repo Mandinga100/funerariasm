@@ -12,7 +12,7 @@ interface ContactData {
   source?: string;
   comuna?: string;
   selectedPlan?: string;
-  urgency?: "immediate" | "high" | "normal";
+  urgency?: "immediate" | "high" | "normal" | "cotizacion" | "prevision";
 }
 
 export const submitContact = async (data: ContactData) => {

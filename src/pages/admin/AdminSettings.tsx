@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/hooks/useAuditLog";
-import { useAuth, CEO_EMAIL } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,8 @@ const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; i
 
 
 export default function AdminSettings() {
-  const { user } = useAuth();
+  const { user, isCeo } = useAuth();
   const { toast } = useToast();
-  const isCeo = user?.email === CEO_EMAIL;
 
   /* ── Admins State ── */
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -583,7 +582,7 @@ export default function AdminSettings() {
                             <p className="text-sm font-medium truncate flex items-center gap-1.5 flex-wrap">
                               <span className="truncate">{admin.display_name ?? admin.email ?? admin.user_id.slice(0, 8) + "..."}</span>
                               <RoleBadge
-                                isCeo={admin.role === "ceo" || admin.email === CEO_EMAIL}
+                                isCeo={admin.role === "ceo"}
                                 isAdmin={admin.role === "admin"}
                                 compact
                               />

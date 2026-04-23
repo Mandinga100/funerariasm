@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-export const CEO_EMAIL = "mandinga_atim@hotmail.com";
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -23,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isCeo, setIsCeo] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkRoles = async (userId: string, email: string | null | undefined) => {
+  const checkRoles = async (userId: string) => {
     const { data } = await supabase
       .from("user_roles")
       .select("role")
@@ -32,11 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const roles = (data ?? []).map(r => r.role);
     const hasAdmin = roles.includes("admin");
     const hasCeoRole = roles.includes("ceo");
-    // CEO absoluto = email designado o rol 'ceo' en BD
-    const ceo = hasCeoRole || email === CEO_EMAIL;
-    // El CEO también tiene todos los permisos de admin
-    setIsAdmin(hasAdmin || ceo);
-    setIsCeo(ceo);
+    // CEO se determina exclusivamente por el rol 'ceo' en la base de datos.
+    // No usamos email hardcodeado para evitar exponer datos personales en el bundle público.
+    setIsAdmin(hasAdmin || hasCeoRole);
+    setIsCeo(hasCeoRole);
   };
 
   useEffect(() => {
@@ -49,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await checkRoles(session.user.id, session.user.email);
+        await checkRoles(session.user.id);
       } else {
         setIsAdmin(false);
         setIsCeo(false);

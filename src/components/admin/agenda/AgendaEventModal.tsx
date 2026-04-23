@@ -153,8 +153,9 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     setEndAt(toLocalInput(end));
   }, [eventType, event, startAt]);
 
-  // Detectar conflictos (debounce básico)
+  // Detectar conflictos (debounce básico). Cualquier cambio invalida la confirmación previa.
   useEffect(() => {
+    setConflictAcknowledged(false);
     if (!assignedTo || !startAt || !endAt) { setConflicts([]); return; }
     const handle = setTimeout(async () => {
       const { data, error } = await supabase.rpc("detect_agenda_conflicts", {
@@ -163,7 +164,12 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
         _end: new Date(endAt).toISOString(),
         _exclude_event_id: event?.id ?? null,
       });
-      if (!error) setConflicts((data as any[]) ?? []);
+      if (!error) {
+        const list: ConflictItem[] = (data ?? []).map((r: any) => ({
+          id: r.event_id, title: r.title, start_at: r.start_at, end_at: r.end_at,
+        }));
+        setConflicts(list);
+      }
     }, 350);
     return () => clearTimeout(handle);
   }, [assignedTo, startAt, endAt, event?.id]);

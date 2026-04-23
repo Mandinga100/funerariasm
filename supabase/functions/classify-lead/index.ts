@@ -265,11 +265,20 @@ async function classifyHeuristic(lead: any, supabase: any) {
     suggested_urgency === "cotizacion" ? 24 :
     72;
 
-  // ── 5. Score de prioridad ──
+  // ── 5. Consultar analíticas históricas para esta combinación ──
+  // (urgency + intent en últimos 180 días → promedios de prioridad, SLA, canal, valor)
+  const stats = await getHistoricalStats(supabase, suggested_urgency, intent);
+
+  // ── 6. Score de prioridad: base + ajuste por histórico ──
   let priority_score = 50;
   if (suggested_urgency === "immediate") priority_score = 95;
   else if (suggested_urgency === "cotizacion") priority_score = 60;
   else priority_score = 35;
+
+  // Si hay suficiente muestra histórica (≥5), promediar con base heurística
+  if (stats && stats.sample_size >= 5 && stats.avg_priority) {
+    priority_score = Math.round((priority_score + stats.avg_priority) / 2);
+  }
 
   // Ajustes por antigüedad sin contactar
   if (lead.pipeline_stage === "nuevo") {
@@ -280,14 +289,29 @@ async function classifyHeuristic(lead: any, supabase: any) {
   }
   if (intent === "reclamo") priority_score = Math.max(priority_score, 85);
 
-  // ── 6. Valor estimado: SOLO con info confiable ──
+  // ── 6b. SLA: usar promedio histórico si confiable ──
+  if (stats && stats.sample_size >= 5 && stats.avg_sla_hours) {
+    // Promedio entre regla base y promedio histórico (capado a min seguro)
+    const baseSla = sla_hours;
+    sla_hours = Math.max(
+      suggested_urgency === "immediate" ? 1 : 6,
+      Math.round((baseSla + stats.avg_sla_hours) / 2),
+    );
+  }
+
+  // ── 6c. Canal recomendado: si el histórico tiene un canal claramente dominante, úsalo ──
+  if (stats && stats.sample_size >= 10 && stats.top_channel) {
+    recommended_channel = stats.top_channel as typeof recommended_channel;
+  }
+
+  // ── 7. Valor estimado: SOLO con info confiable ──
   const realPrice = resolveRealEstimatedValue(lead);
   let estimated_value = 0;
   if (realPrice !== null) {
     estimated_value = realPrice;
   } else if (comesFromPlansPage(lead) && suggested_urgency === "cotizacion") {
-    // Vino desde /planes pero sin plan específico: usar el más solicitado del histórico
-    estimated_value = await getHistoricalAvgValue(supabase, suggested_urgency) ?? 0;
+    // Vino desde /planes pero sin plan: priorizar promedio (urgency+intent), si no hay → urgency global
+    estimated_value = stats?.avg_value ?? (await getHistoricalAvgValue(supabase, suggested_urgency)) ?? 0;
   } else {
     // Sin info real → 0 (no inventar)
     estimated_value = 0;

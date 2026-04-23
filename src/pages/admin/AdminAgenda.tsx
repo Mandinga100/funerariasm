@@ -23,7 +23,10 @@ import {
 } from "@/lib/agenda-config";
 import AgendaCard from "@/components/admin/agenda/AgendaCard";
 import AgendaEventModal from "@/components/admin/agenda/AgendaEventModal";
+import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agenda/AgendaConflictDialog";
 import { downloadCSV, downloadXLSX, type ExportColumn } from "@/lib/admin-export";
+
+const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 type DateRange = "today" | "tomorrow" | "week" | "month" | "all";
 

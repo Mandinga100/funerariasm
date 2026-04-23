@@ -16,7 +16,7 @@ import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
 import AIClassificationHistory from "./AIClassificationHistory";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
-import { normalizeClPhone, openWhatsAppChat } from "@/lib/whatsapp";
+import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
 
 interface LeadDetailSheetProps {
   lead: any | null;
@@ -155,12 +155,16 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   };
 
   const openWhatsApp = () => {
-    const phone = normalizeClPhone(lead?.phone);
-    if (!phone) {
-      toast({ title: "Sin teléfono válido", description: "Este lead no tiene un número chileno válido.", variant: "destructive" });
+    const v = validateClPhone(lead?.phone);
+    if (v.ok !== true) {
+      toast({
+        title: "No se puede abrir WhatsApp",
+        description: v.reason,
+        variant: "destructive",
+      });
       return;
     }
-    const nombre = lead.name?.split(" ")[0]?.trim() ?? "";
+    const nombre = firstName(lead?.name);
     const saludo = nombre ? `Hola ${nombre}` : "Hola, buenos días";
 
     let contexto = "";
@@ -184,10 +188,13 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
     const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nLe escribimos${contexto}. Estamos a su disposición para acompañarle con respeto y cariño en este momento.\n\n¿En qué podemos ayudarle?`;
 
-    const ok = openWhatsAppChat(phone, mensaje);
+    const ok = openWhatsAppChat(v.number, mensaje);
     if (!ok) {
       navigator.clipboard.writeText(mensaje).catch(() => {});
-      toast({ title: "📋 Mensaje copiado", description: "Tu navegador bloqueó la apertura. Pega el mensaje en WhatsApp." });
+      toast({
+        title: "📋 Mensaje copiado",
+        description: `Tu navegador bloqueó la apertura. Pega el mensaje en WhatsApp para ${v.pretty}.`,
+      });
     }
   };
 

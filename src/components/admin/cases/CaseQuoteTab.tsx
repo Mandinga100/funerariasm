@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import { Plus, Trash2, Save, Send, CheckCircle2, XCircle, FileText, Copy, Loader2, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";

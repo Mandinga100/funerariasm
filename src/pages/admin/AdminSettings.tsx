@@ -57,6 +57,8 @@ export default function AdminSettings() {
   const [profileDialog, setProfileDialog] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [signedAvatarMap, setSignedAvatarMap] = useState<Record<string, string>>({});
+  const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);

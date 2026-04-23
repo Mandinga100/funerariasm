@@ -269,7 +269,7 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="rounded-md border p-2">
               <p className="text-[10px] text-muted-foreground uppercase">Total caso</p>
-              <p className="text-sm font-semibold">{fmt(totalAmount)}</p>
+              <p className="text-sm font-semibold">{fmt(liveTotal)}</p>
             </div>
             <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2">
               <p className="text-[10px] text-emerald-700 dark:text-emerald-400 uppercase">Pagado</p>

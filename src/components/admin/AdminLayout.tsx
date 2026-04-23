@@ -215,8 +215,8 @@ export default function AdminLayout() {
     return (
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-10 h-10 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 overflow-hidden shrink-0 flex items-center justify-center">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+          {signedAvatar ? (
+            <img src={signedAvatar} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <span className="text-xs font-semibold text-[#C5A059]">{initials}</span>
           )}

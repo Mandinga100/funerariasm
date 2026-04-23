@@ -456,17 +456,25 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             const channels = Array.from(new Set(recontacts.map((r) => (r.metadata as any)?.contact_type).filter(Boolean)));
             const stage = lead.pipeline_stage || "nuevo";
 
-            // Recomendación dinámica según volumen + etapa
+            // Recomendación dinámica según volumen + etapa → define acción primaria
+            type Action = "whatsapp" | "call" | "schedule" | "follow";
             let recommendation = "";
+            let primaryAction: Action = "follow";
             if (recontacts.length >= 3 && stage === "nuevo") {
               recommendation = "🔥 Alta intención: el lead insiste. Llama AHORA por WhatsApp antes de que contacte a la competencia.";
+              primaryAction = "whatsapp";
             } else if (recontacts.length >= 2 && (stage === "contactado" || stage === "cotizado")) {
               recommendation = "⚠️ Está esperando respuesta. Responde con cotización o agenda visita en menos de 1 hora.";
+              primaryAction = "schedule";
             } else if (recontacts.length >= 1 && stage === "nuevo") {
               recommendation = "📞 Lead repite contacto. Prioriza llamada en próximos 30 min.";
+              primaryAction = "call";
             } else {
               recommendation = "👀 Mantén seguimiento activo. Confirma si necesita más información.";
+              primaryAction = "whatsapp";
             }
+
+            const isPrimary = (a: Action) => a === primaryAction;
 
             return (
               <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-3 space-y-2">
@@ -497,6 +505,36 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
                   <p className="mt-1.5 pt-1.5 border-t border-amber-200/60">
                     <span className="font-semibold">Próximo paso:</span> {recommendation}
                   </p>
+                </div>
+
+                {/* Acciones rápidas — la recomendada queda destacada */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Button
+                    size="sm"
+                    variant={isPrimary("call") ? "default" : "outline"}
+                    className={cn("h-8 text-[11px] px-2", isPrimary("call") && "bg-amber-600 hover:bg-amber-700 text-white border-amber-600")}
+                    onClick={callLead}
+                    disabled={!lead.phone}
+                  >
+                    <PhoneCall className="w-3 h-3 mr-1" />Llamar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={isPrimary("whatsapp") ? "default" : "outline"}
+                    className={cn("h-8 text-[11px] px-2", isPrimary("whatsapp") && "bg-amber-600 hover:bg-amber-700 text-white border-amber-600")}
+                    onClick={openWhatsApp}
+                    disabled={!lead.phone}
+                  >
+                    <MessageSquare className="w-3 h-3 mr-1" />WhatsApp
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={isPrimary("schedule") ? "default" : "outline"}
+                    className={cn("h-8 text-[11px] px-2", isPrimary("schedule") && "bg-amber-600 hover:bg-amber-700 text-white border-amber-600")}
+                    onClick={scheduleMeeting}
+                  >
+                    <CalendarPlus className="w-3 h-3 mr-1" />Reunión
+                  </Button>
                 </div>
 
                 <div className="space-y-1 max-h-32 overflow-y-auto">

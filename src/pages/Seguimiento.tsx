@@ -29,6 +29,34 @@ const OPS_LABELS: Record<string, string> = {
   finalizado: "Servicio completado",
 };
 
+// Prioridad por tipo de documento (mayor = más urgente). Ajustado al flujo funerario CL.
+const DOC_PRIORITY: Record<string, { weight: number; group: "alta" | "media" | "baja" }> = {
+  certificado_defuncion: { weight: 100, group: "alta" },
+  certificado_medico_defuncion: { weight: 95, group: "alta" },
+  cedula_fallecido: { weight: 90, group: "alta" },
+  autorizacion_sepultacion: { weight: 85, group: "alta" },
+  autorizacion_cremacion: { weight: 85, group: "alta" },
+  contrato_servicio: { weight: 70, group: "media" },
+  cesion_derechos: { weight: 60, group: "media" },
+  comprobante_pago: { weight: 55, group: "media" },
+  cedula_solicitante: { weight: 40, group: "baja" },
+  poder_simple: { weight: 30, group: "baja" },
+};
+
+const STATUS_PRIORITY: Record<string, number> = {
+  vencido: 50, rechazado: 40, pendiente: 20, en_revision: 10, recibido: 5,
+};
+
+const GROUP_META: Record<"alta" | "media" | "baja", { label: string; tone: string; icon: typeof AlertTriangle }> = {
+  alta: { label: "Alta prioridad", tone: "text-destructive", icon: AlertTriangle },
+  media: { label: "Prioridad media", tone: "text-amber-600", icon: Clock },
+  baja: { label: "Complementarios", tone: "text-muted-foreground", icon: FileText },
+};
+
+function classifyDoc(docType: string) {
+  return DOC_PRIORITY[docType] ?? { weight: 25, group: "baja" as const };
+}
+
 interface PublicTracking {
   family_code: string;
   family_name: string;

@@ -1,0 +1,448 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { AlertTriangle, Save, Trash2, Phone, MapPin, Briefcase, Link as LinkIcon } from "lucide-react";
+import { COMUNAS_RM } from "@/lib/comunas-rm";
+import {
+  AgendaEvent,
+  AgendaEventType,
+  AgendaPriority,
+  AgendaStatus,
+  EVENT_TYPES,
+  PRIORITIES,
+  STATUS_COLUMNS,
+  eventTypeOf,
+} from "@/lib/agenda-config";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  event: AgendaEvent | null;
+  defaultStatus?: AgendaStatus;
+  defaultStart?: Date;
+  onSaved: () => void;
+}
+
+interface UserOption { user_id: string; display_name: string | null; }
+interface CaseOption { id: string; case_number: string; client_name: string | null; }
+interface LeadOption { id: string; name: string | null; phone: string | null; }
+
+const toLocalInput = (iso: string | Date) => {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, onSaved }: Props) {
+  const { user, isCeo } = useAuth();
+  const { toast } = useToast();
+  const isEdit = !!event;
+
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [conflicts, setConflicts] = useState<{ id: string; title: string; start_at: string; end_at: string }[]>([]);
+
+  // Form state
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [eventType, setEventType] = useState<AgendaEventType>("reunion");
+  const [status, setStatus] = useState<AgendaStatus>("programado");
+  const [priority, setPriority] = useState<AgendaPriority>("normal");
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const [address, setAddress] = useState("");
+  const [comuna, setComuna] = useState<string>("");
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [assignedTo, setAssignedTo] = useState<string>("");
+  const [serviceCaseId, setServiceCaseId] = useState<string>("");
+  const [leadId, setLeadId] = useState<string>("");
+  const [reminder, setReminder] = useState<number>(60);
+  const [internalNotes, setInternalNotes] = useState("");
+
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [cases, setCases] = useState<CaseOption[]>([]);
+  const [leads, setLeads] = useState<LeadOption[]>([]);
+
+  // Cargar opciones
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const [{ data: roles }, { data: pf }, { data: cs }, { data: ld }] = await Promise.all([
+        supabase.from("user_roles").select("user_id").in("role", ["admin", "ceo"]),
+        supabase.from("profiles").select("user_id, display_name"),
+        supabase.from("service_cases").select("id, case_number, client_name").order("created_at", { ascending: false }).limit(100),
+        supabase.from("contact_leads").select("id, name, phone").order("created_at", { ascending: false }).limit(100),
+      ]);
+      const allowedIds = new Set((roles ?? []).map(r => r.user_id));
+      const opts = (pf ?? []).filter(p => allowedIds.has(p.user_id));
+      setUsers(opts);
+      setCases(cs ?? []);
+      setLeads(ld ?? []);
+    })();
+  }, [open]);
+
+  // Inicializar formulario
+  useEffect(() => {
+    if (!open) return;
+    if (event) {
+      setTitle(event.title);
+      setDescription(event.description ?? "");
+      setEventType(event.event_type);
+      setStatus(event.status);
+      setPriority(event.priority);
+      setStartAt(toLocalInput(event.start_at));
+      setEndAt(toLocalInput(event.end_at));
+      setLocationName(event.location_name ?? "");
+      setAddress(event.address ?? "");
+      setComuna(event.comuna ?? "");
+      setContactName(event.contact_name ?? "");
+      setContactPhone(event.contact_phone ?? "");
+      setContactEmail(event.contact_email ?? "");
+      setAssignedTo(event.assigned_to ?? "");
+      setServiceCaseId(event.service_case_id ?? "");
+      setLeadId(event.lead_id ?? "");
+      setReminder(event.reminder_minutes_before ?? 60);
+      setInternalNotes(event.internal_notes ?? "");
+    } else {
+      const start = defaultStart ?? new Date(Date.now() + 60 * 60 * 1000);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      setTitle("");
+      setDescription("");
+      setEventType("reunion");
+      setStatus(defaultStatus ?? "programado");
+      setPriority("normal");
+      setStartAt(toLocalInput(start));
+      setEndAt(toLocalInput(end));
+      setLocationName("");
+      setAddress("");
+      setComuna("");
+      setContactName("");
+      setContactPhone("");
+      setContactEmail("");
+      setAssignedTo(user?.id ?? "");
+      setServiceCaseId("");
+      setLeadId("");
+      setReminder(60);
+      setInternalNotes("");
+    }
+    setConflicts([]);
+  }, [open, event, defaultStatus, defaultStart, user?.id]);
+
+  // Auto-ajustar end al cambiar tipo (si es nuevo)
+  useEffect(() => {
+    if (event || !startAt) return;
+    const t = eventTypeOf(eventType);
+    const start = new Date(startAt);
+    const end = new Date(start.getTime() + t.defaultDurationMin * 60_000);
+    setEndAt(toLocalInput(end));
+  }, [eventType, event, startAt]);
+
+  // Detectar conflictos (debounce básico)
+  useEffect(() => {
+    if (!assignedTo || !startAt || !endAt) { setConflicts([]); return; }
+    const handle = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("detect_agenda_conflicts", {
+        _user_id: assignedTo,
+        _start: new Date(startAt).toISOString(),
+        _end: new Date(endAt).toISOString(),
+        _exclude_event_id: event?.id ?? null,
+      });
+      if (!error) setConflicts((data as any[]) ?? []);
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [assignedTo, startAt, endAt, event?.id]);
+
+  const linkedLabel = useMemo(() => {
+    if (serviceCaseId) {
+      const c = cases.find(x => x.id === serviceCaseId);
+      return c ? `Caso ${c.case_number} — ${c.client_name ?? "Sin nombre"}` : null;
+    }
+    if (leadId) {
+      const l = leads.find(x => x.id === leadId);
+      return l ? `Lead: ${l.name ?? "Sin nombre"}` : null;
+    }
+    return null;
+  }, [serviceCaseId, leadId, cases, leads]);
+
+  const validate = (): string | null => {
+    if (!title.trim()) return "El título es obligatorio";
+    if (!startAt || !endAt) return "Debes definir inicio y fin";
+    if (new Date(endAt) < new Date(startAt)) return "La hora de fin no puede ser anterior al inicio";
+    return null;
+  };
+
+  const save = async () => {
+    const err = validate();
+    if (err) { toast({ title: "Datos incompletos", description: err, variant: "destructive" }); return; }
+    if (!user?.id) return;
+
+    setSaving(true);
+    const payload = {
+      title: title.trim(),
+      description: description.trim() || null,
+      event_type: eventType,
+      status,
+      priority,
+      start_at: new Date(startAt).toISOString(),
+      end_at: new Date(endAt).toISOString(),
+      location_name: locationName.trim() || null,
+      address: address.trim() || null,
+      comuna: comuna || null,
+      contact_name: contactName.trim() || null,
+      contact_phone: contactPhone.trim() || null,
+      contact_email: contactEmail.trim() || null,
+      assigned_to: assignedTo || null,
+      service_case_id: serviceCaseId || null,
+      lead_id: leadId || null,
+      reminder_minutes_before: reminder,
+      internal_notes: internalNotes.trim() || null,
+    };
+
+    if (isEdit && event) {
+      const { error } = await supabase.from("agenda_events").update(payload).eq("id", event.id);
+      if (error) {
+        toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "✅ Evento actualizado" });
+        onSaved();
+        onOpenChange(false);
+      }
+    } else {
+      const { error } = await supabase.from("agenda_events").insert({ ...payload, created_by: user.id });
+      if (error) {
+        toast({ title: "Error al crear", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "✅ Evento creado", description: "Se notificó al responsable asignado." });
+        onSaved();
+        onOpenChange(false);
+      }
+    }
+    setSaving(false);
+  };
+
+  const remove = async () => {
+    if (!event || !isCeo) return;
+    if (!confirm("¿Eliminar este evento definitivamente? Esta acción no se puede deshacer.")) return;
+    setDeleting(true);
+    const { error } = await supabase.from("agenda_events").delete().eq("id", event.id);
+    if (error) {
+      toast({ title: "No se pudo eliminar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Evento eliminado" });
+      onSaved();
+      onOpenChange(false);
+    }
+    setDeleting(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span>{eventTypeOf(eventType).emoji}</span>
+            {isEdit ? "Editar evento" : "Nuevo evento de agenda"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEdit ? "Actualiza los detalles, estado o asignación del evento." : "Programa un nuevo evento operativo conectado al CRM."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Conflictos */}
+          {conflicts.length > 0 && (
+            <div className="flex items-start gap-2 p-3 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div className="text-xs">
+                <p className="font-semibold text-amber-900 dark:text-amber-200">Conflicto de horario detectado</p>
+                <ul className="list-disc list-inside mt-1 text-amber-800 dark:text-amber-300">
+                  {conflicts.slice(0, 3).map(c => (
+                    <li key={c.id}>{c.title} — {new Date(c.start_at).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Tipo + Título */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="md:col-span-1">
+              <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+              <Select value={eventType} onValueChange={v => setEventType(v as AgendaEventType)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPES.map(t => <SelectItem key={t.id} value={t.id}>{t.emoji} {t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-medium text-muted-foreground">Título <span className="text-rose-500">*</span></label>
+              <Input className="mt-1" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Velorio Sra. Pérez en Capilla Recoleta" />
+            </div>
+          </div>
+
+          {/* Estado + Prioridad + Recordatorio */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Estado</label>
+              <Select value={status} onValueChange={v => setStatus(v as AgendaStatus)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUS_COLUMNS.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Prioridad</label>
+              <Select value={priority} onValueChange={v => setPriority(v as AgendaPriority)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map(p => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Recordatorio (min antes)</label>
+              <Select value={String(reminder)} onValueChange={v => setReminder(Number(v))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[0, 15, 30, 60, 120, 240, 1440].map(m => (
+                    <SelectItem key={m} value={String(m)}>{m === 0 ? "Sin recordatorio" : m >= 1440 ? `${m / 1440} día(s)` : m >= 60 ? `${m / 60} h` : `${m} min`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Tiempo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Inicio <span className="text-rose-500">*</span></label>
+              <Input type="datetime-local" className="mt-1" value={startAt} onChange={e => setStartAt(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Fin <span className="text-rose-500">*</span></label>
+              <Input type="datetime-local" className="mt-1" value={endAt} onChange={e => setEndAt(e.target.value)} />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Ubicación */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />Ubicación</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+              <Input placeholder="Lugar (ej: Capilla Recoleta)" value={locationName} onChange={e => setLocationName(e.target.value)} />
+              <Input placeholder="Dirección" value={address} onChange={e => setAddress(e.target.value)} />
+            </div>
+            <Select value={comuna || "__none__"} onValueChange={v => setComuna(v === "__none__" ? "" : v)}>
+              <SelectTrigger className="mt-2"><SelectValue placeholder="Comuna" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Sin comuna —</SelectItem>
+                {COMUNAS_RM.map(c => <SelectItem key={c.slug} value={c.nombre}>{c.nombre}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Contacto */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />Contacto principal</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1">
+              <Input placeholder="Nombre" value={contactName} onChange={e => setContactName(e.target.value)} />
+              <Input placeholder="Teléfono" value={contactPhone} onChange={e => setContactPhone(e.target.value)} />
+              <Input placeholder="Email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Asignación + Vinculación CRM */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="w-3 h-3" />Responsable</label>
+              <Select value={assignedTo || "__none__"} onValueChange={v => setAssignedTo(v === "__none__" ? "" : v)}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Asignar a" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Sin asignar —</SelectItem>
+                  {users.map(u => (
+                    <SelectItem key={u.user_id} value={u.user_id}>{u.display_name ?? u.user_id.slice(0, 8)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><LinkIcon className="w-3 h-3" />Vincular caso/lead</label>
+              <Select
+                value={serviceCaseId ? `case:${serviceCaseId}` : leadId ? `lead:${leadId}` : "__none__"}
+                onValueChange={v => {
+                  if (v === "__none__") { setServiceCaseId(""); setLeadId(""); }
+                  else if (v.startsWith("case:")) { setServiceCaseId(v.slice(5)); setLeadId(""); }
+                  else if (v.startsWith("lead:")) { setLeadId(v.slice(5)); setServiceCaseId(""); }
+                }}
+              >
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Vincular" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Sin vincular —</SelectItem>
+                  {cases.length > 0 && (
+                    <>
+                      <div className="px-2 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">Casos</div>
+                      {cases.slice(0, 50).map(c => (
+                        <SelectItem key={c.id} value={`case:${c.id}`}>{c.case_number} — {c.client_name ?? "Sin nombre"}</SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {leads.length > 0 && (
+                    <>
+                      <div className="px-2 pt-2 pb-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">Leads</div>
+                      {leads.slice(0, 50).map(l => (
+                        <SelectItem key={l.id} value={`lead:${l.id}`}>{l.name ?? "Sin nombre"} {l.phone ? `· ${l.phone}` : ""}</SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              {linkedLabel && <Badge variant="secondary" className="mt-2 text-xs">{linkedLabel}</Badge>}
+            </div>
+          </div>
+
+          {/* Descripción + notas */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Descripción</label>
+            <Textarea className="mt-1 min-h-[60px]" value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalles que debe conocer el equipo (transporte, vestimenta, particularidades)..." />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Notas internas (privadas)</label>
+            <Textarea className="mt-1 min-h-[60px]" value={internalNotes} onChange={e => setInternalNotes(e.target.value)} placeholder="Notas para el equipo, no visibles a la familia." />
+          </div>
+        </div>
+
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 mt-4">
+          <div>
+            {isEdit && isCeo && (
+              <Button variant="destructive" size="sm" onClick={remove} disabled={deleting}>
+                <Trash2 className="w-4 h-4 mr-1" />{deleting ? "Eliminando..." : "Eliminar"}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={saving}>
+              <Save className="w-4 h-4 mr-1" />{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear evento"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

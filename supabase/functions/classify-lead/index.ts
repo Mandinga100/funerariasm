@@ -165,10 +165,10 @@ DATOS DEL LEAD:
 
 INSTRUCCIONES DE CLASIFICACIÓN:
 
-URGENCIA:
-- "immediate" = Fallecimiento reciente o inminente, necesita servicio YA. Palabras clave: fallecimiento, murió, velatorio, urgente, hoy, ahora, cremación urgente.
-- "normal" = Consulta activa sobre precios, planes, cotización. Interés real pero no emergencia.
-- "previsión" = Planificación futura en vida, consulta informativa, memorial, legado.
+URGENCIA (categoría comercial del lead — define en qué pestaña del CRM aparecerá):
+- "immediate" = Fallecimiento reciente o inminente, necesita servicio YA. Palabras clave: fallecimiento, murió, velatorio, urgente, hoy, ahora, cremación urgente. → Pestaña "Urgencias".
+- "cotizacion" = Consulta activa de precios/planes/cotización SIN fallecimiento reciente. Interés real pero no emergencia. → Pestaña "Cotizaciones".
+- "prevision" = Planificación a futuro en vida, consulta informativa, memorial, legado, plan preventivo. → Pestaña "Previsión".
 
 INTENCIÓN (detectar la verdadera necesidad):
 - "servicio_funerario_urgente" = Necesita servicio funerario completo inmediatamente

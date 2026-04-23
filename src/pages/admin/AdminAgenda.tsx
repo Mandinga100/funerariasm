@@ -221,6 +221,29 @@ export default function AdminAgenda() {
     await applyStatusChange(p.eventId, p.newStatus, ev?.title ?? "Evento");
   };
 
+  const rescheduleFromConflict = async (start: Date, end: Date) => {
+    const p = conflictDlg.pending;
+    if (!p) return;
+    const ev = events.find(x => x.id === p.eventId);
+    const { error } = await supabase
+      .from("agenda_events")
+      .update({
+        status: p.newStatus,
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+      })
+      .eq("id", p.eventId);
+    setConflictDlg({ open: false, conflicts: [], pending: null });
+    if (error) {
+      toast({ title: "No se pudo reprogramar", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "📅 Evento reprogramado",
+        description: `${ev?.title ?? "Evento"} → ${start.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}`,
+      });
+    }
+  };
+
   const exportCols: ExportColumn<AgendaEvent>[] = [
     { key: "title", label: "Título", accessor: e => e.title },
     { key: "type", label: "Tipo", accessor: e => e.event_type },

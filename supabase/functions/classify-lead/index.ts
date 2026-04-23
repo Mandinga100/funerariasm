@@ -343,8 +343,9 @@ function buildUpdates(lead: any, c: any) {
     intent: c.intent,
   };
 
-  // Update urgency — AI knows the funeral context
-  if (!lead.urgency || lead.urgency === "normal" || lead.urgency === "immediate") {
+  // Update urgency — solo si no viene ya con una categoría comercial válida del chatbot/formulario
+  const validUrgencies = ["immediate", "cotizacion", "prevision"];
+  if (!lead.urgency || !validUrgencies.includes(lead.urgency)) {
     updates.urgency = c.suggested_urgency;
   }
 

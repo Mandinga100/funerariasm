@@ -37,7 +37,18 @@ const MAIN_OPTIONS = [
   { label: "🤖 Asistente virtual", intent: "general" as ContactIntent },
 ];
 
-const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; link?: string }> = {
+/**
+ * Mapeo determinista intent → urgency, para que la categoría comercial del lead
+ * se decida desde el primer click del usuario en el chat (no requiere IA posterior).
+ */
+const INTENT_TO_URGENCY: Record<string, "immediate" | "cotizacion" | "prevision" | "normal"> = {
+  fallecimiento: "immediate",
+  cotizacion: "cotizacion",
+  planificacion: "prevision",
+  general: "normal",
+};
+
+const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; link?: string; askUrgency?: boolean }> = {
   fallecimiento: {
     message:
       "Entendemos lo difícil de este momento. Nuestro equipo está disponible ahora mismo para acompañarle.\n\n¿Desea que un asesor le contacte de inmediato por WhatsApp?",
@@ -45,8 +56,8 @@ const TREE_RESPONSES: Record<string, { message: string; showContact?: boolean; l
   },
   cotizacion: {
     message:
-      "Con gusto le ayudamos. Tenemos planes desde $1.290.000 hasta servicios premium personalizados.\n\n¿Le gustaría recibir una cotización personalizada por WhatsApp?",
-    showContact: true,
+      "Con gusto le ayudamos. Antes de cotizar: ¿es para una situación urgente (fallecimiento reciente) o para evaluar planes con calma?",
+    askUrgency: true,
   },
   planificacion: {
     message:

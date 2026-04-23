@@ -132,6 +132,7 @@ export default function AdminCasos() {
   });
   const { filterPipeline, filterPayment, searchQuery } = filters;
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     const { data } = await supabase

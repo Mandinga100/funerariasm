@@ -21,6 +21,9 @@ import {
   STATUS_COLUMNS,
   eventTypeOf,
 } from "@/lib/agenda-config";
+import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agenda/AgendaConflictDialog";
+
+const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 interface Props {
   open: boolean;

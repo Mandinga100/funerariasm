@@ -188,26 +188,68 @@ export default function Seguimiento() {
               </Card>
             )}
 
-            {data.pending_documents && data.pending_documents.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-accent" />Documentos pendientes
-                  </CardTitle>
-                  <CardDescription>Estos documentos ayudan a agilizar el servicio.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-1.5 text-sm">
-                    {data.pending_documents.map((d, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 border-b last:border-0 py-1.5">
-                        <span>{d.document_name}</span>
-                        <Badge variant="outline" className="text-[10px] capitalize">{d.status}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
+            {(() => {
+              const docs = data.pending_documents ?? [];
+              const enriched = docs.map(d => {
+                const c = classifyDoc(d.document_type);
+                const sw = STATUS_PRIORITY[d.status] ?? 15;
+                return { ...d, _group: c.group, _weight: c.weight + sw };
+              }).sort((a, b) => b._weight - a._weight);
+
+              const groups: Record<"alta" | "media" | "baja", typeof enriched> = { alta: [], media: [], baja: [] };
+              enriched.forEach(d => groups[d._group].push(d));
+
+              if (enriched.length === 0) {
+                return (
+                  <Card className="border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/10">
+                    <CardContent className="py-5 flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Documentación al día</p>
+                        <p className="text-xs text-muted-foreground">No hay documentos pendientes en este momento. Su ejecutivo se encargará de cualquier trámite adicional.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-accent" />Documentos pendientes
+                      <Badge variant="secondary" className="ml-1 text-[10px]">{enriched.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>Ordenados por prioridad para agilizar el servicio.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {(["alta", "media", "baja"] as const).map(g => {
+                      const items = groups[g];
+                      if (items.length === 0) return null;
+                      const Meta = GROUP_META[g];
+                      const Icon = Meta.icon;
+                      return (
+                        <div key={g}>
+                          <div className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium mb-1.5 ${Meta.tone}`}>
+                            <Icon className="w-3.5 h-3.5" aria-hidden />
+                            {Meta.label}
+                            <span className="text-muted-foreground font-normal normal-case tracking-normal">· {items.length}</span>
+                          </div>
+                          <ul className="space-y-1.5 text-sm rounded-md border bg-card/40">
+                            {items.map((d, i) => (
+                              <li key={i} className="flex items-center justify-between gap-2 px-3 py-2 border-b last:border-0">
+                                <span className="truncate">{d.document_name}</span>
+                                <Badge variant="outline" className="text-[10px] capitalize shrink-0">{d.status.replace(/_/g, " ")}</Badge>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             <p className="text-xs text-muted-foreground text-center">
               Última actualización: {format(new Date(data.updated_at), "dd MMM yyyy HH:mm", { locale: es })} · Para cualquier duda, su ejecutivo está disponible 24/7 al WhatsApp +56 9 6433 3760.

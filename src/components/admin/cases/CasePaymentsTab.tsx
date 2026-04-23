@@ -163,7 +163,7 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
     if (amt < 1000) return "El monto mínimo es $1.000";
     // No permitir superar saldo pendiente (suma de confirmados + nuevo)
     // Tolerancia: si total_amount es 0 (no cotizado), permitimos cualquier monto
-    if (totalAmount > 0 && amt > totals.balance) {
+    if (liveTotal > 0 && amt > totals.balance) {
       return `El monto supera el saldo pendiente (${fmt(totals.balance)}). Ajusta o registra como abono parcial.`;
     }
     if (!fName.trim()) return "Falta nombre del pagador";

@@ -345,6 +345,14 @@ async function classifyHeuristic(lead: any, supabase: any) {
   if (lead.selected_plan) tags.push(lead.selected_plan.toLowerCase().replace(/\s+/g, "-"));
   if (!tags.length) tags.push(suggested_urgency);
 
+  // Si el histórico tiene una emoción dominante con muestra fuerte, sugerirla
+  if (stats && stats.sample_size >= 10 && stats.top_emotion) {
+    emotional_context = stats.top_emotion as typeof emotional_context;
+  }
+  if (stats && stats.sample_size >= 5) {
+    tags.push(`hist:${stats.sample_size}`);
+  }
+
   return {
     summary,
     suggested_urgency,
@@ -356,6 +364,16 @@ async function classifyHeuristic(lead: any, supabase: any) {
     estimated_value,
     sla_hours,
     tags,
+    historical_stats: stats
+      ? {
+          sample_size: stats.sample_size,
+          avg_priority: stats.avg_priority,
+          avg_sla_hours: stats.avg_sla_hours,
+          avg_value: stats.avg_value,
+          conversion_rate: stats.conversion_rate,
+          basis: `${suggested_urgency}/${intent} · 180d`,
+        }
+      : null,
   };
 }
 

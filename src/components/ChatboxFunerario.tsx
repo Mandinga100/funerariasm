@@ -276,6 +276,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     const isAI = label.includes("Asistente");
     setMessages((prev) => [...prev, { role: "user", content: label }]);
     setShowMainOptions(false);
+    setCurrentIntent(intent);
 
     if (isAI) {
       setMode("ai");
@@ -287,16 +288,31 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
 
     const response = TREE_RESPONSES[intent] || TREE_RESPONSES.fallecimiento;
-    try {
-      await submitContact({ contactType: "chatbox", intent, source: "chatbox", urgency: intent === "fallecimiento" ? "immediate" : "normal" });
-    } catch { /* non-blocking */ }
+
+    // Solo registrar pre-lead anónimo si NO vamos a preguntar urgencia primero
+    // (para evitar duplicar leads cuando luego se reclasifica).
+    if (!response.askUrgency) {
+      try {
+        await submitContact({
+          contactType: "chatbox",
+          intent,
+          source: "chatbox",
+          urgency: INTENT_TO_URGENCY[intent] ?? "normal",
+        });
+      } catch { /* non-blocking */ }
+    }
 
     const chips: ChatChip[] = [];
-    if (response.showContact) {
+
+    if (response.askUrgency) {
+      // Pregunta de urgencia: clasifica el lead en Urgencias o Cotizaciones
+      chips.push({ label: "🚨 Sí, es urgente", action: () => handleUrgencyAnswer(true) });
+      chips.push({ label: "🕒 No, evaluar", action: () => handleUrgencyAnswer(false) });
+    } else if (response.showContact) {
       chips.push({ label: "✅ Sí, contactarme", action: () => startContactCollection(intent) });
       chips.push({ label: "📞 Llamar directo", action: () => window.open("tel:+56964333760") });
     }
-    if (response.link) {
+    if (response.link && !response.askUrgency) {
       chips.push({ label: "🔗 Ver planes", action: () => (window.location.href = response.link!) });
     }
     chips.push({ label: "↩️ Volver al inicio", action: resetChat });

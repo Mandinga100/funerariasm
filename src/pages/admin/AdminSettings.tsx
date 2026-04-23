@@ -139,7 +139,7 @@ export default function AdminSettings() {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url");
     const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
 
-    setAdmins(roles.map(r => {
+    const adminList: AdminUser[] = roles.map(r => {
       const p = profileMap.get(r.user_id);
       return {
         id: r.id,
@@ -149,8 +149,13 @@ export default function AdminSettings() {
         avatar_url: p?.avatar_url ?? undefined,
         email: r.user_id === user?.id ? user.email ?? undefined : undefined,
       };
-    }));
+    });
+    setAdmins(adminList);
     setLoadingAdmins(false);
+
+    // Firmar avatares en paralelo (bucket privado)
+    const signed = await signAvatarUrls(adminList.map(a => a.avatar_url));
+    setSignedAvatarMap(signed);
   };
 
   useEffect(() => { loadAdmins(); }, []);

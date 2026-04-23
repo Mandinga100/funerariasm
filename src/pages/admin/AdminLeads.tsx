@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -31,6 +32,9 @@ import {
   URGENCY_LABELS,
   getUrgencyClasses,
   getPriorityClasses,
+  getLeadCategory,
+  LEAD_CATEGORY_META,
+  type LeadCategory,
 } from "@/lib/crm-tokens";
 
 type KpiKey = "total" | "urgent" | "overdue" | "closed";

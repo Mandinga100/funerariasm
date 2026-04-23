@@ -384,6 +384,62 @@ async function getHistoricalAvgValue(supabase: any, urgency: string): Promise<nu
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Stats históricos consolidados por urgency + intent (últimos 180 días).
+// Devuelve null si no hay muestra suficiente o si la consulta falla.
+// Internamente refresca la vista materializada como máximo cada 6h.
+// ────────────────────────────────────────────────────────────────────
+let __statsRefreshedAt = 0;
+async function maybeRefreshStats(supabase: any) {
+  const SIX_HOURS = 6 * 3600 * 1000;
+  if (Date.now() - __statsRefreshedAt < SIX_HOURS) return;
+  try {
+    await supabase.rpc("refresh_lead_classification_stats");
+    __statsRefreshedAt = Date.now();
+  } catch (e) {
+    console.warn("[classify-lead] No se pudo refrescar stats:", e instanceof Error ? e.message : e);
+  }
+}
+
+interface HistoricalStats {
+  sample_size: number;
+  avg_value: number | null;
+  avg_priority: number | null;
+  avg_sla_hours: number | null;
+  top_channel: string | null;
+  top_emotion: string | null;
+  conversion_rate: number | null;
+}
+
+async function getHistoricalStats(
+  supabase: any,
+  urgency: string,
+  intent: string,
+): Promise<HistoricalStats | null> {
+  try {
+    await maybeRefreshStats(supabase);
+    const { data, error } = await supabase.rpc("get_lead_stats", {
+      _urgency: urgency,
+      _intent: intent,
+    });
+    if (error || !data || data.length === 0) return null;
+    const row = data[0];
+    if (!row || !row.sample_size || row.sample_size < 3) return null;
+    return {
+      sample_size: Number(row.sample_size) || 0,
+      avg_value: row.avg_value ?? null,
+      avg_priority: row.avg_priority ?? null,
+      avg_sla_hours: row.avg_sla_hours ?? null,
+      top_channel: row.top_channel ?? null,
+      top_emotion: row.top_emotion ?? null,
+      conversion_rate: row.conversion_rate ?? null,
+    };
+  } catch (e) {
+    console.warn("[classify-lead] getHistoricalStats falló:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Clasificador IA (puede fallar → fallback)
 // ────────────────────────────────────────────────────────────────────
 async function classifyLeadAI(lead: any, apiKey: string) {

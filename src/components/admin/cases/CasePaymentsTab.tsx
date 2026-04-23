@@ -74,6 +74,10 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Total del caso reactivo (puede cambiar por triggers / aceptación de cotización)
+  const [liveTotal, setLiveTotal] = useState<number>(totalAmount);
+  const [liveAmountPaid, setLiveAmountPaid] = useState<number>(0);
+
   // Form state
   const [showForm, setShowForm] = useState(false);
   const [fAmount, setFAmount] = useState("");
@@ -85,24 +89,38 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
   const [fRut, setFRut] = useState("");
   const [fNotes, setFNotes] = useState("");
 
+  // Sincronizar liveTotal cuando cambia la prop (caso recargado por padre)
+  useEffect(() => { setLiveTotal(totalAmount); }, [totalAmount]);
+
   const fetch = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("payment_transactions")
-      .select("id,transaction_ref,amount,status,payment_type,payment_subtype,full_name,email,phone,notes,proof_url,proof_filename,created_at,reviewed_at,reviewed_by")
-      .eq("case_reference", caseNumber)
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast({ title: "Error cargando pagos", description: error.message, variant: "destructive" });
+    const [paymentsRes, caseRes] = await Promise.all([
+      supabase
+        .from("payment_transactions")
+        .select("id,transaction_ref,amount,status,payment_type,payment_subtype,full_name,email,phone,notes,proof_url,proof_filename,created_at,reviewed_at,reviewed_by")
+        .eq("case_reference", caseNumber)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("service_cases")
+        .select("total_amount, amount_paid")
+        .eq("id", caseId)
+        .maybeSingle(),
+    ]);
+    if (paymentsRes.error) {
+      toast({ title: "Error cargando pagos", description: paymentsRes.error.message, variant: "destructive" });
     } else {
-      setPayments((data ?? []) as PaymentRow[]);
+      setPayments((paymentsRes.data ?? []) as PaymentRow[]);
+    }
+    if (caseRes.data) {
+      setLiveTotal(caseRes.data.total_amount ?? 0);
+      setLiveAmountPaid(caseRes.data.amount_paid ?? 0);
     }
     setLoading(false);
-  }, [caseNumber, toast]);
+  }, [caseId, caseNumber, toast]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  // Realtime
+  // Realtime: pagos del caso + cambios al service_case (recalcula liveTotal/amount_paid por trigger)
   useEffect(() => {
     const ch = supabase
       .channel(`case-payments-${caseId}`)
@@ -110,17 +128,24 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
         fetch();
         onSaved?.();
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_cases", filter: `id=eq.${caseId}` }, (payload) => {
+        const next = payload.new as { total_amount?: number; amount_paid?: number };
+        if (typeof next.total_amount === "number") setLiveTotal(next.total_amount);
+        if (typeof next.amount_paid === "number") setLiveAmountPaid(next.amount_paid);
+      })
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
   }, [caseId, caseNumber, fetch, onSaved]);
 
   const totals = useMemo(() => {
-    const confirmed = payments.filter(p => p.status === "confirmed").reduce((s, p) => s + p.amount, 0);
+    // Confirmados según trigger del caso (fuente de verdad) con fallback al cálculo local
+    const localConfirmed = payments.filter(p => p.status === "confirmed").reduce((s, p) => s + p.amount, 0);
+    const confirmed = liveAmountPaid > 0 ? liveAmountPaid : localConfirmed;
     const pending = payments.filter(p => ["initiated", "transfer_reported", "pending_review"].includes(p.status)).reduce((s, p) => s + p.amount, 0);
-    const balance = Math.max(0, totalAmount - confirmed);
-    const pct = totalAmount > 0 ? Math.min(100, Math.round((confirmed / totalAmount) * 100)) : 0;
+    const balance = Math.max(0, liveTotal - confirmed);
+    const pct = liveTotal > 0 ? Math.min(100, Math.round((confirmed / liveTotal) * 100)) : 0;
     return { confirmed, pending, balance, pct };
-  }, [payments, totalAmount]);
+  }, [payments, liveTotal, liveAmountPaid]);
 
   const resetForm = () => {
     setFAmount(""); setFType("abono"); setFSubtype("transferencia");
@@ -138,7 +163,7 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
     if (amt < 1000) return "El monto mínimo es $1.000";
     // No permitir superar saldo pendiente (suma de confirmados + nuevo)
     // Tolerancia: si total_amount es 0 (no cotizado), permitimos cualquier monto
-    if (totalAmount > 0 && amt > totals.balance) {
+    if (liveTotal > 0 && amt > totals.balance) {
       return `El monto supera el saldo pendiente (${fmt(totals.balance)}). Ajusta o registra como abono parcial.`;
     }
     if (!fName.trim()) return "Falta nombre del pagador";
@@ -244,7 +269,7 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="rounded-md border p-2">
               <p className="text-[10px] text-muted-foreground uppercase">Total caso</p>
-              <p className="text-sm font-semibold">{fmt(totalAmount)}</p>
+              <p className="text-sm font-semibold">{fmt(liveTotal)}</p>
             </div>
             <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2">
               <p className="text-[10px] text-emerald-700 dark:text-emerald-400 uppercase">Pagado</p>
@@ -279,14 +304,14 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
                 <Input
                   type="number"
                   min={1}
-                  max={totalAmount > 0 ? totals.balance : undefined}
+                  max={liveTotal > 0 ? totals.balance : undefined}
                   step={1000}
                   className="h-8 text-xs mt-1"
                   value={fAmount}
                   onChange={e => setFAmount(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="0"
                 />
-                {totalAmount > 0 && (
+                {liveTotal > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     Saldo pendiente: <span className="font-medium">{fmt(totals.balance)}</span>
                   </p>

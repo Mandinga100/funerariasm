@@ -401,12 +401,28 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
           {/* Re-contact indicator (last 24h) */}
           {(() => {
-            const since = Date.now() - 24 * 60 * 60 * 1000;
-            const recontacts = activities.filter(
-              (a) => a.activity_type === "duplicate_contact" && new Date(a.created_at).getTime() >= since
-            );
+            const since24 = Date.now() - 24 * 60 * 60 * 1000;
+            const allRecontacts = activities.filter((a) => a.activity_type === "duplicate_contact");
+            const recontacts = allRecontacts.filter((a) => new Date(a.created_at).getTime() >= since24);
             if (recontacts.length === 0) return null;
             const last = recontacts[0];
+            const first = recontacts[recontacts.length - 1];
+            const spanMin = Math.max(1, Math.round((new Date(last.created_at).getTime() - new Date(first.created_at).getTime()) / 60000));
+            const channels = Array.from(new Set(recontacts.map((r) => (r.metadata as any)?.contact_type).filter(Boolean)));
+            const stage = lead.pipeline_stage || "nuevo";
+
+            // Recomendación dinámica según volumen + etapa
+            let recommendation = "";
+            if (recontacts.length >= 3 && stage === "nuevo") {
+              recommendation = "🔥 Alta intención: el lead insiste. Llama AHORA por WhatsApp antes de que contacte a la competencia.";
+            } else if (recontacts.length >= 2 && (stage === "contactado" || stage === "cotizado")) {
+              recommendation = "⚠️ Está esperando respuesta. Responde con cotización o agenda visita en menos de 1 hora.";
+            } else if (recontacts.length >= 1 && stage === "nuevo") {
+              recommendation = "📞 Lead repite contacto. Prioriza llamada en próximos 30 min.";
+            } else {
+              recommendation = "👀 Mantén seguimiento activo. Confirma si necesita más información.";
+            }
+
             return (
               <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-3 space-y-2">
                 <div className="flex items-center gap-2">
@@ -418,6 +434,26 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
                     Último {formatDistanceToNow(new Date(last.created_at), { addSuffix: true, locale: es })}
                   </Badge>
                 </div>
+
+                {/* Resumen narrativo */}
+                <div className="rounded bg-white/60 dark:bg-amber-950/30 border border-amber-200/60 p-2 text-[11px] text-amber-900 dark:text-amber-100 leading-relaxed">
+                  <p>
+                    <span className="font-semibold">Historia:</span> el contacto se repitió{" "}
+                    <span className="font-semibold">{recontacts.length} {recontacts.length === 1 ? "vez" : "veces"}</span>
+                    {recontacts.length > 1 ? ` en un lapso de ${spanMin < 60 ? `${spanMin} min` : `${Math.round(spanMin / 60)} h`}` : ""}
+                    {channels.length > 0 ? ` vía ${channels.join(", ")}` : ""}.
+                    {allRecontacts.length > recontacts.length && (
+                      <> Total histórico: <span className="font-semibold">{allRecontacts.length}</span>.</>
+                    )}
+                  </p>
+                  <p className="mt-1">
+                    <span className="font-semibold">Último mensaje:</span> "{(last.description || "").replace(/^Re-contacto detectado \([^)]+\)\.\s*Mensaje:\s*/i, "").slice(0, 120) || "sin texto"}"
+                  </p>
+                  <p className="mt-1.5 pt-1.5 border-t border-amber-200/60">
+                    <span className="font-semibold">Próximo paso:</span> {recommendation}
+                  </p>
+                </div>
+
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {recontacts.map((rc) => (
                     <div key={rc.id} className="flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">

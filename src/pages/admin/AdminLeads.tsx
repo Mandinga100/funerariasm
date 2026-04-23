@@ -422,6 +422,39 @@ export default function AdminLeads() {
         </div>
       </div>
 
+      {/* Pestañas por categoría comercial — separan urgencias de cotizaciones frías y previsiones.
+          Cada pestaña muestra el conteo total (no afectado por otros filtros activos),
+          para que el ejecutivo vea de un vistazo cuántos leads de cada tipo existen. */}
+      <Tabs value={categoryTab} onValueChange={(v) => setCategoryTab(v as "all" | LeadCategory)}>
+        <TabsList className="w-full grid grid-cols-4 h-auto">
+          <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs">
+            <span>📂 Todos</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{leads.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="urgencia"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-destructive/10 data-[state=active]:text-destructive"
+          >
+            <span>{LEAD_CATEGORY_META.urgencia.emoji} {LEAD_CATEGORY_META.urgencia.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.urgencia}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="cotizacion"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+          >
+            <span>{LEAD_CATEGORY_META.cotizacion.emoji} {LEAD_CATEGORY_META.cotizacion.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.cotizacion}</Badge>
+          </TabsTrigger>
+          <TabsTrigger
+            value="prevision"
+            className="flex flex-col sm:flex-row items-center gap-1 py-2 text-xs data-[state=active]:bg-accent/10 data-[state=active]:text-accent"
+          >
+            <span>{LEAD_CATEGORY_META.prevision.emoji} {LEAD_CATEGORY_META.prevision.label}</span>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 tabular-nums">{categoryCounts.prevision}</Badge>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* KPIs interactivos (oculto en kanban desktop para no recargar UI) */}
       {(isMobile || viewMode === "list") && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">

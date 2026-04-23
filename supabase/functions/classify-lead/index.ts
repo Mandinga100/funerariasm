@@ -6,13 +6,39 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ────────────────────────────────────────────────────────────────────
+// Catálogo OFICIAL de precios (sincronizado con src/components/PlansSection.tsx)
+// SOLO se usa estimated_value si el lead trae uno de estos planes o
+// si su fuente es la página /planes. Si no, NO inventamos precio.
+// ────────────────────────────────────────────────────────────────────
+const PLAN_PRICES: Record<string, { name: string; price: number }> = {
+  margarita: { name: "Plan Margarita", price: 1290000 },
+  azucena: { name: "Plan Azucena", price: 1390000 },
+  acacia: { name: "Plan Acacia", price: 1990000 },
+  orquidea: { name: "Plan Orquídea", price: 1990000 },
+  jazmin: { name: "Plan Jazmín", price: 2790000 },
+  castano: { name: "Plan Castaño", price: 3990000 },
+  rauli: { name: "Plan Raulí", price: 3990000 },
+};
+
+function resolvePlanPrice(rawPlan?: string | null): number | null {
+  if (!rawPlan) return null;
+  const key = rawPlan.toLowerCase().replace(/^plan[\s_]+/i, "").replace(/í/g, "i").replace(/ñ/g, "n").trim();
+  return PLAN_PRICES[key]?.price ?? null;
+}
+
+function comesFromPlansPage(lead: any): boolean {
+  const src = (lead.source ?? "").toLowerCase();
+  const meta = lead.metadata ?? {};
+  const path = (meta.pathname ?? meta.referrer ?? "").toString().toLowerCase();
+  return src.includes("plan") || path.includes("/planes") || path.includes("plan");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -62,11 +88,11 @@ serve(async (req) => {
       const results: any[] = [];
       for (const lead of unclassified) {
         try {
-          const classification = await classifyLead(lead, LOVABLE_API_KEY);
+          const classification = await classifyWithFallback(lead, supabase, LOVABLE_API_KEY);
           const updates = buildUpdates(lead, classification);
           await supabase.from("contact_leads").update(updates).eq("id", lead.id);
           await logActivity(supabase, lead.id, classification);
-          results.push({ id: lead.id, classification });
+          results.push({ id: lead.id, classification, source: classification.__source });
         } catch (e) {
           console.error(`Error classifying lead ${lead.id}:`, e);
           results.push({ id: lead.id, error: String(e) });
@@ -115,19 +141,22 @@ serve(async (req) => {
       });
     }
 
-    const classification = await classifyLead(lead, LOVABLE_API_KEY);
+    const classification = await classifyWithFallback(lead, supabase, LOVABLE_API_KEY);
     const updates = buildUpdates(lead, classification);
     await supabase.from("contact_leads").update(updates).eq("id", lead.id);
     await logActivity(supabase, leadId, classification);
 
-    return new Response(JSON.stringify({ success: true, classification }), {
+    return new Response(JSON.stringify({
+      success: true,
+      classification,
+      source: classification.__source, // "ai" | "heuristic"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("classify-lead error:", e);
-    const status = e instanceof RateLimitError ? 429 : e instanceof PaymentError ? 402 : 500;
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status,
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -136,19 +165,222 @@ serve(async (req) => {
 class RateLimitError extends Error {}
 class PaymentError extends Error {}
 
-async function classifyLead(lead: any, apiKey: string) {
+// ────────────────────────────────────────────────────────────────────
+// Wrapper: intenta IA primero, si falla por rate limit / payment / red
+// usa el clasificador heurístico determinístico (siempre disponible).
+// ────────────────────────────────────────────────────────────────────
+async function classifyWithFallback(lead: any, supabase: any, apiKey?: string) {
+  if (apiKey) {
+    try {
+      const aiResult = await classifyLeadAI(lead, apiKey);
+      // Reforzar valor estimado con fuente confiable
+      const realPrice = resolveRealEstimatedValue(lead);
+      if (realPrice !== null) aiResult.estimated_value = realPrice;
+      else if (!comesFromPlansPage(lead) && !lead.selected_plan) {
+        // Sin info confiable de precio → no inventar.
+        aiResult.estimated_value = 0;
+      }
+      return { ...aiResult, __source: "ai" };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(`[classify-lead] IA falló (${msg}). Usando fallback heurístico.`);
+    }
+  } else {
+    console.warn("[classify-lead] LOVABLE_API_KEY no configurada. Usando fallback heurístico.");
+  }
+  // Fallback: heurística + base histórica
+  const heuristic = await classifyHeuristic(lead, supabase);
+  return { ...heuristic, __source: "heuristic" };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Clasificador heurístico (rule-based) — siempre disponible.
+// Usa: keywords, plan, origen, tiempo, comuna, leads históricos similares.
+// ────────────────────────────────────────────────────────────────────
+async function classifyHeuristic(lead: any, supabase: any) {
+  const text = `${lead.message ?? ""} ${lead.whatsapp_message ?? ""}`.toLowerCase();
+  const hoursElapsed = Math.round((Date.now() - new Date(lead.created_at).getTime()) / 3600000);
+
+  // ── 1. Detectar URGENCIA por keywords ──
+  const URGENT_KW = [
+    "fallec", "murió", "murio", "falleció", "fallecio", "difunto", "difunta",
+    "velorio", "velatorio", "hoy", "ahora", "urgent", "emergencia",
+    "acaba de", "recién", "recien", "esta noche", "esta madrugada",
+    "necesito ya", "necesito hoy", "cremación urgente", "traslado urgente",
+  ];
+  const COTIZACION_KW = [
+    "cotiz", "precio", "valor", "cuánto", "cuanto", "cuesta",
+    "presupuesto", "tarifa", "información sobre planes", "info plan",
+  ];
+  const PREVISION_KW = [
+    "previsión", "prevision", "futuro", "anticipa", "planificar",
+    "plan funerario", "memorial", "legado", "en vida", "antes",
+  ];
+  const TRASLADO_KW = ["traslado", "trasladar", "llevar", "transportar", "repatria"];
+  const CREMACION_KW = ["crema", "incinera"];
+  const RECLAMO_KW = ["reclamo", "queja", "problema", "mala atención", "demanda"];
+
+  const hits = (kws: string[]) => kws.filter((k) => text.includes(k)).length;
+
+  let suggested_urgency: "immediate" | "cotizacion" | "prevision" = "cotizacion";
+  let intent = "consulta_general";
+  let emotional_context: "duelo_activo" | "planificacion_tranquila" | "urgencia_familiar" | "consulta_informativa" | "insatisfaccion" = "consulta_informativa";
+
+  // Si la urgencia ya viene marcada (chatbot/form) y es válida, respétala
+  const validUrg = ["immediate", "cotizacion", "prevision"];
+  if (lead.urgency && validUrg.includes(lead.urgency)) {
+    suggested_urgency = lead.urgency;
+  } else if (hits(URGENT_KW) >= 1) {
+    suggested_urgency = "immediate";
+    emotional_context = "duelo_activo";
+  } else if (hits(PREVISION_KW) >= 1) {
+    suggested_urgency = "prevision";
+    emotional_context = "planificacion_tranquila";
+  } else if (hits(COTIZACION_KW) >= 1 || lead.selected_plan) {
+    suggested_urgency = "cotizacion";
+    emotional_context = "consulta_informativa";
+  }
+
+  // ── 2. Intent ──
+  if (hits(RECLAMO_KW) >= 1) intent = "reclamo", emotional_context = "insatisfaccion";
+  else if (suggested_urgency === "immediate") intent = "servicio_funerario_urgente", emotional_context = "duelo_activo";
+  else if (hits(TRASLADO_KW) >= 1) intent = "traslado";
+  else if (hits(CREMACION_KW) >= 1) intent = "cremacion";
+  else if (suggested_urgency === "prevision") intent = "prevision_funeraria";
+  else if (lead.selected_plan || hits(COTIZACION_KW) >= 1) intent = "cotizacion";
+
+  // ── 3. Canal recomendado ──
+  let recommended_channel: "llamada_telefonica" | "whatsapp" | "email" | "visita_presencial" =
+    suggested_urgency === "immediate"
+      ? "llamada_telefonica"
+      : lead.phone
+        ? "whatsapp"
+        : lead.email
+          ? "email"
+          : "llamada_telefonica";
+
+  // ── 4. SLA según urgencia ──
+  const sla_hours =
+    suggested_urgency === "immediate" ? 1 :
+    suggested_urgency === "cotizacion" ? 24 :
+    72;
+
+  // ── 5. Score de prioridad ──
+  let priority_score = 50;
+  if (suggested_urgency === "immediate") priority_score = 95;
+  else if (suggested_urgency === "cotizacion") priority_score = 60;
+  else priority_score = 35;
+
+  // Ajustes por antigüedad sin contactar
+  if (lead.pipeline_stage === "nuevo") {
+    if (suggested_urgency === "immediate" && hoursElapsed > 1) priority_score = Math.min(100, priority_score + 5);
+    if (suggested_urgency === "cotizacion" && hoursElapsed > 24) priority_score = Math.min(100, priority_score + 10);
+  } else {
+    priority_score = Math.max(20, priority_score - 15);
+  }
+  if (intent === "reclamo") priority_score = Math.max(priority_score, 85);
+
+  // ── 6. Valor estimado: SOLO con info confiable ──
+  const realPrice = resolveRealEstimatedValue(lead);
+  let estimated_value = 0;
+  if (realPrice !== null) {
+    estimated_value = realPrice;
+  } else if (comesFromPlansPage(lead) && suggested_urgency === "cotizacion") {
+    // Vino desde /planes pero sin plan específico: usar el más solicitado del histórico
+    estimated_value = await getHistoricalAvgValue(supabase, suggested_urgency) ?? 0;
+  } else {
+    // Sin info real → 0 (no inventar)
+    estimated_value = 0;
+  }
+
+  // ── 7. Resumen empático ──
+  const nameStr = lead.name ?? "Contacto";
+  const planStr = lead.selected_plan ? ` interesado en ${lead.selected_plan}` : "";
+  const summaryByUrgency: Record<string, string> = {
+    immediate: `${nameStr} reporta fallecimiento${planStr}. Requiere asistencia inmediata, la familia está en duelo activo y necesita coordinación urgente del servicio funerario.`,
+    cotizacion: `${nameStr} está cotizando servicios${planStr}. Oportunidad activa: responder con detalles de planes, valores y disponibilidad antes de 24h.`,
+    prevision: `${nameStr} consulta planificación a futuro${planStr}. Venta consultiva: agendar conversación para conocer necesidades familiares.`,
+  };
+  const summary = summaryByUrgency[suggested_urgency];
+
+  // ── 8. Próximo paso accionable ──
+  const next_step =
+    suggested_urgency === "immediate"
+      ? `📞 Llamar AHORA al ${lead.phone ?? "contacto"} y coordinar retiro/velatorio.`
+      : suggested_urgency === "cotizacion"
+        ? `💬 Enviar cotización por WhatsApp con valores de ${lead.selected_plan ?? "planes solicitados"} y agendar visita.`
+        : `📅 Agendar reunión informativa para presentar planes de previsión.`;
+
+  // ── 9. Tags útiles ──
+  const tags: string[] = [];
+  if (hits(CREMACION_KW)) tags.push("cremacion");
+  if (hits(TRASLADO_KW)) tags.push("traslado");
+  if (text.includes("flor")) tags.push("flores");
+  if (suggested_urgency === "prevision") tags.push("prevision");
+  if (lead.comuna) tags.push(lead.comuna.toLowerCase());
+  if (lead.selected_plan) tags.push(lead.selected_plan.toLowerCase().replace(/\s+/g, "-"));
+  if (!tags.length) tags.push(suggested_urgency);
+
+  return {
+    summary,
+    suggested_urgency,
+    intent,
+    priority_score,
+    next_step,
+    recommended_channel,
+    emotional_context,
+    estimated_value,
+    sla_hours,
+    tags,
+  };
+}
+
+// Resuelve precio real SOLO si el lead trae plan reconocido
+function resolveRealEstimatedValue(lead: any): number | null {
+  return resolvePlanPrice(lead.selected_plan);
+}
+
+// Promedio histórico de valor para leads con misma urgencia (últimos 90d)
+async function getHistoricalAvgValue(supabase: any, urgency: string): Promise<number | null> {
+  try {
+    const since = new Date(Date.now() - 90 * 24 * 3600000).toISOString();
+    const { data } = await supabase
+      .from("contact_leads")
+      .select("estimated_value")
+      .eq("urgency", urgency)
+      .gt("estimated_value", 0)
+      .gte("created_at", since)
+      .limit(100);
+    if (!data || data.length === 0) return null;
+    const avg = data.reduce((s: number, r: any) => s + (r.estimated_value ?? 0), 0) / data.length;
+    return Math.round(avg / 10000) * 10000; // redondear a 10K
+  } catch {
+    return null;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Clasificador IA (puede fallar → fallback)
+// ────────────────────────────────────────────────────────────────────
+async function classifyLeadAI(lead: any, apiKey: string) {
   const now = new Date();
   const createdAt = new Date(lead.created_at);
   const hoursElapsed = Math.round((now.getTime() - createdAt.getTime()) / 3600000);
+
+  const planPriceHint = resolveRealEstimatedValue(lead);
+  const priceGuidance = planPriceHint
+    ? `IMPORTANTE: este lead seleccionó un plan oficial. Usa exactamente CLP ${planPriceHint} como estimated_value.`
+    : comesFromPlansPage(lead)
+      ? "El lead llegó desde /planes pero no eligió un plan específico. Usa un rango conservador 1.300.000-2.000.000 CLP."
+      : "El lead NO viene de la página de planes ni eligió plan. Usa estimated_value=0 (no inventes precios).";
 
   const prompt = `Eres un experto en gestión de servicios funerarios en Chile con 20 años de experiencia.
 Analiza este lead y proporciona una clasificación completa para el CRM de la funeraria.
 
 CONTEXTO DEL NEGOCIO:
-- Los servicios funerarios inmediatos (fallecimiento reciente) tienen máxima prioridad: la familia está en duelo y necesita respuesta en menos de 2 horas.
+- Los servicios funerarios inmediatos (fallecimiento reciente) tienen máxima prioridad.
 - Las consultas de precios/cotizaciones son oportunidades activas que deben responderse en 24h.
-- Los servicios de previsión (planificación en vida) son ventas consultivas de ciclo largo.
-- Los memoriales y legados son servicios de valor añadido post-servicio.
+- Los servicios de previsión son ventas consultivas de ciclo largo.
 
 DATOS DEL LEAD:
 - Nombre: ${lead.name ?? "No proporcionado"}
@@ -163,38 +395,8 @@ DATOS DEL LEAD:
 - Horas desde contacto: ${hoursElapsed}h
 - Etapa pipeline: ${lead.pipeline_stage ?? "nuevo"}
 
-INSTRUCCIONES DE CLASIFICACIÓN:
-
-URGENCIA (categoría comercial del lead — define en qué pestaña del CRM aparecerá):
-- "immediate" = Fallecimiento reciente o inminente, necesita servicio YA. Palabras clave: fallecimiento, murió, velatorio, urgente, hoy, ahora, cremación urgente. → Pestaña "Urgencias".
-- "cotizacion" = Consulta activa de precios/planes/cotización SIN fallecimiento reciente. Interés real pero no emergencia. → Pestaña "Cotizaciones".
-- "prevision" = Planificación a futuro en vida, consulta informativa, memorial, legado, plan preventivo. → Pestaña "Previsión".
-
-INTENCIÓN (detectar la verdadera necesidad):
-- "servicio_funerario_urgente" = Necesita servicio funerario completo inmediatamente
-- "traslado" = Necesita traslado de restos (nacional o internacional)
-- "cremacion" = Consulta específica sobre cremación
-- "cotizacion" = Pide precios o cotización de planes
-- "prevision_funeraria" = Quiere contratar servicio de previsión (en vida)
-- "memorial_legado" = Interesado en memorial digital o legado
-- "consulta_general" = Pregunta general informativa
-- "reclamo" = Queja o reclamo sobre servicio
-
-SCORING DE PRIORIDAD (0-100):
-- Fallecimiento reciente + sin contactar = 95-100
-- Fallecimiento reciente + ya contactado = 70-80
-- Cotización activa sin responder > 12h = 60-75
-- Cotización respondida, esperando decisión = 40-55
-- Previsión interesada = 30-45
-- Consulta general = 10-25
-
-VALOR ESTIMADO en CLP:
-- Servicio funerario completo: 1.500.000 - 5.000.000
-- Cremación: 800.000 - 2.500.000
-- Traslado: 500.000 - 3.000.000
-- Plan previsión: 300.000 - 1.200.000
-- Memorial/legado: 50.000 - 300.000
-- Consulta: 0`;
+VALOR ESTIMADO (REGLA ESTRICTA):
+${priceGuidance}`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -207,7 +409,7 @@ VALOR ESTIMADO en CLP:
       messages: [
         {
           role: "system",
-          content: "Eres un CRM inteligente especializado en servicios funerarios en Chile. Clasifica leads con empatía, profesionalismo y precisión comercial. Responde SOLO con la herramienta provista.",
+          content: "Eres un CRM inteligente especializado en servicios funerarios en Chile. Clasifica leads con empatía y precisión. NUNCA inventes precios si no hay info confiable.",
         },
         { role: "user", content: prompt },
       ],
@@ -216,77 +418,22 @@ VALOR ESTIMADO en CLP:
           type: "function",
           function: {
             name: "classify_lead",
-            description: "Clasificar y priorizar un lead de funeraria profesionalmente",
+            description: "Clasificar y priorizar un lead de funeraria",
             parameters: {
               type: "object",
               properties: {
-                summary: {
-                  type: "string",
-                  description: "Resumen empático y profesional del caso en 2-3 líneas. Incluir contexto emocional si aplica.",
-                },
-                suggested_urgency: {
-                  type: "string",
-                  enum: ["immediate", "cotizacion", "prevision"],
-                  description: "Categoría comercial: immediate=urgencia funeraria, cotizacion=interés activo frío, prevision=planificación futura",
-                },
-                intent: {
-                  type: "string",
-                  enum: [
-                    "servicio_funerario_urgente",
-                    "traslado",
-                    "cremacion",
-                    "cotizacion",
-                    "prevision_funeraria",
-                    "memorial_legado",
-                    "consulta_general",
-                    "reclamo",
-                  ],
-                  description: "Intención principal del contacto",
-                },
-                priority_score: {
-                  type: "number",
-                  description: "Score de prioridad 0-100 basado en urgencia, tiempo transcurrido y valor",
-                },
-                next_step: {
-                  type: "string",
-                  description: "Próximo paso concreto y accionable para el asesor funerario",
-                },
-                recommended_channel: {
-                  type: "string",
-                  enum: ["llamada_telefonica", "whatsapp", "email", "visita_presencial"],
-                  description: "Canal recomendado para contactar al lead",
-                },
-                emotional_context: {
-                  type: "string",
-                  enum: ["duelo_activo", "planificacion_tranquila", "urgencia_familiar", "consulta_informativa", "insatisfaccion"],
-                  description: "Estado emocional probable del contacto",
-                },
-                estimated_value: {
-                  type: "number",
-                  description: "Valor estimado en CLP del servicio potencial",
-                },
-                sla_hours: {
-                  type: "number",
-                  description: "Horas máximas de SLA para primer contacto según urgencia",
-                },
-                tags: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "Etiquetas relevantes: cremacion, velatorio, traslado, flores, prevision, etc.",
-                },
+                summary: { type: "string" },
+                suggested_urgency: { type: "string", enum: ["immediate", "cotizacion", "prevision"] },
+                intent: { type: "string", enum: ["servicio_funerario_urgente","traslado","cremacion","cotizacion","prevision_funeraria","memorial_legado","consulta_general","reclamo"] },
+                priority_score: { type: "number" },
+                next_step: { type: "string" },
+                recommended_channel: { type: "string", enum: ["llamada_telefonica","whatsapp","email","visita_presencial"] },
+                emotional_context: { type: "string", enum: ["duelo_activo","planificacion_tranquila","urgencia_familiar","consulta_informativa","insatisfaccion"] },
+                estimated_value: { type: "number" },
+                sla_hours: { type: "number" },
+                tags: { type: "array", items: { type: "string" } },
               },
-              required: [
-                "summary",
-                "suggested_urgency",
-                "intent",
-                "priority_score",
-                "next_step",
-                "recommended_channel",
-                "emotional_context",
-                "estimated_value",
-                "sla_hours",
-                "tags",
-              ],
+              required: ["summary","suggested_urgency","intent","priority_score","next_step","recommended_channel","emotional_context","estimated_value","sla_hours","tags"],
               additionalProperties: false,
             },
           },
@@ -299,8 +446,8 @@ VALOR ESTIMADO en CLP:
   if (!response.ok) {
     const errText = await response.text();
     console.error("AI gateway error:", response.status, errText);
-    if (response.status === 429) throw new RateLimitError("Rate limited, please try again later");
-    if (response.status === 402) throw new PaymentError("Payment required for AI");
+    if (response.status === 429) throw new RateLimitError("Rate limited");
+    if (response.status === 402) throw new PaymentError("Payment required");
     throw new Error(`AI error: ${response.status}`);
   }
 
@@ -313,20 +460,13 @@ VALOR ESTIMADO en CLP:
 
 function buildUpdates(lead: any, c: any) {
   const channelEmoji: Record<string, string> = {
-    llamada_telefonica: "📞",
-    whatsapp: "💬",
-    email: "📧",
-    visita_presencial: "🏠",
+    llamada_telefonica: "📞", whatsapp: "💬", email: "📧", visita_presencial: "🏠",
   };
-
   const emotionalEmoji: Record<string, string> = {
-    duelo_activo: "🕊️",
-    planificacion_tranquila: "🌿",
-    urgencia_familiar: "⚡",
-    consulta_informativa: "ℹ️",
-    insatisfaccion: "⚠️",
+    duelo_activo: "🕊️", planificacion_tranquila: "🌿", urgencia_familiar: "⚡",
+    consulta_informativa: "ℹ️", insatisfaccion: "⚠️",
   };
-
+  const sourceTag = c.__source === "heuristic" ? "🧠 Análisis heurístico (sin IA)" : "🤖 Análisis IA";
   const summaryParts = [
     c.summary,
     "",
@@ -335,56 +475,55 @@ function buildUpdates(lead: any, c: any) {
     `📋 Próximo paso: ${c.next_step}`,
     `⏱️ SLA: ${c.sla_hours}h máx. para primer contacto`,
     c.tags?.length ? `🏷️ ${c.tags.join(", ")}` : "",
+    "",
+    sourceTag,
   ].filter(Boolean).join("\n");
+
+  // Limpiar marcador interno antes de guardar
+  const { __source, ...cleanClassification } = c;
 
   const updates: Record<string, any> = {
     ai_summary: summaryParts,
-    ai_classification: c,
+    ai_classification: { ...cleanClassification, _source: __source },
     intent: c.intent,
   };
 
-  // Update urgency — solo si no viene ya con una categoría comercial válida del chatbot/formulario
   const validUrgencies = ["immediate", "cotizacion", "prevision"];
   if (!lead.urgency || !validUrgencies.includes(lead.urgency)) {
     updates.urgency = c.suggested_urgency;
   }
 
-  // Set estimated value
-  if (!lead.estimated_value || lead.estimated_value === 0) {
-    updates.estimated_value = c.estimated_value || 0;
+  // Valor estimado: solo actualizar si el clasificador lo determinó con base real
+  if (c.estimated_value && c.estimated_value > 0) {
+    updates.estimated_value = c.estimated_value;
   }
 
   return updates;
 }
 
 function computePriorityScore(lead: any): number {
-  // If AI already computed a score, use it
   if (lead.ai_classification?.priority_score) {
     return lead.ai_classification.priority_score;
   }
-
-  // Fallback scoring
   let score = 50;
   const urgency = lead.urgency ?? "normal";
   if (urgency === "immediate" || urgency === "inmediata") score += 40;
   else if (urgency === "normal") score += 10;
-  else score -= 10; // previsión
-
+  else score -= 10;
   if (lead.pipeline_stage === "nuevo") score += 10;
   if ((lead.estimated_value ?? 0) > 1000000) score += 10;
-
   const hoursElapsed = (Date.now() - new Date(lead.created_at).getTime()) / 3600000;
-  if (urgency === "immediate" && hoursElapsed > 2) score += 15; // overdue penalty = higher priority
+  if (urgency === "immediate" && hoursElapsed > 2) score += 15;
   if (urgency === "normal" && hoursElapsed > 24) score += 10;
-
   return Math.min(100, Math.max(0, score));
 }
 
 async function logActivity(supabase: any, leadId: string, c: any) {
+  const sourceLabel = c.__source === "heuristic" ? "heurística" : "IA";
   await supabase.from("lead_activities").insert({
     lead_id: leadId,
     activity_type: "ai_classification",
-    description: `IA clasificó: urgencia ${c.suggested_urgency}, intención ${c.intent}, prioridad ${c.priority_score}/100, SLA ${c.sla_hours}h`,
+    description: `Clasificación ${sourceLabel}: urgencia ${c.suggested_urgency}, intención ${c.intent}, prioridad ${c.priority_score}/100, SLA ${c.sla_hours}h`,
     metadata: c,
   });
 }

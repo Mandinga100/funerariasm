@@ -327,8 +327,15 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
                 <Input className="h-8 text-xs mt-1" value={fPhone} onChange={e => setFPhone(e.target.value)} placeholder="+56 9 ..." />
               </div>
               <div className="col-span-2">
-                <label className="text-[11px] font-medium text-muted-foreground">Notas</label>
-                <Textarea className="text-xs mt-1 min-h-[50px]" value={fNotes} onChange={e => setFNotes(e.target.value)} placeholder="Referencia bancaria, observaciones..." />
+                <label className="text-[11px] font-medium text-muted-foreground">
+                  Notas {requiresProofRef && <span className="text-destructive">* (obligatorio para {fSubtype})</span>}
+                </label>
+                <Textarea
+                  className="text-xs mt-1 min-h-[50px]"
+                  value={fNotes}
+                  onChange={e => setFNotes(e.target.value)}
+                  placeholder={requiresProofRef ? "Indica N° de comprobante o referencia bancaria…" : "Observaciones (opcional)…"}
+                />
               </div>
             </div>
             <div className="flex gap-2 justify-end">

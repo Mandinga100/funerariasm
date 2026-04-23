@@ -18,6 +18,7 @@ import CaseStatusTab from "./CaseStatusTab";
 import CaseChecklistTab from "./CaseChecklistTab";
 import CaseDocumentsTab from "./CaseDocumentsTab";
 import CaseHistoryTab from "./CaseHistoryTab";
+import CaseTrackingWidget from "./CaseTrackingWidget";
 
 interface CaseDetailSheetProps {
   serviceCase: any | null;
@@ -219,6 +220,10 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
                 <Badge variant="secondary" className="mt-1">{serviceCase.selected_plan}</Badge>
               </div>
             )}
+
+            <Separator />
+
+            <CaseTrackingWidget caseId={serviceCase.id} />
 
             <Separator />
 

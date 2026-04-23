@@ -941,40 +941,55 @@ export type Database = {
       family_tracking: {
         Row: {
           assigned_at: string
+          auto_created_from: string | null
           family_code: string
           family_email: string | null
           family_name: string
           family_phone: string | null
+          family_phone_normalized: string | null
           id: string
+          is_published: boolean
           memorial_id: string | null
           notes: string | null
           obituary_id: string | null
+          published_at: string | null
+          service_case_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
           assigned_at?: string
+          auto_created_from?: string | null
           family_code?: string
           family_email?: string | null
           family_name: string
           family_phone?: string | null
+          family_phone_normalized?: string | null
           id?: string
+          is_published?: boolean
           memorial_id?: string | null
           notes?: string | null
           obituary_id?: string | null
+          published_at?: string | null
+          service_case_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           assigned_at?: string
+          auto_created_from?: string | null
           family_code?: string
           family_email?: string | null
           family_name?: string
           family_phone?: string | null
+          family_phone_normalized?: string | null
           id?: string
+          is_published?: boolean
           memorial_id?: string | null
           notes?: string | null
           obituary_id?: string | null
+          published_at?: string | null
+          service_case_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -1643,9 +1658,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      family_tracking_public: {
+        Row: {
+          assigned_at: string | null
+          deceased_death_date: string | null
+          deceased_name: string | null
+          family_code: string | null
+          family_name: string | null
+          next_event: Json | null
+          operational_status: string | null
+          payment_summary: string | null
+          pending_documents: Json | null
+          service_stage: string | null
+          tracking_status: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      case_is_eligible_for_auto_tracking: {
+        Args: { _case_id: string; _event_priority?: string }
+        Returns: boolean
+      }
       detect_agenda_conflicts: {
         Args: {
           _end: string

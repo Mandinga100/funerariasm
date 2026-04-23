@@ -23,7 +23,7 @@ import {
 } from "@/lib/agenda-config";
 import AgendaCard from "@/components/admin/agenda/AgendaCard";
 import AgendaEventModal from "@/components/admin/agenda/AgendaEventModal";
-import { exportRows, type ExportColumn } from "@/lib/admin-export";
+import { downloadCSV, downloadXLSX, type ExportColumn } from "@/lib/admin-export";
 
 type DateRange = "today" | "tomorrow" | "week" | "month" | "all";
 
@@ -192,10 +192,10 @@ export default function AdminAgenda() {
           <Button variant="outline" size="sm" onClick={fetchAll} disabled={loading}>
             <RefreshCw className={cn("w-4 h-4 mr-1", loading && "animate-spin")} />Refrescar
           </Button>
-          <Button variant="outline" size="sm" onClick={() => exportRows(filtered, "csv", exportCols, "agenda")}>
+          <Button variant="outline" size="sm" onClick={() => downloadCSV(filtered, exportCols, "agenda")}>
             <Download className="w-4 h-4 mr-1" />CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={() => exportRows(filtered, "xlsx", exportCols, "agenda")}>
+          <Button variant="outline" size="sm" onClick={() => downloadXLSX(filtered, exportCols, "agenda")}>
             <Download className="w-4 h-4 mr-1" />XLSX
           </Button>
           <Button size="sm" onClick={() => openNew()}>
@@ -208,8 +208,8 @@ export default function AdminAgenda() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="Hoy" value={kpis.today} icon={CalendarIcon} />
         <KpiCard label="Próximos" value={kpis.upcoming} icon={CalendarIcon} />
-        <KpiCard label="Vencidos sin cerrar" value={kpis.overdue} icon={AlertTriangle} variant={kpis.overdue > 0 ? "warning" : "default"} />
-        <KpiCard label="Críticos activos" value={kpis.critical} icon={AlertTriangle} variant={kpis.critical > 0 ? "danger" : "default"} />
+        <KpiCard label="Vencidos sin cerrar" value={kpis.overdue} icon={AlertTriangle} accentClassName={kpis.overdue > 0 ? "bg-amber-500" : undefined} />
+        <KpiCard label="Críticos activos" value={kpis.critical} icon={AlertTriangle} accentClassName={kpis.critical > 0 ? "bg-rose-500" : undefined} />
       </div>
 
       {/* Filtros */}

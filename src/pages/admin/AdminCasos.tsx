@@ -124,6 +124,7 @@ export default function AdminCasos() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [agendaPrefill, setAgendaPrefill] = useState<AgendaPrefill | null>(null);
+  const notifiedAgendaIdsRef = useRef<Set<string>>(new Set());
   const { isCeo } = useAuth();
   const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_casos", {
     filterPipeline: "all",

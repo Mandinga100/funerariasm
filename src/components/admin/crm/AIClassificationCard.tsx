@@ -13,6 +13,14 @@ interface Classification {
   sla_hours?: number;
   tags?: string[];
   _source?: "ai" | "heuristic";
+  historical_stats?: {
+    sample_size?: number;
+    avg_priority?: number | null;
+    avg_sla_hours?: number | null;
+    avg_value?: number | null;
+    conversion_rate?: number | null;
+    basis?: string;
+  } | null;
 }
 
 const urgencyMap: Record<string, { label: string; emoji: string; color: string }> = {

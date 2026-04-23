@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
+import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
 import assistantAvatar from "@/assets/assistant-avatar.png";
 
 interface ChatMessage {
@@ -17,12 +18,12 @@ interface ChatChip {
 
 interface ContactFormData {
   name: string;
-  rut: string;
   phone: string;
+  email: string;
 }
 
 type ChatMode = "tree" | "ai";
-type ContactStep = "idle" | "name" | "rut" | "phone" | "done";
+type ContactStep = "idle" | "name" | "phone" | "email" | "done";
 
 const GREETING: ChatMessage = {
   role: "assistant",
@@ -81,7 +82,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [currentIntent, setCurrentIntent] = useState<ContactIntent>("general");
   const [contactStep, setContactStep] = useState<ContactStep>("idle");
-  const [contactData, setContactData] = useState<ContactFormData>({ name: "", rut: "", phone: "" });
+  const [contactData, setContactData] = useState<ContactFormData>({ name: "", phone: "", email: "" });
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -122,7 +123,7 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setShowMainOptions(true);
     setMode("tree");
     setContactStep("idle");
-    setContactData({ name: "", rut: "", phone: "" });
+    setContactData({ name: "", phone: "", email: "" });
     setInputText("");
   }, []);
 

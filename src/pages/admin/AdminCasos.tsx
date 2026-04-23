@@ -621,6 +621,15 @@ export default function AdminCasos() {
         itemLabel={{ singular: "caso", plural: "casos" }}
         loading={deleting}
       />
+
+      {/* Derivar caso → Agenda */}
+      <AgendaEventModal
+        open={!!agendaPrefill}
+        onOpenChange={(v) => { if (!v) setAgendaPrefill(null); }}
+        event={null}
+        prefill={agendaPrefill ?? undefined}
+        onSaved={() => { setAgendaPrefill(null); load(); }}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
+import { signAvatarUrl } from "@/lib/avatar-url";
 
 // Aplica el tema almacenado antes del primer render para evitar flash visual.
 bootstrapAdminTheme();
@@ -57,6 +58,7 @@ export default function AdminLayout() {
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
+  const [signedAvatar, setSignedAvatar] = useState<string | null>(null);
 
   // Cargar perfil para mostrar nombre + avatar en sidebar
   useEffect(() => {
@@ -81,6 +83,24 @@ export default function AdminLayout() {
       .subscribe();
     return () => { cancelled = true; void supabase.removeChannel(ch); };
   }, [user?.id]);
+
+  // Firmar URL del avatar (bucket privado) cada vez que cambia el path almacenado.
+  // Re-firma cada 50 min para evitar expiración.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const refresh = async () => {
+      const url = await signAvatarUrl(profile?.avatar_url, 3600);
+      if (!cancelled) setSignedAvatar(url);
+    };
+    if (profile?.avatar_url) {
+      void refresh();
+      timer = setInterval(refresh, 50 * 60 * 1000);
+    } else {
+      setSignedAvatar(null);
+    }
+    return () => { cancelled = true; if (timer) clearInterval(timer); };
+  }, [profile?.avatar_url]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -195,8 +215,8 @@ export default function AdminLayout() {
     return (
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-10 h-10 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 overflow-hidden shrink-0 flex items-center justify-center">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+          {signedAvatar ? (
+            <img src={signedAvatar} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <span className="text-xs font-semibold text-[#C5A059]">{initials}</span>
           )}

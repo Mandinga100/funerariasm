@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
+import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
   Users, Shield, Bell, Moon, Sun, Monitor, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
@@ -56,6 +57,8 @@ export default function AdminSettings() {
   const [profileDialog, setProfileDialog] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [signedAvatarMap, setSignedAvatarMap] = useState<Record<string, string>>({});
+  const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
@@ -136,7 +139,7 @@ export default function AdminSettings() {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url");
     const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
 
-    setAdmins(roles.map(r => {
+    const adminList: AdminUser[] = roles.map(r => {
       const p = profileMap.get(r.user_id);
       return {
         id: r.id,
@@ -146,8 +149,13 @@ export default function AdminSettings() {
         avatar_url: p?.avatar_url ?? undefined,
         email: r.user_id === user?.id ? user.email ?? undefined : undefined,
       };
-    }));
+    });
+    setAdmins(adminList);
     setLoadingAdmins(false);
+
+    // Firmar avatares en paralelo (bucket privado)
+    const signed = await signAvatarUrls(adminList.map(a => a.avatar_url));
+    setSignedAvatarMap(signed);
   };
 
   useEffect(() => { loadAdmins(); }, []);
@@ -162,10 +170,11 @@ export default function AdminSettings() {
       .maybeSingle();
     setProfileName(data?.display_name ?? "");
     setProfileAvatarUrl(data?.avatar_url ?? null);
+    setProfileAvatarPreview(await signAvatarUrl(data?.avatar_url));
     setProfileDialog(true);
   };
 
-  /* ── Subir avatar al bucket 'avatars' ── */
+  /* ── Subir avatar al bucket 'avatars' (privado, URL firmada) ── */
   const handleAvatarUpload = async (file: File) => {
     if (!user?.id) return;
     setUploadingAvatar(true);
@@ -176,8 +185,10 @@ export default function AdminSettings() {
         cacheControl: "3600", upsert: true,
       });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      setProfileAvatarUrl(pub.publicUrl);
+      // Guardamos el path (no URL pública); para mostrar usamos un signed URL
+      setProfileAvatarUrl(path);
+      const signed = await signAvatarUrl(path);
+      setProfileAvatarPreview(signed);
       toast({ title: "Foto cargada", description: "Recuerde guardar para aplicar el cambio." });
     } catch (e: any) {
       toast({ title: "Error subiendo foto", description: e.message, variant: "destructive" });
@@ -572,8 +583,8 @@ export default function AdminSettings() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
-                            {admin.avatar_url ? (
-                              <img src={admin.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            {admin.avatar_url && signedAvatarMap[admin.avatar_url] ? (
+                              <img src={signedAvatarMap[admin.avatar_url]} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
                               <span className="text-[10px] font-semibold text-[#C5A059]">{initials}</span>
                             )}
@@ -1293,8 +1304,8 @@ export default function AdminSettings() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
-                {profileAvatarUrl ? (
-                  <img src={profileAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                {profileAvatarPreview ? (
+                  <img src={profileAvatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <UserCog className="w-8 h-8 text-[#C5A059]" />
                 )}

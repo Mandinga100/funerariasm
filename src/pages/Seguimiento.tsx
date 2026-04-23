@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, MapPin, FileText, CreditCard, Flower } from "lucide-react";
+import { Search, Calendar, MapPin, FileText, CreditCard, Flower, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import Layout from "@/components/Layout";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";

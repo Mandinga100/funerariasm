@@ -583,8 +583,8 @@ export default function AdminSettings() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
-                            {admin.avatar_url ? (
-                              <img src={admin.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            {admin.avatar_url && signedAvatarMap[admin.avatar_url] ? (
+                              <img src={signedAvatarMap[admin.avatar_url]} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
                               <span className="text-[10px] font-semibold text-[#C5A059]">{initials}</span>
                             )}

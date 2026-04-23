@@ -58,6 +58,7 @@ export default function AdminLayout() {
   const [newLeads, setNewLeads] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
+  const [signedAvatar, setSignedAvatar] = useState<string | null>(null);
 
   // Cargar perfil para mostrar nombre + avatar en sidebar
   useEffect(() => {
@@ -82,6 +83,24 @@ export default function AdminLayout() {
       .subscribe();
     return () => { cancelled = true; void supabase.removeChannel(ch); };
   }, [user?.id]);
+
+  // Firmar URL del avatar (bucket privado) cada vez que cambia el path almacenado.
+  // Re-firma cada 50 min para evitar expiración.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const refresh = async () => {
+      const url = await signAvatarUrl(profile?.avatar_url, 3600);
+      if (!cancelled) setSignedAvatar(url);
+    };
+    if (profile?.avatar_url) {
+      void refresh();
+      timer = setInterval(refresh, 50 * 60 * 1000);
+    } else {
+      setSignedAvatar(null);
+    }
+    return () => { cancelled = true; if (timer) clearInterval(timer); };
+  }, [profile?.avatar_url]);
 
   // Request notification permission on mount
   useEffect(() => {

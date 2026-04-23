@@ -13,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
+import { signAvatarUrl } from "@/lib/avatar-url";
 
 // Aplica el tema almacenado antes del primer render para evitar flash visual.
 bootstrapAdminTheme();

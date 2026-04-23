@@ -226,8 +226,8 @@ VALOR ESTIMADO en CLP:
                 },
                 suggested_urgency: {
                   type: "string",
-                  enum: ["immediate", "normal", "previsión"],
-                  description: "Nivel de urgencia del servicio requerido",
+                  enum: ["immediate", "cotizacion", "prevision"],
+                  description: "Categoría comercial: immediate=urgencia funeraria, cotizacion=interés activo frío, prevision=planificación futura",
                 },
                 intent: {
                   type: "string",

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
@@ -399,6 +399,42 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
 
           <Separator />
 
+          {/* Re-contact indicator (last 24h) */}
+          {(() => {
+            const since = Date.now() - 24 * 60 * 60 * 1000;
+            const recontacts = activities.filter(
+              (a) => a.activity_type === "duplicate_contact" && new Date(a.created_at).getTime() >= since
+            );
+            if (recontacts.length === 0) return null;
+            const last = recontacts[0];
+            return (
+              <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Repeat2 className="w-4 h-4 text-amber-600" />
+                  <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    {recontacts.length} re-contacto{recontacts.length !== 1 ? "s" : ""} en últimas 24h
+                  </span>
+                  <Badge variant="outline" className="ml-auto text-[10px] border-amber-400 text-amber-700">
+                    Último {formatDistanceToNow(new Date(last.created_at), { addSuffix: true, locale: es })}
+                  </Badge>
+                </div>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {recontacts.map((rc) => (
+                    <div key={rc.id} className="flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
+                      <div className="w-1 h-1 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="line-clamp-2">{rc.description}</p>
+                        <p className="text-[10px] opacity-70">
+                          {format(new Date(rc.created_at), "dd/MM HH:mm", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Activity Timeline */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Timeline de Actividad</label>
@@ -408,7 +444,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
               <div className="space-y-1">
                 {activities.map(act => (
                   <div key={act.id} className="flex items-start gap-2 text-xs">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    <div className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0", act.activity_type === "duplicate_contact" ? "bg-amber-500" : "bg-primary")} />
                     <div>
                       <p>{act.description}</p>
                       <p className="text-muted-foreground">{formatDistanceToNow(new Date(act.created_at), { addSuffix: true, locale: es })}</p>

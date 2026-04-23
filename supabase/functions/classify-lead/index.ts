@@ -259,8 +259,8 @@ async function classifyHeuristic(lead: any, supabase: any) {
           ? "email"
           : "llamada_telefonica";
 
-  // ── 4. SLA según urgencia ──
-  const sla_hours =
+  // ── 4. SLA según urgencia (base, podrá ajustarse con histórico) ──
+  let sla_hours =
     suggested_urgency === "immediate" ? 1 :
     suggested_urgency === "cotizacion" ? 24 :
     72;

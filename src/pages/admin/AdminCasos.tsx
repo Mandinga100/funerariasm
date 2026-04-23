@@ -480,6 +480,9 @@ export default function AdminCasos() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setSelected(c)}><Eye className="w-4 h-4 mr-2" />Ver detalle</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openAgendaForCase(c)}>
+                          <CalendarPlus className="w-4 h-4 mr-2" />Derivar a agenda
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {PIPELINE_STAGES.filter(s => s.id !== c.pipeline_stage).map(s => (
                           <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { pipeline_stage: s.id } as any)}>

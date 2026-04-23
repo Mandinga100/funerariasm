@@ -168,29 +168,66 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setContactStep("name");
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: "Para contactarle de forma personalizada, necesito algunos datos.\n\n¿Cuál es su nombre completo?" },
+      { role: "assistant", content: "Para contactarle de forma personalizada, necesito algunos datos.\n\n¿Cuál es su nombre completo? (nombre y apellido)" },
     ]);
   };
 
+  /**
+   * Captura datos del usuario validando cada campo:
+   *  - nombre completo (Nombre Apellido)
+   *  - teléfono chileno (+56 9XXXXXXXX)
+   *  - correo con dominio real
+   * Si la entrada es inválida, el bot pide corregir SIN avanzar de paso.
+   */
   const handleContactInput = async (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }]);
 
     if (contactStep === "name") {
-      setContactData((prev) => ({ ...prev, name: value }));
-      setContactStep("rut");
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Gracias. ¿Cuál es su RUT? (ej: 12.345.678-9)" },
-      ]);
-    } else if (contactStep === "rut") {
-      setContactData((prev) => ({ ...prev, rut: value }));
+      const result = validateFullName(value);
+      if (!result.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `${result.error}\n\nPor favor escriba nuevamente su nombre completo.` },
+        ]);
+        return;
+      }
+      setContactData((prev) => ({ ...prev, name: result.value! }));
       setContactStep("phone");
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "¿Y su número de teléfono de contacto? (ej: +56 9 1234 5678)" },
+        { role: "assistant", content: `Gracias, ${result.value!.split(" ")[0]}. ¿Cuál es su número de teléfono celular? (ej: +56 9 6166 1474)` },
       ]);
-    } else if (contactStep === "phone") {
-      const finalData = { ...contactData, phone: value };
+      return;
+    }
+
+    if (contactStep === "phone") {
+      const result = validateChileanPhone(value);
+      if (!result.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `${result.error}\n\nIngrese su celular chileno nuevamente.` },
+        ]);
+        return;
+      }
+      setContactData((prev) => ({ ...prev, phone: result.value! }));
+      setContactStep("email");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Perfecto. ¿Cuál es su correo electrónico? (ej: nombre@gmail.com)" },
+      ]);
+      return;
+    }
+
+    if (contactStep === "email") {
+      const result = validateEmail(value, { required: true });
+      if (!result.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `${result.error}\n\nVerifique su correo e intente nuevamente.` },
+        ]);
+        return;
+      }
+      const finalData = { ...contactData, email: result.value! };
       setContactData(finalData);
       setContactStep("done");
 
@@ -202,9 +239,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
           contactType: "chatbox",
           name: finalData.name,
           phone: finalData.phone,
+          email: finalData.email,
           intent: currentIntent,
           source: "chatbox",
-          message: `RUT: ${finalData.rut}`,
           urgency,
         });
       } catch { /* non-blocking */ }
@@ -215,13 +252,13 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
         planificacion: "planificación de servicio a futuro",
       };
       const serviceDesc = intentLabels[currentIntent] || "consulta general";
-      const whatsappMsg = `Hola, soy ${finalData.name} (RUT: ${finalData.rut}). Necesito ${serviceDesc}. Mi número de contacto es ${finalData.phone}. Agradezco su pronta respuesta.`;
+      const whatsappMsg = `Hola, soy ${finalData.name}. Necesito ${serviceDesc}. Mi número de contacto es ${finalData.phone} y mi correo ${finalData.email}. Agradezco su pronta respuesta.`;
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: `Perfecto, ${finalData.name}. Hemos registrado sus datos. Un asesor le contactará a la brevedad.\n\nTambién puede iniciar la conversación directamente:`,
+          content: `Perfecto, ${finalData.name.split(" ")[0]}. Hemos registrado sus datos correctamente. Un asesor le contactará a la brevedad.\n\nTambién puede iniciar la conversación directamente:`,
           chips: [
             { label: "💬 Abrir WhatsApp", action: () => window.open(buildWhatsAppUrlDirect(whatsappMsg), "_blank") },
             { label: "📞 Llamar ahora", action: () => window.open("tel:+56964333760") },
@@ -417,9 +454,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const showInput = mode === "ai" || (contactStep !== "idle" && contactStep !== "done");
 
   const getPlaceholder = () => {
-    if (contactStep === "name") return "Ingrese su nombre completo...";
-    if (contactStep === "rut") return "Ingrese su RUT...";
-    if (contactStep === "phone") return "Ingrese su teléfono...";
+    if (contactStep === "name") return "Ej: María González Pérez";
+    if (contactStep === "phone") return "Ej: +56 9 6166 1474";
+    if (contactStep === "email") return "Ej: nombre@gmail.com";
     return "Escriba su consulta...";
   };
 

@@ -87,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearAvatarCache();
     setUser(null);
     setSession(null);
     setIsAdmin(false);

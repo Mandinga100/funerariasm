@@ -153,7 +153,7 @@ export default function CaseDocumentsTab({ caseId }: Props) {
                   </Select>
                   {d.validated_at && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Check className="w-3 h-3 text-green-600" />
+                      <Check className="w-3 h-3 text-primary" />
                       Validado {format(new Date(d.validated_at), "dd/MM HH:mm", { locale: es })}
                     </span>
                   )}

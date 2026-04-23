@@ -64,15 +64,22 @@ export const STATUS_COLUMNS: { id: AgendaStatus; label: string; color: string; d
   { id: "cancelado", label: "Cancelados", color: "bg-rose-600", description: "Suspendidos o desistidos" },
 ];
 
+// Orden intuitivo siguiendo el flujo natural de un servicio funerario:
+// 1) Contacto inicial → 2) Coordinación → 3) Logística operativa → 4) Servicios públicos → 5) Disposición final → 6) Tareas internas.
 export const EVENT_TYPES: { id: AgendaEventType; label: string; emoji: string; defaultDurationMin: number }[] = [
+  // 1. Contacto y coordinación inicial
+  { id: "llamada", label: "Llamada / Seguimiento", emoji: "📞", defaultDurationMin: 30 },
+  { id: "reunion", label: "Reunión con familia", emoji: "🤝", defaultDurationMin: 60 },
+  // 2. Logística operativa con el cuerpo
+  { id: "retiro", label: "Retiro del cuerpo", emoji: "🏥", defaultDurationMin: 60 },
+  { id: "traslado", label: "Traslado", emoji: "🚐", defaultDurationMin: 90 },
+  // 3. Servicios funerarios públicos
   { id: "velorio", label: "Velorio", emoji: "🕯️", defaultDurationMin: 720 },
   { id: "ceremonia", label: "Ceremonia / Misa", emoji: "⛪", defaultDurationMin: 90 },
+  // 4. Disposición final
   { id: "sepultacion", label: "Sepultación", emoji: "🌹", defaultDurationMin: 90 },
   { id: "cremacion", label: "Cremación", emoji: "🔥", defaultDurationMin: 120 },
-  { id: "traslado", label: "Traslado", emoji: "🚐", defaultDurationMin: 90 },
-  { id: "retiro", label: "Retiro del cuerpo", emoji: "🏥", defaultDurationMin: 60 },
-  { id: "reunion", label: "Reunión con familia", emoji: "🤝", defaultDurationMin: 60 },
-  { id: "llamada", label: "Llamada / Seguimiento", emoji: "📞", defaultDurationMin: 30 },
+  // 5. Tareas internas / otros
   { id: "tarea", label: "Tarea interna", emoji: "✅", defaultDurationMin: 30 },
   { id: "otro", label: "Otro", emoji: "📌", defaultDurationMin: 60 },
 ];

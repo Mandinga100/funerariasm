@@ -25,12 +25,27 @@ import AgendaConflictDialog, { type ConflictItem } from "@/components/admin/agen
 
 const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
+export interface AgendaPrefill {
+  title?: string;
+  description?: string;
+  eventType?: AgendaEventType;
+  priority?: AgendaPriority;
+  serviceCaseId?: string;
+  leadId?: string;
+  contactName?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  comuna?: string;
+  internalNotes?: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   event: AgendaEvent | null;
   defaultStatus?: AgendaStatus;
   defaultStart?: Date;
+  prefill?: AgendaPrefill;
   onSaved: () => void;
 }
 
@@ -44,7 +59,7 @@ const toLocalInput = (iso: string | Date) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, onSaved }: Props) {
+export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, prefill, onSaved }: Props) {
   const { user, isCeo } = useAuth();
   const { toast } = useToast();
   const isEdit = !!event;
@@ -122,27 +137,27 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     } else {
       const start = defaultStart ?? new Date(Date.now() + 60 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      setTitle("");
-      setDescription("");
-      setEventType("reunion");
+      setTitle(prefill?.title ?? "");
+      setDescription(prefill?.description ?? "");
+      setEventType(prefill?.eventType ?? "reunion");
       setStatus(defaultStatus ?? "programado");
-      setPriority("normal");
+      setPriority(prefill?.priority ?? "normal");
       setStartAt(toLocalInput(start));
       setEndAt(toLocalInput(end));
       setLocationName("");
       setAddress("");
-      setComuna("");
-      setContactName("");
-      setContactPhone("");
-      setContactEmail("");
+      setComuna(prefill?.comuna ?? "");
+      setContactName(prefill?.contactName ?? "");
+      setContactPhone(prefill?.contactPhone ?? "");
+      setContactEmail(prefill?.contactEmail ?? "");
       setAssignedTo(user?.id ?? "");
-      setServiceCaseId("");
-      setLeadId("");
+      setServiceCaseId(prefill?.serviceCaseId ?? "");
+      setLeadId(prefill?.leadId ?? "");
       setReminder(60);
-      setInternalNotes("");
+      setInternalNotes(prefill?.internalNotes ?? "");
     }
     setConflicts([]);
-  }, [open, event, defaultStatus, defaultStart, user?.id]);
+  }, [open, event, defaultStatus, defaultStart, prefill, user?.id]);
 
   // Auto-ajustar end al cambiar tipo (si es nuevo)
   useEffect(() => {

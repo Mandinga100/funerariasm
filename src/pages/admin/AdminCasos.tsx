@@ -9,10 +9,11 @@ import { SortableTable, type SortableColumn } from "@/components/admin/SortableT
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, Briefcase, FileDown, AlertCircle } from "lucide-react";
+import { Search, X, MoreVertical, Eye, Trash2, DollarSign, Clock, CheckCircle2, Briefcase, FileDown, AlertCircle, CalendarPlus } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import CaseDetailSheet from "@/components/admin/cases/CaseDetailSheet";
+import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
@@ -78,20 +79,21 @@ const PAYMENT_STATUSES = [
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
-// Orden intuitivo de prioridad (asc = más prioritario primero).
-// Pago: Pagado primero (revenue confirmado), luego Cotizado, Aprobado, Pendiente, Cancelado al final.
+// Orden intuitivo siguiendo el flujo natural del proceso funerario.
+// Asc = primer estado del flujo arriba; Desc = último estado arriba.
+// Pago: Pendiente → Cotizado → Aprobado → Pagado → Cancelado.
 const PAYMENT_PRIORITY: Record<string, number> = {
-  pagado: 1,
+  pendiente: 1,
   cotizado: 2,
   aprobado: 3,
-  pendiente: 4,
+  pagado: 4,
   cancelado: 5,
 };
-// Etapa: Contratado primero (cliente activo), Cotizado, Contactado, Cerrado al final.
+// Etapa: Contactado → Cotizado → Contratado → Cerrado.
 const PIPELINE_PRIORITY: Record<string, number> = {
-  contratado: 1,
+  contactado: 1,
   cotizado: 2,
-  contactado: 3,
+  contratado: 3,
   cerrado: 4,
 };
 const paymentRank = (s: string) => PAYMENT_PRIORITY[s] ?? 99;
@@ -119,6 +121,7 @@ export default function AdminCasos() {
   const [activeKpi, setActiveKpi] = useState<CaseKpi>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [agendaPrefill, setAgendaPrefill] = useState<AgendaPrefill | null>(null);
   const { isCeo } = useAuth();
   const { filters, setFilter, hydrated: filtersHydrated } = usePersistentFilters("admin_casos", {
     filterPipeline: "all",
@@ -201,6 +204,25 @@ export default function AdminCasos() {
       toast({ title: "Caso eliminado" });
       load();
     }
+  };
+
+  /** Deriva un caso a la agenda abriendo el modal con datos precargados. */
+  const openAgendaForCase = (c: ServiceCase) => {
+    const planLabel = c.selected_plan ? ` — Plan ${c.selected_plan}` : "";
+    const subject = c.deceased_name ? `${c.deceased_name}` : (c.client_name ?? "cliente");
+    setAgendaPrefill({
+      title: `Coordinación caso ${c.case_number} — ${subject}`,
+      description: c.service_description ?? c.original_message ?? undefined,
+      eventType: "reunion",
+      priority: c.urgency === "inmediata" ? "critica" : c.urgency === "urgente" ? "alta" : "normal",
+      serviceCaseId: c.id,
+      leadId: c.lead_id ?? undefined,
+      contactName: c.client_name ?? undefined,
+      contactPhone: c.client_phone ?? undefined,
+      contactEmail: c.client_email ?? undefined,
+      comuna: c.comuna ?? undefined,
+      internalNotes: `Caso ${c.case_number}${planLabel}. Etapa: ${c.pipeline_stage}. Pago: ${c.payment_status}.`,
+    });
   };
 
   const staleList = useMemo(() => cases.filter(isStale), [cases]);
@@ -458,6 +480,9 @@ export default function AdminCasos() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setSelected(c)}><Eye className="w-4 h-4 mr-2" />Ver detalle</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openAgendaForCase(c)}>
+                          <CalendarPlus className="w-4 h-4 mr-2" />Derivar a agenda
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {PIPELINE_STAGES.filter(s => s.id !== c.pipeline_stage).map(s => (
                           <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { pipeline_stage: s.id } as any)}>
@@ -507,6 +532,9 @@ export default function AdminCasos() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setSelected(c)}><Eye className="w-4 h-4 mr-2" />Ver detalle</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openAgendaForCase(c)}>
+                          <CalendarPlus className="w-4 h-4 mr-2" />Derivar a agenda
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {PIPELINE_STAGES.filter(s => s.id !== c.pipeline_stage).map(s => (
                           <DropdownMenuItem key={s.id} onClick={() => updateCase(c.id, { pipeline_stage: s.id } as any)}>
@@ -592,6 +620,15 @@ export default function AdminCasos() {
         count={selection.count}
         itemLabel={{ singular: "caso", plural: "casos" }}
         loading={deleting}
+      />
+
+      {/* Derivar caso → Agenda */}
+      <AgendaEventModal
+        open={!!agendaPrefill}
+        onOpenChange={(v) => { if (!v) setAgendaPrefill(null); }}
+        event={null}
+        prefill={agendaPrefill ?? undefined}
+        onSaved={() => { setAgendaPrefill(null); load(); }}
       />
     </div>
   );

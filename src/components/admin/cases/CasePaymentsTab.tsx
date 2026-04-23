@@ -304,14 +304,14 @@ export default function CasePaymentsTab({ caseId, caseNumber, totalAmount, onSav
                 <Input
                   type="number"
                   min={1}
-                  max={totalAmount > 0 ? totals.balance : undefined}
+                  max={liveTotal > 0 ? totals.balance : undefined}
                   step={1000}
                   className="h-8 text-xs mt-1"
                   value={fAmount}
                   onChange={e => setFAmount(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="0"
                 />
-                {totalAmount > 0 && (
+                {liveTotal > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     Saldo pendiente: <span className="font-medium">{fmt(totals.balance)}</span>
                   </p>

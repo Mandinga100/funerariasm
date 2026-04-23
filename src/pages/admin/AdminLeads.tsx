@@ -357,7 +357,7 @@ export default function AdminLeads() {
     setExpandedStages(prev => ({ ...prev, [stageId]: !prev[stageId] }));
   };
 
-  const hasActiveFilters = filterStage !== "all" || filterOverdue || filterUrgency !== "all";
+  const hasActiveFilters = filterStage !== "all" || filterOverdue || filterUrgency !== "all" || categoryTab !== "all";
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
@@ -374,7 +374,7 @@ export default function AdminLeads() {
             {hasActiveFilters && (
               <button
                 className="ml-2 text-primary hover:underline"
-                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); }}
+                onClick={() => { setFilterStage("all"); setFilterOverdue(false); setFilterUrgency("all"); setCategoryTab("all"); }}
               >
                 Limpiar filtros
               </button>

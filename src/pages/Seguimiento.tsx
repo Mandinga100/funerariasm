@@ -201,9 +201,9 @@ export default function Seguimiento() {
 
               if (enriched.length === 0) {
                 return (
-                  <Card className="border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/10">
+                  <Card className="border-accent/40 bg-accent/5">
                     <CardContent className="py-5 flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden />
+                      <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden />
                       <div>
                         <p className="text-sm font-medium text-foreground">Documentación al día</p>
                         <p className="text-xs text-muted-foreground">No hay documentos pendientes en este momento. Su ejecutivo se encargará de cualquier trámite adicional.</p>

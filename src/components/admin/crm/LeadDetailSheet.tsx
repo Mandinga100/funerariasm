@@ -130,10 +130,11 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
       if (error) throw error;
       // Show result instantly from the function response
       if (data?.classification) {
-        setLocalClassification(data.classification);
+        const enriched = { ...data.classification, _source: data.source ?? data.classification._source ?? "ai" };
+        setLocalClassification(enriched);
         setLocalSummary(data.classification.summary ?? null);
-        // Update estimated value if returned
-        if (data.classification.estimated_value) {
+        // Update estimated value if returned (only if real)
+        if (data.classification.estimated_value && data.classification.estimated_value > 0) {
           setEstimatedValue(data.classification.estimated_value.toString());
         }
       } else {
@@ -144,7 +145,13 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
           setLocalSummary(updated.ai_summary ?? null);
         }
       }
-      toast({ title: "✅ Análisis IA completado" });
+      const isHeuristic = data?.source === "heuristic";
+      toast({
+        title: isHeuristic ? "🧠 Análisis heurístico completado" : "✅ Análisis IA completado",
+        description: isHeuristic
+          ? "IA no disponible — usamos clasificación inteligente basada en reglas y datos históricos."
+          : undefined,
+      });
       onUpdate();
       loadActivities();
       loadClassificationHistory();

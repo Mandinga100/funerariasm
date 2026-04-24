@@ -174,6 +174,18 @@ const MemorialDetail = () => {
   const handleCondolenceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authorName.trim() || !message.trim() || !memorial) return;
+
+    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    const shield = checkBotShield({
+      honeypot: condolenceHoneypot,
+      startedAt: condolenceStartedAtRef.current,
+      formKey: `condolence_${memorial.id}`,
+    });
+    if (!shield.ok) {
+      toast.error(shield.message ?? "Envío bloqueado.");
+      return;
+    }
+
     setSending(true);
     const { error } = await supabase.from("condolences").insert({
       memorial_id: memorial.id,
@@ -184,9 +196,12 @@ const MemorialDetail = () => {
     if (error) {
       toast.error("No se pudo enviar su condolencia.");
     } else {
+      registerShieldHit(`condolence_${memorial.id}`);
       toast.success("Condolencia enviada. Gracias.");
       setAuthorName("");
       setMessage("");
+      setCondolenceHoneypot("");
+      condolenceStartedAtRef.current = createShieldTimer();
     }
   };
 

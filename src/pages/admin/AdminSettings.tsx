@@ -371,6 +371,15 @@ export default function AdminSettings() {
       toast({ title: "Acceso denegado", description: "Solo el CEO puede modificar roles de CEO.", variant: "destructive" });
       return;
     }
+    // CEO fundador inamovible: ni siquiera otro CEO puede degradar su rol
+    if (isFounder(targetUserId) && target?.role === "ceo" && role !== "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle está protegido y no puede ser modificado.",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase.from("user_roles").update({ role }).eq("id", adminId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

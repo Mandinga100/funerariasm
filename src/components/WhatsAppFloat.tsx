@@ -4,42 +4,25 @@ import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
 
 const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
-  // `chatOpen` controla visibilidad. `everOpened` mantiene el componente montado
-  // tras la primera apertura para preservar el historial entre minimizar/abrir.
-  // El usuario sólo puede destruir el estado pulsando la X (botón cerrar real).
+  // El chat solo se cierra con la X (handleClose). No hay click-outside ni minimizar:
+  // mientras esté abierto, el historial se conserva. Al pulsar X se desmonta y al
+  // volver a abrir empieza una nueva conversación (resetKey fuerza el reset).
   const [chatOpen, setChatOpen] = useState(false);
-  const [everOpened, setEverOpened] = useState(false);
-  // `resetKey` permite forzar un nuevo ChatboxFunerario cuando el usuario cierra
-  // explícitamente con la X, descartando el historial anterior.
   const [resetKey, setResetKey] = useState(0);
 
   function handleOpen() {
     setChatOpen(true);
-    setEverOpened(true);
   }
 
-  function handleMinimize() {
-    // Minimiza sin destruir el historial: el componente sigue montado.
+  function handleClose() {
     setChatOpen(false);
-  }
-
-  function handleHardClose() {
-    // Cierre explícito vía botón X: destruye el componente y resetea el historial.
-    setChatOpen(false);
-    setEverOpened(false);
     setResetKey((k) => k + 1);
   }
 
   return (
     <>
-      {/* Chatbox: una vez abierto, permanece montado para conservar el historial. */}
-      {everOpened && (
-        <ChatboxFunerario
-          key={resetKey}
-          isOpen={chatOpen}
-          onMinimize={handleMinimize}
-          onHardClose={handleHardClose}
-        />
+      {chatOpen && (
+        <ChatboxFunerario key={resetKey} isOpen onMinimize={handleClose} onHardClose={handleClose} />
       )}
 
       {/* Toggle button */}

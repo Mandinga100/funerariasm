@@ -163,6 +163,11 @@ export const submitContact = async (data: ContactData) => {
     throw new Error("No se pudo registrar el contacto");
   }
 
+  // Registra el hit en el throttle por sesión solo si vino con shield activo
+  if (data.formStartedAt !== undefined || data.honeypot !== undefined) {
+    registerShieldHit(`contact_${data.contactType}`);
+  }
+
   // 2. Send email copy via edge function
   try {
     await supabase.functions.invoke("send-contact-email", {

@@ -48,15 +48,10 @@ Deno.serve(async (req) => {
   try {
     const body = (await req.json()) as Body;
 
-    // Bot-shield
+    // Bot-shield: solo honeypot. El timing no aplica al chat porque el usuario
+    // puede legítimamente hacer click en una opción del menú al instante.
     if (body.hp && body.hp.length > 0) {
       return new Response(JSON.stringify({ ok: true, ignored: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (body.loaded_at && Date.now() - body.loaded_at < 1500) {
-      return new Response(JSON.stringify({ error: "too_fast" }), {
-        status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

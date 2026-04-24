@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     // Upsert conversación por token
     const { data: existing } = await supabase
       .from("chat_conversations")
-      .select("id, status, priority, assigned_to, lead_id, service_case_id, visitor_name")
+      .select("id, status, priority, assigned_to, lead_id, service_case_id, visitor_name, visitor_phone, visitor_email")
       .eq("conversation_token", body.conversation_token)
       .maybeSingle();
 
@@ -122,11 +122,19 @@ Deno.serve(async (req) => {
     } else {
       conversationId = existing.id;
       currentStatus = existing.status;
-      // Actualizar datos visitante si llegaron nuevos
+      // Actualizar datos visitante si llegaron nuevos (siempre que vengan distintos
+      // a los ya guardados, para reflejar en tiempo real cualquier cambio que el
+      // visitante introduzca durante la conversación).
       const updates: Record<string, unknown> = {};
-      if (body.visitor_name && !existing.visitor_name) updates.visitor_name = body.visitor_name;
-      if (body.visitor_phone) updates.visitor_phone = body.visitor_phone;
-      if (body.visitor_email) updates.visitor_email = body.visitor_email;
+      if (body.visitor_name && body.visitor_name !== existing.visitor_name) {
+        updates.visitor_name = body.visitor_name;
+      }
+      if (body.visitor_phone && body.visitor_phone !== (existing as { visitor_phone?: string }).visitor_phone) {
+        updates.visitor_phone = body.visitor_phone;
+      }
+      if (body.visitor_email && body.visitor_email !== (existing as { visitor_email?: string }).visitor_email) {
+        updates.visitor_email = body.visitor_email;
+      }
 
       // Si keywords detectaron mayor prioridad o pidió humano explícitamente
       if (needs_handoff && currentStatus === "bot") {

@@ -4,7 +4,7 @@ import { MessageBubble, type ChatMessageRow } from "./MessageBubble";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
-import { Send, StickyNote } from "lucide-react";
+import { Send, StickyNote, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +14,44 @@ interface Props {
   readOnly?: boolean;
 }
 
+/**
+ * Plantillas de respuesta rápida disponibles junto al toggle "Mensaje al visitante".
+ * Cada plantilla recibe { visitorName, executiveName } y devuelve el texto a precargar
+ * en el textarea — el ejecutivo puede revisar/editar antes de enviar.
+ */
+type QuickReply = {
+  key: string;
+  label: string;
+  build: (ctx: { visitorName: string; executiveName: string }) => string;
+};
+
+const QUICK_REPLIES: QuickReply[] = [
+  {
+    key: "bienvenida",
+    label: "Bienvenida",
+    build: ({ visitorName, executiveName }) =>
+      `Hola ${visitorName}, te has contactado con ${executiveName}, tu ejecutivo de ventas. ¿En qué puedo ayudarte?`,
+  },
+  {
+    key: "espera",
+    label: "Un momento",
+    build: ({ visitorName }) =>
+      `${visitorName}, dame un momento por favor mientras reviso tu caso para entregarte la mejor respuesta.`,
+  },
+  {
+    key: "datos",
+    label: "Pedir datos",
+    build: ({ visitorName }) =>
+      `${visitorName}, para asistirte mejor, ¿podrías compartirme tu nombre completo, teléfono y comuna? Así te orientamos con precisión.`,
+  },
+  {
+    key: "despedida",
+    label: "Cierre",
+    build: ({ visitorName, executiveName }) =>
+      `${visitorName}, ha sido un gusto atenderte. Cualquier consulta adicional, escríbeme directamente. — ${executiveName}, Funeraria Santa Margarita.`,
+  },
+];
+
 export function MessageThread({ conversationId, readOnly = false }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -22,6 +60,8 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
   const [draft, setDraft] = useState("");
   const [internalNote, setInternalNote] = useState(false);
   const [sending, setSending] = useState(false);
+  const [visitorName, setVisitorName] = useState<string>("");
+  const [executiveName, setExecutiveName] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Load messages + subscribe
@@ -54,6 +94,51 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
 
     return () => { cancelled = true; void supabase.removeChannel(channel); };
   }, [conversationId]);
+
+  // Cargar nombre del visitante + escuchar cambios en tiempo real (si en la
+  // conversación se actualiza el dato, las plantillas reflejan el nuevo nombre).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("chat_conversations")
+        .select("visitor_name")
+        .eq("id", conversationId)
+        .maybeSingle();
+      if (!cancelled) {
+        setVisitorName(data?.visitor_name?.trim().split(/\s+/)[0] ?? "");
+      }
+    })();
+    const ch = supabase
+      .channel(`chat-thread-convo-${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "chat_conversations", filter: `id=eq.${conversationId}` },
+        (payload) => {
+          const next = payload.new as { visitor_name?: string | null };
+          setVisitorName(next.visitor_name?.trim().split(/\s+/)[0] ?? "");
+        },
+      )
+      .subscribe();
+    return () => { cancelled = true; void supabase.removeChannel(ch); };
+  }, [conversationId]);
+
+  // Cargar nombre del ejecutivo desde profiles (configurado en /admin/ajustes).
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) {
+        setExecutiveName(data?.display_name?.trim() || user.email?.split("@")[0] || "tu ejecutivo");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, user?.email]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -103,6 +188,13 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
     setSending(false);
   }
 
+  function applyQuickReply(qr: QuickReply) {
+    const safeVisitor = visitorName || "tocayo/a";
+    const safeExec = executiveName || "tu ejecutivo";
+    setDraft(qr.build({ visitorName: safeVisitor, executiveName: safeExec }));
+    setInternalNote(false);
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 bg-muted/30">
@@ -121,7 +213,7 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
 
       {!readOnly && (
         <div className="border-t bg-background p-2.5 space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setInternalNote((v) => !v)}
@@ -135,6 +227,24 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
               <StickyNote className="w-3 h-3" />
               {internalNote ? "Nota interna activa" : "Mensaje al visitante"}
             </button>
+
+            {/* Respuestas pre-establecidas — mismo lenguaje visual que el badge anterior. */}
+            <div className="h-4 w-px bg-border mx-0.5" aria-hidden />
+            <Sparkles className="w-3 h-3 text-muted-foreground" aria-hidden />
+            {QUICK_REPLIES.map((qr) => (
+              <button
+                key={qr.key}
+                type="button"
+                onClick={() => applyQuickReply(qr)}
+                title={qr.build({
+                  visitorName: visitorName || "[nombre visitante]",
+                  executiveName: executiveName || "[tu nombre]",
+                })}
+                className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border border-input text-muted-foreground hover:bg-primary/10 hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                {qr.label}
+              </button>
+            ))}
           </div>
           <div className="flex gap-2 items-end">
             <Textarea

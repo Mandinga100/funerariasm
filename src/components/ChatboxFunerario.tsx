@@ -124,10 +124,20 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
    * Solución: cola FIFO + debounce mínimo de 350ms entre envíos + 1 reintento
    * con backoff si la primera llamada falla. Todo no bloqueante para la UI.
    */
-  const sendQueueRef = useRef<Array<{ content: string; request_human?: boolean }>>([]);
+  const sendQueueRef = useRef<Array<{
+    content: string;
+    request_human?: boolean;
+    overrides?: { name?: string; phone?: string; email?: string };
+  }>>([]);
   const sendingRef = useRef(false);
   const lastSentAtRef = useRef(0);
   const MIN_GAP_MS = 350;
+
+  // Ref con los datos del visitante siempre frescos. Evita closures stale en la
+  // cola de envío y garantiza que cualquier dato recién capturado se refleje
+  // en la próxima llamada al edge function (y por ende en el CRM Realtime).
+  const contactDataRef = useRef<ContactFormData>({ name: "", phone: "", email: "" });
+  useEffect(() => { contactDataRef.current = contactData; }, [contactData]);
 
   const flushSendQueue = useCallback(async () => {
     if (sendingRef.current) return;
@@ -140,19 +150,19 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
           await new Promise((r) => setTimeout(r, MIN_GAP_MS - gap));
         }
         const token = getOrCreateChatToken();
+        const current = contactDataRef.current;
         const body = {
           conversation_token: token,
           content: next.content,
-          visitor_name: contactData.name || undefined,
-          visitor_phone: contactData.phone || undefined,
-          visitor_email: contactData.email || undefined,
+          visitor_name: next.overrides?.name || current.name || undefined,
+          visitor_phone: next.overrides?.phone || current.phone || undefined,
+          visitor_email: next.overrides?.email || current.email || undefined,
           request_human: next.request_human,
           loaded_at: loadedAtRef.current,
           source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
         };
         try {
           const res = await supabase.functions.invoke("chat-public-send", { body });
-          // Reintento único si el edge respondió con too_fast / 429.
           const errMsg = (res as { error?: { message?: string } } | null)?.error?.message ?? "";
           if (/too_fast|429/i.test(errMsg)) {
             await new Promise((r) => setTimeout(r, 800));
@@ -167,16 +177,23 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     } finally {
       sendingRef.current = false;
     }
-  }, [contactData.email, contactData.name, contactData.phone]);
+  }, []);
 
   /**
-   * Encola un evento del visitante para persistirlo en `chat_conversations` +
-   * `chat_messages`. La primera llamada crea la conversación (visible de
-   * inmediato en /admin/chat vía Realtime). No bloqueante.
+   * Encola un evento del visitante. Acepta `overrides` para pasar datos recién
+   * capturados que aún no llegaron al state de React (ej: el nombre que se acaba
+   * de validar y guardar) — así el CRM los ve en la misma llamada, no después.
    */
   const pushVisitorEvent = useCallback(
-    (content: string, extras?: { request_human?: boolean }) => {
-      sendQueueRef.current.push({ content, request_human: extras?.request_human });
+    (
+      content: string,
+      extras?: { request_human?: boolean; overrides?: { name?: string; phone?: string; email?: string } },
+    ) => {
+      sendQueueRef.current.push({
+        content,
+        request_human: extras?.request_human,
+        overrides: extras?.overrides,
+      });
       void flushSendQueue();
     },
     [flushSendQueue],
@@ -270,12 +287,12 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
    */
   const handleContactInput = async (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }]);
-    // Refleja cada respuesta del visitante (nombre/teléfono/email) en la bandeja CRM.
-    pushVisitorEvent(value);
 
     if (contactStep === "name") {
       const result = validateFullName(value);
       if (!result.ok) {
+        // Eco al CRM solo del texto crudo (sin override) — entrada inválida.
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nPor favor escriba nuevamente su nombre completo.` },
@@ -283,6 +300,8 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
         return;
       }
       setContactData((prev) => ({ ...prev, name: result.value! }));
+      // Override inmediato: el CRM ve el nombre validado en esta misma llamada.
+      pushVisitorEvent(value, { overrides: { name: result.value! } });
       setContactStep("phone");
       setMessages((prev) => [
         ...prev,
@@ -294,6 +313,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (contactStep === "phone") {
       const result = validateChileanPhone(value);
       if (!result.ok) {
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nIngrese su celular chileno nuevamente.` },
@@ -301,6 +321,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
         return;
       }
       setContactData((prev) => ({ ...prev, phone: result.value! }));
+      pushVisitorEvent(value, { overrides: { phone: result.value! } });
       setContactStep("email");
       setMessages((prev) => [
         ...prev,
@@ -312,6 +333,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (contactStep === "email") {
       const result = validateEmail(value, { required: true });
       if (!result.ok) {
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nVerifique su correo e intente nuevamente.` },
@@ -320,6 +342,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
       }
       const finalData = { ...contactData, email: result.value! };
       setContactData(finalData);
+      pushVisitorEvent(value, { overrides: { email: result.value! } });
       setContactStep("done");
 
       // Decidir urgency desde el intent — clasificación determinista del lead

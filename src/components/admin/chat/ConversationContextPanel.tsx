@@ -133,14 +133,28 @@ export function ConversationContextPanel({ convo }: Props) {
         <h3 className="text-sm font-semibold flex items-center gap-1.5">
           <UserIcon className="w-3.5 h-3.5" /> Datos del visitante
         </h3>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="h-8 text-sm" />
+        {pendingSync && (
+          <button
+            type="button"
+            onClick={applyPendingSync}
+            className="w-full flex items-center justify-between gap-2 text-[11px] px-2 py-1.5 rounded-md border border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10 transition-colors"
+            title="El visitante actualizó sus datos mientras editabas. Click para aplicar."
+          >
+            <span className="flex items-center gap-1.5">
+              <RefreshCw className="w-3 h-3 text-primary" />
+              Datos nuevos del visitante
+            </span>
+            <span className="text-primary font-medium">Aplicar</span>
+          </button>
+        )}
+        <Input ref={nameRef} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="h-8 text-sm" />
         <div className="relative">
           <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Teléfono" className="h-8 pl-7 text-sm" />
+          <Input ref={phoneRef} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Teléfono" className="h-8 pl-7 text-sm" />
         </div>
         <div className="relative">
           <Mail className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-8 pl-7 text-sm" />
+          <Input ref={emailRef} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-8 pl-7 text-sm" />
         </div>
         <div>
           <label className="text-[11px] text-muted-foreground">Prioridad</label>

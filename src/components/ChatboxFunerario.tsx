@@ -333,6 +333,8 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     setCurrentIntent(newIntent);
     const label = isUrgent ? "🚨 Sí, es urgente" : "🕒 No, solo evaluar";
     setMessages((prev) => [...prev, { role: "user", content: label }]);
+    // Reflejar la respuesta en la bandeja CRM y escalar a humano si es urgente.
+    pushVisitorEvent(label, { request_human: isUrgent });
 
     if (isUrgent) {
       setMessages((prev) => [

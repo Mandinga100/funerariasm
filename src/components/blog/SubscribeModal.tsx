@@ -60,11 +60,16 @@ const SubscribeModal = ({
   const [error, setError] = useState<string | null>(null);
 
   const [honeypot, setHoneypot] = useState("");
+  const [needsChallenge, setNeedsChallenge] = useState(false);
+  const [challengePassed, setChallengePassed] = useState(false);
   const startedAtRef = useRef<number>(createShieldTimer());
 
   // Reset timer cada vez que se abre el modal
   useEffect(() => {
-    if (open) startedAtRef.current = createShieldTimer();
+    if (open) {
+      startedAtRef.current = createShieldTimer();
+      setChallengePassed(hasValidChallengePass("blog_subscribe"));
+    }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {

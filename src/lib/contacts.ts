@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContactIntent, buildWhatsAppMessage } from "./whatsapp";
 import { getComunaAttribution } from "./comuna-tracking";
 import { validateFullName, validateChileanPhone, validateEmail } from "./lead-validation";
+import { checkBotShield, registerShieldHit } from "./bot-shield";
 
 interface ContactData {
   contactType: string;
@@ -19,6 +20,14 @@ interface ContactData {
    * registrado al primer click del chatbox antes de pedir datos).
    */
   skipValidation?: boolean;
+  /**
+   * Timestamp (Date.now()) cuando el formulario fue cargado/abierto.
+   * Si se provee, se aplica timing check + throttle por sesión.
+   * Si se omite, solo se aplica throttle (chatbox no tiene timer claro).
+   */
+  formStartedAt?: number;
+  /** Honeypot — debe venir vacío. */
+  honeypot?: string;
 }
 
 export const submitContact = async (data: ContactData) => {

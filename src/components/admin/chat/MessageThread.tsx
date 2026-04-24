@@ -189,7 +189,10 @@ export function MessageThread({ conversationId, readOnly = false }: Props) {
   }
 
   function applyQuickReply(qr: QuickReply) {
-    const safeVisitor = visitorName || "tocayo/a";
+    // Si el visitante aún no entregó su nombre, omitimos cualquier saludo cercano
+    // o genérico ("tocayo/a", "estimado/a", etc.) y dejamos un placeholder neutro
+    // que el ejecutivo debe completar manualmente antes de enviar.
+    const safeVisitor = visitorName || "[nombre]";
     const safeExec = executiveName || "tu ejecutivo";
     setDraft(qr.build({ visitorName: safeVisitor, executiveName: safeExec }));
     setInternalNote(false);

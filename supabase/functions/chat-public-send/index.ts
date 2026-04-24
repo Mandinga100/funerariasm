@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     // Upsert conversación por token
     const { data: existing } = await supabase
       .from("chat_conversations")
-      .select("id, status, priority, assigned_to, lead_id, service_case_id, visitor_name")
+      .select("id, status, priority, assigned_to, lead_id, service_case_id, visitor_name, visitor_phone, visitor_email")
       .eq("conversation_token", body.conversation_token)
       .maybeSingle();
 

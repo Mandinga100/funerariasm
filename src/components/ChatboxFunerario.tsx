@@ -235,6 +235,8 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
    */
   const handleContactInput = async (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }]);
+    // Refleja cada respuesta del visitante (nombre/teléfono/email) en la bandeja CRM.
+    pushVisitorEvent(value);
 
     if (contactStep === "name") {
       const result = validateFullName(value);

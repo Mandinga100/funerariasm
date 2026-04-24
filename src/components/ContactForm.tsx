@@ -248,7 +248,11 @@ const ContactForm = ({
           />
         </div>
 
-        {status === "error" && (
+        {needsChallenge && (
+          <ChallengeGate formKey={`contact_${type}`} onPass={handleChallengePass} />
+        )}
+
+        {status === "error" && !needsChallenge && (
           <p className="text-sm text-destructive">
             {errorMsg || "Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente."}
           </p>

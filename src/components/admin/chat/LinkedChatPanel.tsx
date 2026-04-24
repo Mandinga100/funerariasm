@@ -140,12 +140,24 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
       )}
 
       <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="h-4 px-1 text-[10px] capitalize">{active.status.replace("_", " ")}</Badge>
-          <span>·</span>
-          <span>Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <StatusBadge status={active.status} />
+          {(active.priority === "urgente" || active.priority === "alta") && (
+            <Badge
+              variant="outline"
+              className={`h-4 px-1.5 text-[10px] capitalize border-0 ${
+                active.priority === "urgente"
+                  ? "bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200 animate-pulse"
+                  : "bg-orange-100 text-orange-900 dark:bg-orange-950/60 dark:text-orange-200"
+              }`}
+            >
+              {active.priority}
+            </Badge>
+          )}
+          <span className="hidden sm:inline">·</span>
+          <span className="truncate">Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
         </div>
-        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2">
+        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2 shrink-0">
           <Link to={`/admin/chat?conversation=${active.id}`}>
             Bandeja completa
           </Link>

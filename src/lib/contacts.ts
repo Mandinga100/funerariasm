@@ -31,6 +31,20 @@ interface ContactData {
 }
 
 export const submitContact = async (data: ContactData) => {
+  // Defensa anti-bot opcional: solo se aplica cuando el caller envía
+  // formStartedAt y/o honeypot (formularios tradicionales). El chatbox
+  // omite estos campos y sigue funcionando como antes.
+  if (data.formStartedAt !== undefined || data.honeypot !== undefined) {
+    const shield = checkBotShield({
+      honeypot: data.honeypot ?? "",
+      startedAt: data.formStartedAt ?? Date.now(),
+      formKey: `contact_${data.contactType}`,
+    });
+    if (!shield.ok) {
+      throw new Error(shield.message ?? "Envío bloqueado por motivos de seguridad.");
+    }
+  }
+
   // Validación de defensa en profundidad: si vienen nombre/teléfono/email,
   // se exige que sean reales. Esto bloquea bots y formularios mal armados
   // antes de tocar la base de datos. El chatbox ya valida paso a paso,

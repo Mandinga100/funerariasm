@@ -1,35 +1,87 @@
-import { useState, forwardRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
 
 const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
-  // El chat solo se cierra con la X (handleClose). No hay click-outside ni minimizar:
-  // mientras esté abierto, el historial se conserva. Al pulsar X se desmonta y al
-  // volver a abrir empieza una nueva conversación (resetKey fuerza el reset).
-  const [chatOpen, setChatOpen] = useState(false);
+  // Tres estados de la ventana del chat:
+  //  - mounted=false: nunca se ha abierto en esta sesión, no se renderiza.
+  //  - mounted=true + open=true: visible.
+  //  - mounted=true + open=false: minimizado (oculto pero el componente sigue
+  //    vivo, conservando historial y estado).
+  // Solo la X dispara hardClose: desmonta el componente y resetea historial.
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const chatWrapperRef = useRef<HTMLDivElement | null>(null);
+  const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
 
   function handleOpen() {
-    setChatOpen(true);
+    setMounted(true);
+    setOpen(true);
   }
 
-  function handleClose() {
-    setChatOpen(false);
+  // Minimizar (click-outside o flecha): conserva historial y estado.
+  function handleMinimize() {
+    setOpen(false);
+  }
+
+  // Cierre real (X): destruye el componente y resetea la conversación.
+  function handleHardClose() {
+    setOpen(false);
+    setMounted(false);
     setResetKey((k) => k + 1);
   }
 
+  // Click-outside: solo cuando está visible, ignora clicks en el botón flotante.
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (chatWrapperRef.current?.contains(target)) return;
+      if (toggleBtnRef.current?.contains(target)) return;
+      handleMinimize();
+    }
+    // Pequeño delay para evitar capturar el mismo click que abre el chat.
+    const t = window.setTimeout(() => {
+      window.addEventListener("pointerdown", onPointerDown);
+    }, 0);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
+  // Escape también minimiza suavemente.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") handleMinimize();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <>
-      {chatOpen && (
-        <ChatboxFunerario key={resetKey} isOpen onMinimize={handleClose} onHardClose={handleClose} />
+      {mounted && (
+        <div ref={chatWrapperRef}>
+          <ChatboxFunerario
+            key={resetKey}
+            isOpen={open}
+            onMinimize={handleMinimize}
+            onHardClose={handleHardClose}
+          />
+        </div>
       )}
 
       {/* Toggle button */}
       <button
+        ref={toggleBtnRef}
         onClick={handleOpen}
         className={`fixed bottom-20 right-3 sm:right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out ${
-          chatOpen
+          open
             ? "scale-0 opacity-0 pointer-events-none"
             : "bg-gold text-accent-foreground hover:bg-gold-dark hover:scale-110 hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.5)] scale-100 opacity-100"
         }`}

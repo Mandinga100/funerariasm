@@ -109,11 +109,9 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir
+  // con la página; bloquear el scroll rompe el click-outside y la sensación de
+  // overlay no modal.
 
   /**
    * Persiste un evento del visitante en `chat_conversations` + `chat_messages`
@@ -528,28 +526,27 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     return "Escriba su consulta...";
   };
 
+  // Cuando está minimizado (`!isOpen`), aplicamos la misma animación de salida
+  // (`isClosing`) para deslizar/escalar hacia el botón flotante. El componente
+  // queda en el DOM (sin pointer-events) para conservar historial y estado.
+  const hidden = !isOpen || isClosing;
+
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm transition-opacity duration-500 ${
-          isClosing ? "opacity-0" : "opacity-100"
-        }`}
-      />
-
       {/* Chat window */}
       <div
         ref={chatRef}
+        aria-hidden={hidden}
         className={`fixed z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isClosing
-            ? "opacity-0 scale-[0.15]"
-            : "opacity-100 scale-100 animate-fade-in-up"
+          hidden
+            ? "opacity-0 scale-[0.15] pointer-events-none"
+            : "opacity-100 scale-100"
         }`}
         style={{
           width: "min(calc(100vw - 24px), 380px)",
           height: "min(560px, calc(100vh - 140px))",
-          bottom: isClosing ? "5rem" : "5rem",
-          right: isClosing ? "0.75rem" : "0.75rem",
+          bottom: "5rem",
+          right: "0.75rem",
           transformOrigin: "bottom right",
         }}
       >

@@ -3,6 +3,8 @@ import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
+import { getOrCreateChatToken } from "@/lib/chat-token";
+import { supabase } from "@/integrations/supabase/client";
 import assistantAvatar from "@/assets/assistant-avatar.png";
 
 interface ChatMessage {

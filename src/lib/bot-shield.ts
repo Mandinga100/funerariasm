@@ -17,6 +17,14 @@ const THROTTLE_MAX = 3;   // máx 3 envíos por ventana
 const THROTTLE_WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 
 const STORAGE_PREFIX = "bot_shield:";
+const SUSPICION_PREFIX = "bot_shield_susp:";
+/**
+ * A partir de este número de señales sospechosas (honeypot/too_fast/throttled)
+ * en la ventana, exigimos un challenge tipo captcha antes de permitir el envío.
+ */
+const SUSPICION_THRESHOLD = 2;
+const SUSPICION_WINDOW_MS = 30 * 60 * 1000; // 30 minutos
+const CHALLENGE_PASS_TTL_MS = 10 * 60 * 1000; // un pase válido durante 10 min
 
 /** Crea un timestamp inicial al montar el formulario. */
 export function createShieldTimer(): number {

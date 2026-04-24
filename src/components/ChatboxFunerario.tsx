@@ -109,11 +109,9 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir
+  // con la página; bloquear el scroll rompe el click-outside y la sensación de
+  // overlay no modal.
 
   /**
    * Persiste un evento del visitante en `chat_conversations` + `chat_messages`

@@ -3,6 +3,8 @@ import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
+import { getOrCreateChatToken } from "@/lib/chat-token";
+import { supabase } from "@/integrations/supabase/client";
 import assistantAvatar from "@/assets/assistant-avatar.png";
 
 interface ChatMessage {
@@ -378,6 +380,24 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     if (isLoading) return;
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
+
+    // Persistir el mensaje del visitante en la bandeja CRM (no bloqueante).
+    // Si el bot responde bien, el ChatboxFunerario sigue mostrando el stream;
+    // si el visitante pide asesor, el backend marca pendiente_humano y aparece en /admin/chat.
+    try {
+      const token = getOrCreateChatToken();
+      void supabase.functions.invoke("chat-public-send", {
+        body: {
+          conversation_token: token,
+          content: userMsg,
+          visitor_name: contactData.name || undefined,
+          visitor_phone: contactData.phone || undefined,
+          visitor_email: contactData.email || undefined,
+          loaded_at: Date.now() - 2000,
+          source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
+        },
+      });
+    } catch { /* non-blocking */ }
 
     const aiMessages = messages
       .filter((m) => m.role === "user" || m.role === "assistant")

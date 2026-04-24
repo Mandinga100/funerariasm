@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, MapPin, Trophy, Brain, Calendar } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, MapPin, Trophy, Brain, Calendar, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useLeadRealtimeAlerts } from "@/hooks/use-lead-notifications";
 import { useModuleRealtimeAlerts } from "@/hooks/use-module-realtime-alerts";
 import { useNotificationPrefsSync } from "@/hooks/use-notification-prefs-sync";
+import { useChatRealtimeAlerts } from "@/hooks/use-chat-realtime";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
 import { signAvatarUrl } from "@/lib/avatar-url";
 
@@ -26,7 +27,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   end: boolean;
-  badgeKey?: "leads" | "pagos";
+  badgeKey?: "leads" | "pagos" | "chat";
   /** Solo visible para CEO */
   ceoOnly?: boolean;
 };
@@ -34,6 +35,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" },
+  { to: "/admin/chat", label: "Bandeja Chat", icon: MessageCircle, end: false, badgeKey: "chat" },
   { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
   { to: "/admin/agenda", label: "Agenda", icon: Calendar, end: false },
   { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false, ceoOnly: true },
@@ -63,8 +65,11 @@ export default function AdminLayout() {
   useLeadRealtimeAlerts({ enabled: !!user?.id });
   // Suscripción global a casos, agenda, suscriptores, tracking y pagos.
   useModuleRealtimeAlerts({ enabled: !!user?.id });
+  // Suscripción global al chat (handoff bot→humano).
+  useChatRealtimeAlerts({ enabled: !!user?.id });
   const [pendingPayments, setPendingPayments] = useState(0);
   const [newLeads, setNewLeads] = useState(0);
+  const [pendingChats, setPendingChats] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
   const [signedAvatar, setSignedAvatar] = useState<string | null>(null);
@@ -186,8 +191,17 @@ export default function AdminLayout() {
       setNewLeads(count ?? 0);
     };
 
+    const fetchChats = async () => {
+      const { count } = await supabase
+        .from("chat_conversations")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pendiente_humano", "humano_activo"]);
+      setPendingChats(count ?? 0);
+    };
+
     fetchPending();
     fetchLeads();
+    fetchChats();
 
     const suffix = Date.now();
     const paymentsChannel = supabase
@@ -200,9 +214,15 @@ export default function AdminLayout() {
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => fetchLeads())
       .subscribe();
 
+    const chatsChannel = supabase
+      .channel(`sidebar-chats-${suffix}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_conversations" }, () => fetchChats())
+      .subscribe();
+
     return () => {
       void supabase.removeChannel(paymentsChannel);
       void supabase.removeChannel(leadsChannel);
+      void supabase.removeChannel(chatsChannel);
     };
   }, []);
 
@@ -214,6 +234,7 @@ export default function AdminLayout() {
   const getBadgeCount = (key?: string) => {
     if (key === "pagos") return pendingPayments;
     if (key === "leads") return newLeads;
+    if (key === "chat") return pendingChats;
     return 0;
   };
 

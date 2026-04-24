@@ -756,6 +756,149 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          assigned_to: string | null
+          channel: string
+          closed_at: string | null
+          conversation_token: string
+          created_at: string
+          id: string
+          last_message_at: string
+          lead_id: string | null
+          metadata: Json | null
+          priority: string
+          service_case_id: string | null
+          sla_due_at: string | null
+          status: string
+          unread_admin: number
+          unread_visitor: number
+          updated_at: string
+          visitor_email: string | null
+          visitor_name: string | null
+          visitor_phone: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          channel?: string
+          closed_at?: string | null
+          conversation_token: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          priority?: string
+          service_case_id?: string | null
+          sla_due_at?: string | null
+          status?: string
+          unread_admin?: number
+          unread_visitor?: number
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_phone?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          channel?: string
+          closed_at?: string | null
+          conversation_token?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          priority?: string
+          service_case_id?: string | null
+          sla_due_at?: string | null
+          status?: string
+          unread_admin?: number
+          unread_visitor?: number
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contact_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_service_case_id_fkey"
+            columns: ["service_case_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          attachment_mime: string | null
+          attachment_name: string | null
+          attachment_url: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_internal_note: boolean
+          metadata: Json | null
+          read_by_admin_at: string | null
+          read_by_visitor_at: string | null
+          sender_type: string
+          sender_user_id: string | null
+          voice_duration_seconds: number | null
+          voice_url: string | null
+        }
+        Insert: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_internal_note?: boolean
+          metadata?: Json | null
+          read_by_admin_at?: string | null
+          read_by_visitor_at?: string | null
+          sender_type: string
+          sender_user_id?: string | null
+          voice_duration_seconds?: number | null
+          voice_url?: string | null
+        }
+        Update: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_internal_note?: boolean
+          metadata?: Json | null
+          read_by_admin_at?: string | null
+          read_by_visitor_at?: string | null
+          sender_type?: string
+          sender_user_id?: string | null
+          voice_duration_seconds?: number | null
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comuna_conversion_events: {
         Row: {
           comuna_nombre: string | null

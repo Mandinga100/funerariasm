@@ -75,7 +75,16 @@ interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } } };
 }
 
-const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
+interface ChatboxProps {
+  /** Visibilidad: false = minimizado (componente sigue montado, conserva historial). */
+  isOpen: boolean;
+  /** Minimizar (sin destruir el estado). El componente queda oculto pero vivo. */
+  onMinimize: () => void;
+  /** Cierre real vía X: avisa al padre para destruir el componente y resetear historial. */
+  onHardClose: () => void;
+}
+
+const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");
@@ -89,26 +98,69 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  // Marca cuando ya se persistió la conversación inicial en el CRM.
+  // Evita duplicar inserts al primer mensaje del visitante.
+  const conversationCreatedRef = useRef(false);
+  // Timestamp de "load" usado por el bot-shield del edge function.
+  // Lo fijamos al montar y restamos 2s para no chocar con el guard de timing.
+  const loadedAtRef = useRef<number>(Date.now() - 2000);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
-  }, []);
+  }, [isOpen]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
-        handleClose();
+  /**
+   * Persiste un evento del visitante en `chat_conversations` + `chat_messages`
+   * vía la edge function pública. La primera llamada crea la conversación
+   * (lo que la hace aparecer de inmediato en /admin/chat por Realtime).
+   * Las llamadas siguientes solo agregan mensajes / actualizan datos del visitante.
+   *
+   * Es no bloqueante: si el endpoint falla, el chat sigue funcionando para el usuario.
+   */
+  const pushVisitorEvent = useCallback(
+    (content: string, extras?: { request_human?: boolean }) => {
+      try {
+        const token = getOrCreateChatToken();
+        void supabase.functions.invoke("chat-public-send", {
+          body: {
+            conversation_token: token,
+            content,
+            visitor_name: contactData.name || undefined,
+            visitor_phone: contactData.phone || undefined,
+            visitor_email: contactData.email || undefined,
+            request_human: extras?.request_human,
+            loaded_at: loadedAtRef.current,
+            source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
+          },
+        });
+        conversationCreatedRef.current = true;
+      } catch {
+        /* non-blocking */
       }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+    },
+    [contactData.email, contactData.name, contactData.phone],
+  );
 
+  // Cierre suave (minimizar): conserva historial y estado.
+  const handleMinimize = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      setIsListening(false);
+    }
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onMinimize();
+    }, 500);
+  }, [onMinimize]);
+
+  // Cierre duro (X): destruye el componente y resetea todo.
   const handleClose = useCallback(() => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
@@ -116,9 +168,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
     setIsClosing(true);
     setTimeout(() => {
-      onClose();
+      onHardClose();
     }, 500);
-  }, [onClose]);
+  }, [onHardClose]);
 
   const resetChat = useCallback(() => {
     setMessages([GREETING]);

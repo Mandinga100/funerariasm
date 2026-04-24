@@ -1611,6 +1611,45 @@ export type Database = {
           },
         ]
       }
+      user_notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          normal_tone: string
+          notif_leads: boolean
+          notif_payments: boolean
+          sound_enabled: boolean
+          updated_at: string
+          urgent_tone: string
+          user_id: string
+          volume: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          normal_tone?: string
+          notif_leads?: boolean
+          notif_payments?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
+          urgent_tone?: string
+          user_id: string
+          volume?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          normal_tone?: string
+          notif_leads?: boolean
+          notif_payments?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
+          urgent_tone?: string
+          user_id?: string
+          volume?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

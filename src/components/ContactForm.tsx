@@ -231,7 +231,7 @@ const ContactForm = ({
 
         {status === "error" && (
           <p className="text-sm text-destructive">
-            Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente.
+            {errorMsg || "Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente."}
           </p>
         )}
 

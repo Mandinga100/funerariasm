@@ -325,6 +325,35 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           </TabsContent>
         </Tabs>
       </SheetContent>
+
+      <AgendaEventModal
+        open={agendaOpen}
+        onOpenChange={setAgendaOpen}
+        event={null}
+        prefill={{
+          title: `Caso ${serviceCase.case_number}${serviceCase.deceased_name ? ` — ${serviceCase.deceased_name}` : ""}`,
+          description: serviceCase.service_description ?? serviceCase.notes ?? undefined,
+          eventType: "reunion",
+          priority: serviceCase.urgency === "inmediata" || serviceCase.urgency === "urgente" ? "alta" : "normal",
+          serviceCaseId: serviceCase.id,
+          leadId: serviceCase.lead_id ?? undefined,
+          contactName: serviceCase.client_name ?? undefined,
+          contactPhone: serviceCase.client_phone ?? undefined,
+          contactEmail: serviceCase.client_email ?? undefined,
+          comuna: serviceCase.comuna ?? undefined,
+        } satisfies AgendaPrefill}
+        onSaved={(createdEventId) => {
+          setAgendaOpen(false);
+          toast({
+            title: "📅 Evento agendado",
+            description: "El evento quedó vinculado a este caso.",
+          });
+          onUpdate();
+          if (createdEventId) {
+            navigate(`/admin/agenda?event=${createdEventId}`);
+          }
+        }}
+      />
     </Sheet>
   );
 }

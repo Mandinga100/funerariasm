@@ -370,6 +370,11 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     setShowMainOptions(false);
     setCurrentIntent(intent);
 
+    // Persistir IMMEDIATAMENTE en la bandeja CRM: cualquier interacción del usuario
+    // (clic en una opción del árbol, abrir asistente IA) crea/actualiza la conversación,
+    // por lo que el operador la ve en /admin/chat al instante via Realtime.
+    pushVisitorEvent(label, { request_human: intent === "fallecimiento" });
+
     if (isAI) {
       setMode("ai");
       setMessages((prev) => [

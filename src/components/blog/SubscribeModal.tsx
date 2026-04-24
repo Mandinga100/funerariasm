@@ -57,9 +57,29 @@ const SubscribeModal = ({
   const [successName, setSuccessName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [honeypot, setHoneypot] = useState("");
+  const startedAtRef = useRef<number>(createShieldTimer());
+
+  // Reset timer cada vez que se abre el modal
+  useEffect(() => {
+    if (open) startedAtRef.current = createShieldTimer();
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    const shield = checkBotShield({
+      honeypot,
+      startedAt: startedAtRef.current,
+      formKey: "blog_subscribe",
+    });
+    if (!shield.ok) {
+      setError(shield.message ?? "Envío bloqueado");
+      return;
+    }
+
     const parsedEmail = emailSchema.safeParse(email);
     if (!parsedEmail.success) {
       setError(parsedEmail.error.issues[0]?.message ?? "Correo inválido");

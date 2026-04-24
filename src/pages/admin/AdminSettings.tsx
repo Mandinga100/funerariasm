@@ -24,7 +24,7 @@ import {
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
   Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
-  Filter
+  Filter, Volume2, VolumeX, Play
 } from "lucide-react";
 
 type AppRole = "ceo" | "admin" | "moderator";
@@ -78,6 +78,10 @@ export default function AdminSettings() {
   const [notifLeads, setNotifLeads] = useState(() => localStorage.getItem("crm_notif_leads") !== "false");
   const [notifPayments, setNotifPayments] = useState(() => localStorage.getItem("crm_notif_payments") !== "false");
   const [notifSound, setNotifSound] = useState(() => localStorage.getItem("admin_notification_sound") !== "false");
+  const [soundVolume, setSoundVolume] = useState<number>(() => Math.round(getVolume() * 100));
+  const [normalTone, setNormalTone] = useState<NormalTone>(() => getNormalTone());
+  const [urgentTone, setUrgentTone] = useState<UrgentTone>(() => getUrgentTone());
+  const { playNotification, playUrgentAlert } = useNotificationSound();
   const [wspNotif, setWspNotif] = useState(() => localStorage.getItem("crm_wsp_notif") === "true");
   const [wspNumber, setWspNumber] = useState(() => localStorage.getItem("crm_wsp_number") ?? "+56 9 6433 3760");
 
@@ -435,6 +439,10 @@ export default function AdminSettings() {
     localStorage.setItem("crm_notif_leads", String(notifLeads));
     localStorage.setItem("crm_notif_payments", String(notifPayments));
     localStorage.setItem("admin_notification_sound", String(notifSound));
+    setSoundVolume(soundVolume); // no-op, mantiene estado consistente
+    localStorage.setItem("admin_notification_volume", String(soundVolume / 100));
+    persistNormalTone(normalTone);
+    persistUrgentTone(urgentTone);
     localStorage.setItem("crm_wsp_notif", String(wspNotif));
     localStorage.setItem("crm_wsp_number", wspNumber);
     toast({ title: "Preferencias guardadas" });

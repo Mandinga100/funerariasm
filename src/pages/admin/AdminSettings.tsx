@@ -427,7 +427,7 @@ export default function AdminSettings() {
     setEditDialog(false);
   };
 
-  /* ── Delete admin ── */
+  /* ── Delete admin / moderator / CEO ── */
   const handleDeleteAdmin = async () => {
     if (!selectedAdmin) return;
     if (selectedAdmin.user_id === user?.id) {
@@ -438,12 +438,37 @@ export default function AdminSettings() {
       toast({ title: "Acceso denegado", description: "Solo el CEO puede remover a otro CEO.", variant: "destructive" });
       return;
     }
+    // CEO fundador inamovible: ni siquiera otro CEO puede eliminarlo
+    if (isFounder(selectedAdmin.user_id) && selectedAdmin.role === "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle está protegido permanentemente y no puede ser removido.",
+        variant: "destructive",
+      });
+      setDeleteDialog(false);
+      setSelectedAdmin(null);
+      return;
+    }
+    setSaving(true);
     const { error } = await supabase.from("user_roles").delete().eq("id", selectedAdmin.id);
+    setSaving(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      // El trigger protect_founder_ceo lanza un mensaje claro si intenta tocar al fundador
+      toast({ title: "No se pudo eliminar", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Acceso removido" });
-      logAudit({ action: "remove_member", module: "equipo", description: `Removió acceso de ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`, entity_type: "user_role", entity_id: selectedAdmin.id, old_data: { role: selectedAdmin.role } });
+      const roleLabel = ROLE_META[selectedAdmin.role].label;
+      toast({
+        title: `${roleLabel} removido`,
+        description: `${selectedAdmin.display_name ?? "El miembro"} ya no tiene acceso al CRM.`,
+      });
+      logAudit({
+        action: "remove_member",
+        module: "equipo",
+        description: `Removió ${roleLabel} ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`,
+        entity_type: "user_role",
+        entity_id: selectedAdmin.id,
+        old_data: { role: selectedAdmin.role, user_id: selectedAdmin.user_id },
+      });
       loadAdmins();
     }
     setDeleteDialog(false);

@@ -75,7 +75,16 @@ interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } } };
 }
 
-const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
+interface ChatboxProps {
+  /** Visibilidad: false = minimizado (componente sigue montado, conserva historial). */
+  isOpen: boolean;
+  /** Minimizar (sin destruir el estado). El componente queda oculto pero vivo. */
+  onMinimize: () => void;
+  /** Cierre real vía X: avisa al padre para destruir el componente y resetear historial. */
+  onHardClose: () => void;
+}
+
+const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");
@@ -89,26 +98,69 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  // Marca cuando ya se persistió la conversación inicial en el CRM.
+  // Evita duplicar inserts al primer mensaje del visitante.
+  const conversationCreatedRef = useRef(false);
+  // Timestamp de "load" usado por el bot-shield del edge function.
+  // Lo fijamos al montar y restamos 2s para no chocar con el guard de timing.
+  const loadedAtRef = useRef<number>(Date.now() - 2000);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
-  }, []);
+  }, [isOpen]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
-        handleClose();
+  /**
+   * Persiste un evento del visitante en `chat_conversations` + `chat_messages`
+   * vía la edge function pública. La primera llamada crea la conversación
+   * (lo que la hace aparecer de inmediato en /admin/chat por Realtime).
+   * Las llamadas siguientes solo agregan mensajes / actualizan datos del visitante.
+   *
+   * Es no bloqueante: si el endpoint falla, el chat sigue funcionando para el usuario.
+   */
+  const pushVisitorEvent = useCallback(
+    (content: string, extras?: { request_human?: boolean }) => {
+      try {
+        const token = getOrCreateChatToken();
+        void supabase.functions.invoke("chat-public-send", {
+          body: {
+            conversation_token: token,
+            content,
+            visitor_name: contactData.name || undefined,
+            visitor_phone: contactData.phone || undefined,
+            visitor_email: contactData.email || undefined,
+            request_human: extras?.request_human,
+            loaded_at: loadedAtRef.current,
+            source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
+          },
+        });
+        conversationCreatedRef.current = true;
+      } catch {
+        /* non-blocking */
       }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+    },
+    [contactData.email, contactData.name, contactData.phone],
+  );
 
+  // Cierre suave (minimizar): conserva historial y estado.
+  const handleMinimize = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      setIsListening(false);
+    }
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onMinimize();
+    }, 500);
+  }, [onMinimize]);
+
+  // Cierre duro (X): destruye el componente y resetea todo.
   const handleClose = useCallback(() => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
@@ -116,9 +168,9 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     }
     setIsClosing(true);
     setTimeout(() => {
-      onClose();
+      onHardClose();
     }, 500);
-  }, [onClose]);
+  }, [onHardClose]);
 
   const resetChat = useCallback(() => {
     setMessages([GREETING]);
@@ -183,6 +235,8 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
    */
   const handleContactInput = async (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }]);
+    // Refleja cada respuesta del visitante (nombre/teléfono/email) en la bandeja CRM.
+    pushVisitorEvent(value);
 
     if (contactStep === "name") {
       const result = validateFullName(value);
@@ -281,6 +335,8 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setCurrentIntent(newIntent);
     const label = isUrgent ? "🚨 Sí, es urgente" : "🕒 No, solo evaluar";
     setMessages((prev) => [...prev, { role: "user", content: label }]);
+    // Reflejar la respuesta en la bandeja CRM y escalar a humano si es urgente.
+    pushVisitorEvent(label, { request_human: isUrgent });
 
     if (isUrgent) {
       setMessages((prev) => [
@@ -317,6 +373,11 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setMessages((prev) => [...prev, { role: "user", content: label }]);
     setShowMainOptions(false);
     setCurrentIntent(intent);
+
+    // Persistir IMMEDIATAMENTE en la bandeja CRM: cualquier interacción del usuario
+    // (clic en una opción del árbol, abrir asistente IA) crea/actualiza la conversación,
+    // por lo que el operador la ve en /admin/chat al instante via Realtime.
+    pushVisitorEvent(label, { request_human: intent === "fallecimiento" });
 
     if (isAI) {
       setMode("ai");
@@ -382,22 +443,8 @@ const ChatboxFunerario = ({ onClose }: { onClose: () => void }) => {
     setIsLoading(true);
 
     // Persistir el mensaje del visitante en la bandeja CRM (no bloqueante).
-    // Si el bot responde bien, el ChatboxFunerario sigue mostrando el stream;
-    // si el visitante pide asesor, el backend marca pendiente_humano y aparece en /admin/chat.
-    try {
-      const token = getOrCreateChatToken();
-      void supabase.functions.invoke("chat-public-send", {
-        body: {
-          conversation_token: token,
-          content: userMsg,
-          visitor_name: contactData.name || undefined,
-          visitor_phone: contactData.phone || undefined,
-          visitor_email: contactData.email || undefined,
-          loaded_at: Date.now() - 2000,
-          source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
-        },
-      });
-    } catch { /* non-blocking */ }
+    // Centralizado en pushVisitorEvent → mismo upsert que el árbol/contacto.
+    pushVisitorEvent(userMsg);
 
     const aiMessages = messages
       .filter((m) => m.role === "user" || m.role === "assistant")

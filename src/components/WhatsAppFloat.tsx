@@ -4,16 +4,30 @@ import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
 
 const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
+  // El chat solo se cierra con la X (handleClose). No hay click-outside ni minimizar:
+  // mientras esté abierto, el historial se conserva. Al pulsar X se desmonta y al
+  // volver a abrir empieza una nueva conversación (resetKey fuerza el reset).
   const [chatOpen, setChatOpen] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+
+  function handleOpen() {
+    setChatOpen(true);
+  }
+
+  function handleClose() {
+    setChatOpen(false);
+    setResetKey((k) => k + 1);
+  }
 
   return (
     <>
-      {/* Chatbox */}
-      {chatOpen && <ChatboxFunerario onClose={() => setChatOpen(false)} />}
+      {chatOpen && (
+        <ChatboxFunerario key={resetKey} isOpen onMinimize={handleClose} onHardClose={handleClose} />
+      )}
 
       {/* Toggle button */}
       <button
-        onClick={() => setChatOpen(true)}
+        onClick={handleOpen}
         className={`fixed bottom-20 right-3 sm:right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out ${
           chatOpen
             ? "scale-0 opacity-0 pointer-events-none"

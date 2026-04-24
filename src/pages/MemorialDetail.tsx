@@ -78,6 +78,8 @@ const MemorialDetail = () => {
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
+  const [condolenceHoneypot, setCondolenceHoneypot] = useState("");
+  const condolenceStartedAtRef = useRef<number>(createShieldTimer());
   const [sending, setSending] = useState(false);
   const [crownModalOpen, setCrownModalOpen] = useState(false);
   const [tributesModalOpen, setTributesModalOpen] = useState(false);

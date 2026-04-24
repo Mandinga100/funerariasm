@@ -10,13 +10,15 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2, PhoneCall, CalendarPlus } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2, PhoneCall, CalendarPlus, ChevronDown } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
 import AIClassificationHistory from "./AIClassificationHistory";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
+import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface LeadDetailSheetProps {
   lead: any | null;
@@ -560,6 +562,20 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
               </div>
             );
           })()}
+
+          {/* Linked Chat Conversations */}
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group">
+              <span className="flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" />
+                Conversaciones de chat vinculadas
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <LinkedChatPanel leadId={lead.id} compact />
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Activity Timeline */}
           <div className="space-y-2">

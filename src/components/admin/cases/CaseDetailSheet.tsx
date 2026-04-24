@@ -22,6 +22,7 @@ import CaseTrackingWidget from "./CaseTrackingWidget";
 import CaseQuoteTab from "./CaseQuoteTab";
 import CasePaymentsTab from "./CasePaymentsTab";
 import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
+import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { useNavigate } from "react-router-dom";
 
 interface CaseDetailSheetProps {
@@ -162,7 +163,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
         </SheetHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-4">
-          <TabsList className="w-full grid grid-cols-4 sm:grid-cols-8 h-auto gap-0.5">
+          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-9 h-auto gap-0.5">
             <TabsTrigger value="resumen" className="text-[11px] sm:text-xs px-1.5 py-1.5">Resumen</TabsTrigger>
             <TabsTrigger value="fallecido" className="text-[11px] sm:text-xs px-1.5 py-1.5">Fallecido</TabsTrigger>
             <TabsTrigger value="cotizacion" className="text-[11px] sm:text-xs px-1.5 py-1.5">Cotización</TabsTrigger>
@@ -170,6 +171,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
             <TabsTrigger value="estados" className="text-[11px] sm:text-xs px-1.5 py-1.5">Estados</TabsTrigger>
             <TabsTrigger value="checklist" className="text-[11px] sm:text-xs px-1.5 py-1.5">Hitos</TabsTrigger>
             <TabsTrigger value="docs" className="text-[11px] sm:text-xs px-1.5 py-1.5">Docs</TabsTrigger>
+            <TabsTrigger value="chat" className="text-[11px] sm:text-xs px-1.5 py-1.5">Chat</TabsTrigger>
             <TabsTrigger value="historial" className="text-[11px] sm:text-xs px-1.5 py-1.5">Historial</TabsTrigger>
           </TabsList>
 
@@ -317,6 +319,11 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           {/* ----- EXPEDIENTE DOCUMENTAL ----- */}
           <TabsContent value="docs" className="mt-4">
             <CaseDocumentsTab caseId={serviceCase.id} />
+          </TabsContent>
+
+          {/* ----- CHAT VINCULADO ----- */}
+          <TabsContent value="chat" className="mt-4">
+            <LinkedChatPanel serviceCaseId={serviceCase.id} compact />
           </TabsContent>
 
           {/* ----- BITÁCORA ----- */}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ConversationList, type ConversationRow } from "@/components/admin/chat/ConversationList";
 import { MessageThread } from "@/components/admin/chat/MessageThread";
 import { ConversationContextPanel } from "@/components/admin/chat/ConversationContextPanel";
@@ -11,10 +12,22 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type MobileTab = "lista" | "hilo" | "contexto";
 
 export default function AdminChat() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("conversation");
+  const [selectedId, setSelectedId] = useState<string | null>(initialId);
   const [convo, setConvo] = useState<ConversationRow | null>(null);
   const isMobile = useIsMobile();
-  const [mobileTab, setMobileTab] = useState<MobileTab>("lista");
+  const [mobileTab, setMobileTab] = useState<MobileTab>(initialId ? "hilo" : "lista");
+
+  // Sync when query param changes (e.g. user clicks a different deep link)
+  useEffect(() => {
+    const id = searchParams.get("conversation");
+    if (id && id !== selectedId) {
+      setSelectedId(id);
+      if (isMobile) setMobileTab("hilo");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Load + subscribe to selected conversation
   useEffect(() => {

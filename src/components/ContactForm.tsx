@@ -57,11 +57,14 @@ const ContactForm = ({
   const [whatsappMsg, setWhatsappMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
+  const [needsChallenge, setNeedsChallenge] = useState(false);
+  const [challengePassed, setChallengePassed] = useState(false);
   const startedAtRef = useRef<number>(createShieldTimer());
 
   useEffect(() => {
     startedAtRef.current = createShieldTimer();
-  }, []);
+    setChallengePassed(hasValidChallengePass(`contact_${type}`));
+  }, [type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

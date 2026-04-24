@@ -84,8 +84,9 @@ export function useNotificationPrefsSync() {
   // Realtime: aplicar cambios desde otros dispositivos
   useEffect(() => {
     if (!user?.id) return;
+    // Sufijo único por montaje para evitar choque de canales en StrictMode (doble efecto en dev)
     const channel = supabase
-      .channel(`notif-prefs-${user.id}`)
+      .channel(`notif-prefs-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_notification_preferences", filter: `user_id=eq.${user.id}` },

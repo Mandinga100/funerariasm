@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { MessageThread } from "./MessageThread";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MessageSquare, ExternalLink, Hand } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   /** Filter conversations linked to this lead. */

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandoffControls } from "./HandoffControls";
-import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus } from "lucide-react";
+import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ConversationRow } from "./ConversationList";
 
@@ -23,12 +23,58 @@ export function ConversationContextPanel({ convo }: Props) {
   const [priority, setPriority] = useState(convo.priority);
   const [busy, setBusy] = useState(false);
 
+  // Refs para detectar foco — si el admin está editando un input, NO lo sobrescribimos
+  // con el valor que llega por realtime (evita perder lo que está tipeando).
+  // Si el campo no está enfocado, sincronizamos en vivo desde la DB.
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const phoneRef = useRef<HTMLInputElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+
+  // Indicador visual: hay datos nuevos del visitante que aún no se aplicaron
+  // localmente porque el admin está editando. Permite refrescar manualmente.
+  const [pendingSync, setPendingSync] = useState<null | {
+    visitor_name: string | null;
+    visitor_phone: string | null;
+    visitor_email: string | null;
+  }>(null);
+
   useEffect(() => {
-    setName(convo.visitor_name ?? "");
-    setPhone(convo.visitor_phone ?? "");
-    setEmail(convo.visitor_email ?? "");
+    const incoming = {
+      visitor_name: convo.visitor_name ?? "",
+      visitor_phone: convo.visitor_phone ?? "",
+      visitor_email: convo.visitor_email ?? "",
+    };
+
+    // Aplicar sólo a los campos que NO están enfocados, para no romper edición en curso.
+    const focusedEl = typeof document !== "undefined" ? document.activeElement : null;
+
+    let deferred = false;
+    if (nameRef.current !== focusedEl) setName(incoming.visitor_name);
+    else if (incoming.visitor_name !== name) deferred = true;
+
+    if (phoneRef.current !== focusedEl) setPhone(incoming.visitor_phone);
+    else if (incoming.visitor_phone !== phone) deferred = true;
+
+    if (emailRef.current !== focusedEl) setEmail(incoming.visitor_email);
+    else if (incoming.visitor_email !== email) deferred = true;
+
     setPriority(convo.priority);
+
+    setPendingSync(deferred ? {
+      visitor_name: incoming.visitor_name,
+      visitor_phone: incoming.visitor_phone,
+      visitor_email: incoming.visitor_email,
+    } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convo.id, convo.visitor_name, convo.visitor_phone, convo.visitor_email, convo.priority]);
+
+  function applyPendingSync() {
+    if (!pendingSync) return;
+    setName(pendingSync.visitor_name ?? "");
+    setPhone(pendingSync.visitor_phone ?? "");
+    setEmail(pendingSync.visitor_email ?? "");
+    setPendingSync(null);
+  }
 
   async function saveDetails() {
     setBusy(true);

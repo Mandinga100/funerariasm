@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useLeadRealtimeAlerts } from "@/hooks/use-lead-notifications";
 import { useModuleRealtimeAlerts } from "@/hooks/use-module-realtime-alerts";
+import { useNotificationPrefsSync } from "@/hooks/use-notification-prefs-sync";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
 import { signAvatarUrl } from "@/lib/avatar-url";
 
@@ -56,6 +57,8 @@ export default function AdminLayout() {
   const { playUrgentAlert } = useNotificationSound();
   // Inicializa el tema una vez montado el layout (auto-aplica light/dark/system).
   useAdminTheme();
+  // Sincroniza preferencias de sonido por usuario desde Lovable Cloud (multi-dispositivo + realtime).
+  useNotificationPrefsSync();
   // Suscripción global a leads nuevos: alerta sonora + toast con WhatsApp Business.
   useLeadRealtimeAlerts({ enabled: !!user?.id });
   // Suscripción global a casos, agenda, suscriptores, tracking y pagos.

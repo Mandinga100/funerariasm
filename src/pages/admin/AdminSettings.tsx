@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
-import { useNotificationSound, getVolume, setVolume as setSoundVolume, getNormalTone, setNormalTone as persistNormalTone, getUrgentTone, setUrgentTone as persistUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { useNotificationSound, getVolume, getNormalTone, getUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { useNotificationPrefsSync } from "@/hooks/use-notification-prefs-sync";
 import { Slider } from "@/components/ui/slider";
 import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
@@ -82,8 +83,20 @@ export default function AdminSettings() {
   const [normalTone, setNormalTone] = useState<NormalTone>(() => getNormalTone());
   const [urgentTone, setUrgentTone] = useState<UrgentTone>(() => getUrgentTone());
   const { playNotification, playUrgentAlert } = useNotificationSound();
+  const { savePrefs: savePrefsCloud, loading: prefsLoading } = useNotificationPrefsSync();
   const [wspNotif, setWspNotif] = useState(() => localStorage.getItem("crm_wsp_notif") === "true");
   const [wspNumber, setWspNumber] = useState(() => localStorage.getItem("crm_wsp_number") ?? "+56 9 6433 3760");
+
+  // Re-hidrata los controles cuando llegan/cambian las preferencias en la nube (login, otro dispositivo).
+  useEffect(() => {
+    if (prefsLoading) return;
+    setNotifSound(localStorage.getItem("admin_notification_sound") !== "false");
+    setSoundVolume(Math.round(getVolume() * 100));
+    setNormalTone(getNormalTone());
+    setUrgentTone(getUrgentTone());
+    setNotifLeads(localStorage.getItem("crm_notif_leads") !== "false");
+    setNotifPayments(localStorage.getItem("crm_notif_payments") !== "false");
+  }, [prefsLoading]);
 
   /* ── Security State ── */
   const [showPass, setShowPass] = useState(false);
@@ -434,18 +447,33 @@ export default function AdminSettings() {
     setChangingPass(false);
   };
 
-  /* ── Save notification prefs ── */
-  const saveNotifPrefs = () => {
-    localStorage.setItem("crm_notif_leads", String(notifLeads));
-    localStorage.setItem("crm_notif_payments", String(notifPayments));
-    localStorage.setItem("admin_notification_sound", String(notifSound));
-    setSoundVolume(soundVolume); // no-op, mantiene estado consistente
-    localStorage.setItem("admin_notification_volume", String(soundVolume / 100));
-    persistNormalTone(normalTone);
-    persistUrgentTone(urgentTone);
+  /* ── Save notification prefs (sincroniza en Lovable Cloud + cache local) ── */
+  const saveNotifPrefs = async () => {
+    // WhatsApp queda local (config de organización, no por usuario)
     localStorage.setItem("crm_wsp_notif", String(wspNotif));
     localStorage.setItem("crm_wsp_number", wspNumber);
-    toast({ title: "Preferencias guardadas" });
+
+    const { error } = await savePrefsCloud({
+      sound_enabled: notifSound,
+      volume: soundVolume / 100,
+      normal_tone: normalTone,
+      urgent_tone: urgentTone,
+      notif_leads: notifLeads,
+      notif_payments: notifPayments,
+    });
+
+    if (error) {
+      toast({
+        title: "Guardado local",
+        description: "Las preferencias se aplicaron en este dispositivo, pero no se pudieron sincronizar con la nube.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Preferencias sincronizadas",
+        description: "Volumen y tonos disponibles en todos tus dispositivos.",
+      });
+    }
   };
 
   /* ── Save integrations ── */

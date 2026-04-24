@@ -114,6 +114,7 @@ const SubscribeModal = ({
           setError("No fue posible procesar la suscripción. Intente nuevamente.");
         }
       } else {
+        registerShieldHit("blog_subscribe");
         setSuccessName(cleanName);
         setSuccess(true);
       }

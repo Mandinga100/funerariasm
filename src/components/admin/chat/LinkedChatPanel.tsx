@@ -215,11 +215,23 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
           <span className="hidden sm:inline">·</span>
           <span className="truncate">Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
         </div>
-        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2 shrink-0">
-          <Link to={`/admin/chat?conversation=${active.id}`}>
-            Bandeja completa
-          </Link>
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          {active.status !== "cerrado" && (
+            <Button
+              size="sm"
+              onClick={() => handleAttendNow(active.id)}
+              disabled={attending}
+              className="h-6 text-[10px] px-2 gap-1"
+            >
+              <Hand className="w-3 h-3" /> Atender ahora
+            </Button>
+          )}
+          <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2">
+            <Link to={`/admin/chat?conversation=${active.id}`}>
+              Bandeja completa
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className={`rounded-md border overflow-hidden ${compact ? "h-[420px]" : "h-[520px]"}`}>

@@ -398,6 +398,15 @@ export default function AdminSettings() {
       setEditDialog(false);
       return;
     }
+    // Bloqueo extra: nadie puede degradar al CEO fundador
+    if (isFounder(selectedAdmin.user_id) && selectedAdmin.role === "ceo" && newRole !== "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle no puede ser modificado.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSaving(true);
     // Update display name in profiles
     if (newDisplayName.trim()) {

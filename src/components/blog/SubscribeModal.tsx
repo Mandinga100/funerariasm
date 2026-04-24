@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, Sparkles, CheckCircle2, Loader2, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { detectSubscriptionSource } from "@/lib/subscription-source";
+import {
+  checkBotShield,
+  createShieldTimer,
+  honeypotInputProps,
+  registerShieldHit,
+} from "@/lib/bot-shield";
 
 interface SubscribeModalProps {
   open: boolean;

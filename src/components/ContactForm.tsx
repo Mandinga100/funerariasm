@@ -66,10 +66,7 @@ const ContactForm = ({
     setChallengePassed(hasValidChallengePass(`contact_${type}`));
   }, [type]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || (!form.email.trim() && !form.phone.trim())) return;
-
+  const submit = async (passed: boolean) => {
     setStatus("loading");
     setErrorMsg(null);
     try {
@@ -86,14 +83,32 @@ const ContactForm = ({
         urgency: config.urgency,
         formStartedAt: startedAtRef.current,
         honeypot,
+        challengePassed: passed,
       });
       setWhatsappMsg(result.whatsappMessage);
       setStatus("success");
       onSuccess?.();
     } catch (err) {
+      if (err instanceof BotShieldError && err.requiresChallenge) {
+        setNeedsChallenge(true);
+      }
       setErrorMsg(err instanceof Error ? err.message : null);
       setStatus("error");
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || (!form.email.trim() && !form.phone.trim())) return;
+    await submit(challengePassed);
+  };
+
+  const handleChallengePass = () => {
+    setChallengePassed(true);
+    setNeedsChallenge(false);
+    setErrorMsg(null);
+    // Reintenta el envío automáticamente con el pase recién obtenido.
+    void submit(true);
   };
 
   if (status === "success") {

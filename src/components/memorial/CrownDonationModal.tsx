@@ -86,6 +86,12 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
         </p>
 
         <div className="px-6 space-y-4 pb-6">
+          {/* Honeypot — invisible para humanos, visible para bots */}
+          <input
+            {...honeypotInputProps}
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+          />
           {/* Donor name */}
           <div>
             <label className="text-xs text-primary-foreground/50 mb-1.5 block">Nombre o Familia *</label>

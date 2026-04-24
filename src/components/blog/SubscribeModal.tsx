@@ -131,6 +131,7 @@ const SubscribeModal = ({
       setTimeout(() => {
         setEmail("");
         setName("");
+        setHoneypot("");
         setSuccess(false);
         setSuccessName(null);
         setError(null);

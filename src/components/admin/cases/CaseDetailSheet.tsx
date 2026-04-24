@@ -22,6 +22,7 @@ import CaseTrackingWidget from "./CaseTrackingWidget";
 import CaseQuoteTab from "./CaseQuoteTab";
 import CasePaymentsTab from "./CasePaymentsTab";
 import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
+import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { useNavigate } from "react-router-dom";
 
 interface CaseDetailSheetProps {

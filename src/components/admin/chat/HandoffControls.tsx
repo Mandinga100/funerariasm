@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,24 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
+  const [executiveName, setExecutiveName] = useState<string>("");
+
+  // Cargar nombre del ejecutivo desde profiles para personalizar el mensaje de bienvenida.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) {
+        setExecutiveName(data?.display_name?.trim() || user.email?.split("@")[0] || "tu ejecutivo");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, user?.email]);
 
   async function takeOver() {
     if (!user || busy) return;
@@ -18,12 +36,16 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
       .from("chat_conversations")
       .update({ status: "humano_activo", assigned_to: user.id })
       .eq("id", convo.id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else {
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      // Mensaje de sistema visible: nombre real del ejecutivo + nombre del visitante.
+      const visitorFirstName = convo.visitor_name?.trim().split(/\s+/)[0];
+      const visitorLabel = visitorFirstName ? ` con ${visitorFirstName}` : "";
       await supabase.from("chat_messages").insert({
         conversation_id: convo.id,
         sender_type: "system",
-        content: "Un asesor se ha unido a la conversación.",
+        content: `${executiveName} se ha unido a la conversación${visitorLabel} y le acompañará desde ahora.`,
       });
     }
     setBusy(false);

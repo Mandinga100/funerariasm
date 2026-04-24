@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandoffControls } from "./HandoffControls";
-import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus } from "lucide-react";
+import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ConversationRow } from "./ConversationList";
 
@@ -23,12 +23,58 @@ export function ConversationContextPanel({ convo }: Props) {
   const [priority, setPriority] = useState(convo.priority);
   const [busy, setBusy] = useState(false);
 
+  // Refs para detectar foco — si el admin está editando un input, NO lo sobrescribimos
+  // con el valor que llega por realtime (evita perder lo que está tipeando).
+  // Si el campo no está enfocado, sincronizamos en vivo desde la DB.
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const phoneRef = useRef<HTMLInputElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+
+  // Indicador visual: hay datos nuevos del visitante que aún no se aplicaron
+  // localmente porque el admin está editando. Permite refrescar manualmente.
+  const [pendingSync, setPendingSync] = useState<null | {
+    visitor_name: string | null;
+    visitor_phone: string | null;
+    visitor_email: string | null;
+  }>(null);
+
   useEffect(() => {
-    setName(convo.visitor_name ?? "");
-    setPhone(convo.visitor_phone ?? "");
-    setEmail(convo.visitor_email ?? "");
+    const incoming = {
+      visitor_name: convo.visitor_name ?? "",
+      visitor_phone: convo.visitor_phone ?? "",
+      visitor_email: convo.visitor_email ?? "",
+    };
+
+    // Aplicar sólo a los campos que NO están enfocados, para no romper edición en curso.
+    const focusedEl = typeof document !== "undefined" ? document.activeElement : null;
+
+    let deferred = false;
+    if (nameRef.current !== focusedEl) setName(incoming.visitor_name);
+    else if (incoming.visitor_name !== name) deferred = true;
+
+    if (phoneRef.current !== focusedEl) setPhone(incoming.visitor_phone);
+    else if (incoming.visitor_phone !== phone) deferred = true;
+
+    if (emailRef.current !== focusedEl) setEmail(incoming.visitor_email);
+    else if (incoming.visitor_email !== email) deferred = true;
+
     setPriority(convo.priority);
+
+    setPendingSync(deferred ? {
+      visitor_name: incoming.visitor_name,
+      visitor_phone: incoming.visitor_phone,
+      visitor_email: incoming.visitor_email,
+    } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convo.id, convo.visitor_name, convo.visitor_phone, convo.visitor_email, convo.priority]);
+
+  function applyPendingSync() {
+    if (!pendingSync) return;
+    setName(pendingSync.visitor_name ?? "");
+    setPhone(pendingSync.visitor_phone ?? "");
+    setEmail(pendingSync.visitor_email ?? "");
+    setPendingSync(null);
+  }
 
   async function saveDetails() {
     setBusy(true);
@@ -87,14 +133,28 @@ export function ConversationContextPanel({ convo }: Props) {
         <h3 className="text-sm font-semibold flex items-center gap-1.5">
           <UserIcon className="w-3.5 h-3.5" /> Datos del visitante
         </h3>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="h-8 text-sm" />
+        {pendingSync && (
+          <button
+            type="button"
+            onClick={applyPendingSync}
+            className="w-full flex items-center justify-between gap-2 text-[11px] px-2 py-1.5 rounded-md border border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10 transition-colors"
+            title="El visitante actualizó sus datos mientras editabas. Click para aplicar."
+          >
+            <span className="flex items-center gap-1.5">
+              <RefreshCw className="w-3 h-3 text-primary" />
+              Datos nuevos del visitante
+            </span>
+            <span className="text-primary font-medium">Aplicar</span>
+          </button>
+        )}
+        <Input ref={nameRef} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="h-8 text-sm" />
         <div className="relative">
           <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Teléfono" className="h-8 pl-7 text-sm" />
+          <Input ref={phoneRef} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Teléfono" className="h-8 pl-7 text-sm" />
         </div>
         <div className="relative">
           <Mail className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-8 pl-7 text-sm" />
+          <Input ref={emailRef} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-8 pl-7 text-sm" />
         </div>
         <div>
           <label className="text-[11px] text-muted-foreground">Prioridad</label>

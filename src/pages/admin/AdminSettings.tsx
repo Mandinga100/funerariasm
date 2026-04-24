@@ -654,9 +654,11 @@ export default function AdminSettings() {
               ) : (
                 <div className="space-y-2">
                   {admins.map(admin => {
-                    const canManage = isCeo && admin.user_id !== user?.id;
-                    const canChangeRole = isCeo;
+                    const founder = isFounder(admin.user_id) && admin.role === "ceo";
                     const isSelf = admin.user_id === user?.id;
+                    // El fundador es inamovible: nadie puede gestionar su rol CEO ni eliminarlo
+                    const canManage = isCeo && !isSelf && !founder;
+                    const canChangeRole = isCeo && !founder;
                     const initials = (admin.display_name ?? admin.email ?? admin.user_id).slice(0, 2).toUpperCase();
                     return (
                       <div
@@ -665,10 +667,11 @@ export default function AdminSettings() {
                           "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border transition-colors",
                           isSelf
                             ? "bg-[#C5A059]/5 border-[#C5A059]/40 hover:bg-[#C5A059]/10 cursor-pointer"
-                            : "hover:bg-muted/30"
+                            : "hover:bg-muted/30",
+                          founder && !isSelf && "border-[#C5A059]/40 bg-[#C5A059]/5"
                         )}
                         onClick={isSelf ? openOwnProfile : undefined}
-                        title={isSelf ? "Click para editar tu nombre y foto" : undefined}
+                        title={isSelf ? "Click para editar tu nombre y foto" : (founder ? "CEO fundador inamovible" : undefined)}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
@@ -686,11 +689,17 @@ export default function AdminSettings() {
                                 isAdmin={admin.role === "admin"}
                                 compact
                               />
+                              {founder && (
+                                <Badge variant="outline" className="text-[9px] gap-0.5 border-[#C5A059]/60 text-[#C5A059] px-1.5 py-0 h-4">
+                                  <Lock className="w-2.5 h-2.5" /> Inamovible
+                                </Badge>
+                              )}
                               {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">
                               {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
                               {isSelf && <span className="ml-1 text-[#C5A059] font-medium">(Tú — click para editar)</span>}
+                              {founder && !isSelf && <span className="ml-1 text-[#C5A059] font-medium">· CEO fundador</span>}
                             </p>
                           </div>
                         </div>

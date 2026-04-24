@@ -1460,17 +1460,31 @@ export default function AdminSettings() {
       </Dialog>
 
       {/* ═══════════════ DELETE DIALOG ═══════════════ */}
-      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+      <Dialog open={deleteDialog} onOpenChange={(v) => { if (!saving) setDeleteDialog(v); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-destructive" />Remover Acceso</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {selectedAdmin ? `Eliminar ${ROLE_META[selectedAdmin.role].label}` : "Eliminar miembro"}
+            </DialogTitle>
             <DialogDescription>
-              ¿Está seguro de remover el acceso de <strong>{selectedAdmin?.display_name ?? selectedAdmin?.user_id.slice(0, 12)}</strong>? Perderá acceso al CRM inmediatamente.
+              ¿Está seguro de eliminar a{" "}
+              <strong>{selectedAdmin?.display_name ?? selectedAdmin?.email ?? selectedAdmin?.user_id.slice(0, 12)}</strong>
+              {selectedAdmin && (
+                <> como <strong>{ROLE_META[selectedAdmin.role].label}</strong></>
+              )}?{" "}
+              Perderá acceso al CRM inmediatamente. Esta acción queda registrada en el log de auditoría.
             </DialogDescription>
           </DialogHeader>
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+            Solo se elimina este rol del usuario. Si tiene otros roles asignados (por ejemplo, también es Moderador),
+            esos no se ven afectados.
+          </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
-            <Button variant="destructive" onClick={handleDeleteAdmin} className="w-full sm:w-auto">Remover Acceso</Button>
+            <Button variant="outline" disabled={saving} onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button variant="destructive" disabled={saving} onClick={handleDeleteAdmin} className="w-full sm:w-auto">
+              {saving ? "Eliminando..." : `Sí, eliminar ${selectedAdmin ? ROLE_META[selectedAdmin.role].label : ""}`}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

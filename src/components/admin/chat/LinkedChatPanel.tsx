@@ -27,6 +27,37 @@ interface ConvoRow {
   visitor_phone: string | null;
 }
 
+const STATUS_META: Record<string, { label: string; className: string }> = {
+  humano_activo: {
+    label: "Humano activo",
+    className: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200",
+  },
+  pendiente_humano: {
+    label: "Pendiente",
+    className: "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 animate-pulse",
+  },
+  bot: {
+    label: "Bot",
+    className: "bg-sky-100 text-sky-900 dark:bg-sky-950/60 dark:text-sky-200",
+  },
+  cerrado: {
+    label: "Cerrado",
+    className: "bg-muted text-muted-foreground",
+  },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const meta = STATUS_META[status] ?? {
+    label: status.replace("_", " "),
+    className: "bg-muted text-muted-foreground",
+  };
+  return (
+    <Badge variant="outline" className={`h-4 px-1.5 text-[10px] border-0 ${meta.className}`}>
+      {meta.label}
+    </Badge>
+  );
+}
+
 /**
  * Reusable panel that finds chat conversations linked to a lead or service case
  * and renders the thread inline. Used in LeadDetailSheet and CaseDetailSheet.

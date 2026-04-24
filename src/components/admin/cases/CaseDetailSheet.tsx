@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, Mail, MapPin, Calendar, Save, ExternalLink, User, FileText } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, Save, ExternalLink, User, FileText, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { validateClPhone, openWhatsAppChat, firstName } from "@/lib/whatsapp";
@@ -21,6 +21,8 @@ import CaseHistoryTab from "./CaseHistoryTab";
 import CaseTrackingWidget from "./CaseTrackingWidget";
 import CaseQuoteTab from "./CaseQuoteTab";
 import CasePaymentsTab from "./CasePaymentsTab";
+import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
+import { useNavigate } from "react-router-dom";
 
 interface CaseDetailSheetProps {
   serviceCase: any | null;

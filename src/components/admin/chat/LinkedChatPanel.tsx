@@ -242,7 +242,7 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
         </div>
       </div>
 
-      <div className={`rounded-md border overflow-hidden ${compact ? "h-[420px]" : "h-[520px]"}`}>
+      <div className={`rounded-md border overflow-hidden transition-opacity ${compact ? "h-[420px]" : "h-[520px]"} ${attending ? "opacity-60 pointer-events-none" : ""}`}>
         <MessageThread conversationId={active.id} />
       </div>
     </div>

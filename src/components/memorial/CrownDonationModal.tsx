@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Crown } from "lucide-react";
+import { checkBotShield, createShieldTimer, honeypotInputProps } from "@/lib/bot-shield";
 
 interface CrownDonationModalProps {
   open: boolean;

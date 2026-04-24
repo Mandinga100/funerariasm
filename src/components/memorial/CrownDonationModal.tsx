@@ -21,6 +21,16 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
   const [donorName, setDonorName] = useState("");
   const [message, setMessage] = useState("");
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const startedAtRef = useRef<number>(createShieldTimer());
+
+  // Reset timer y honeypot cada vez que se abre el modal
+  useEffect(() => {
+    if (open) {
+      startedAtRef.current = createShieldTimer();
+      setHoneypot("");
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -29,6 +39,21 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
 
   const handleSubmit = (simulate: boolean) => {
     if (!isValid || !selected) return;
+
+    // Defensa anti-bot — el shield aplica también para simulaciones para
+    // evitar que bots inunden la UI con coronas falsas.
+    const shield = checkBotShield({
+      honeypot,
+      startedAt: startedAtRef.current,
+      formKey: "memorial_offering",
+    });
+    if (!shield.ok) {
+      // Mensaje en consola; no rompemos UX silenciosa con toast aquí porque
+      // el modal no tiene contenedor de errores. El usuario verá que no pasó nada.
+      console.warn("[CrownDonationModal] Shield bloqueó envío:", shield.reason);
+      return;
+    }
+
     onDonate({
       donorName: donorName.trim(),
       message: message.trim(),

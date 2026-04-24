@@ -30,6 +30,14 @@ import {
 
 type AppRole = "ceo" | "admin" | "moderator";
 
+/**
+ * CEO fundador inamovible. Su rol CEO está protegido a nivel de base de datos
+ * mediante el trigger `protect_founder_ceo` (ni siquiera otro CEO puede removerlo).
+ * La UI también bloquea editar, eliminar o cambiar su rol.
+ */
+const FOUNDER_USER_ID = "637e3028-414a-4c56-b4a0-6895cd152683";
+const isFounder = (userId: string | undefined | null) => userId === FOUNDER_USER_ID;
+
 interface AdminUser {
   id: string;
   user_id: string;

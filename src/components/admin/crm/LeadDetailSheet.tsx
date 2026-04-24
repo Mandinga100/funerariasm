@@ -10,13 +10,15 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2, PhoneCall, CalendarPlus } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, MessageSquare, Clock, DollarSign, Sparkles, Send, ExternalLink, Repeat2, PhoneCall, CalendarPlus, ChevronDown } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import AIClassificationCard from "./AIClassificationCard";
 import AIClassificationHistory from "./AIClassificationHistory";
 import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
+import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface LeadDetailSheetProps {
   lead: any | null;

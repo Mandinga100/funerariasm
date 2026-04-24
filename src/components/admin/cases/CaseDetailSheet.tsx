@@ -321,6 +321,11 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
             <CaseDocumentsTab caseId={serviceCase.id} />
           </TabsContent>
 
+          {/* ----- CHAT VINCULADO ----- */}
+          <TabsContent value="chat" className="mt-4">
+            <LinkedChatPanel serviceCaseId={serviceCase.id} compact />
+          </TabsContent>
+
           {/* ----- BITÁCORA ----- */}
           <TabsContent value="historial" className="mt-4">
             <CaseHistoryTab caseId={serviceCase.id} />

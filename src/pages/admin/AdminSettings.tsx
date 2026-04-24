@@ -16,13 +16,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
+import { useNotificationSound, getVolume, setVolume as setSoundVolume, getNormalTone, setNormalTone as persistNormalTone, getUrgentTone, setUrgentTone as persistUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { Slider } from "@/components/ui/slider";
 import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
   Users, Shield, Bell, Moon, Sun, Monitor, BarChart3, Trash2,
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
   Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
-  Filter
+  Filter, Volume2, VolumeX, Play
 } from "lucide-react";
 
 type AppRole = "ceo" | "admin" | "moderator";
@@ -76,6 +78,10 @@ export default function AdminSettings() {
   const [notifLeads, setNotifLeads] = useState(() => localStorage.getItem("crm_notif_leads") !== "false");
   const [notifPayments, setNotifPayments] = useState(() => localStorage.getItem("crm_notif_payments") !== "false");
   const [notifSound, setNotifSound] = useState(() => localStorage.getItem("admin_notification_sound") !== "false");
+  const [soundVolume, setSoundVolume] = useState<number>(() => Math.round(getVolume() * 100));
+  const [normalTone, setNormalTone] = useState<NormalTone>(() => getNormalTone());
+  const [urgentTone, setUrgentTone] = useState<UrgentTone>(() => getUrgentTone());
+  const { playNotification, playUrgentAlert } = useNotificationSound();
   const [wspNotif, setWspNotif] = useState(() => localStorage.getItem("crm_wsp_notif") === "true");
   const [wspNumber, setWspNumber] = useState(() => localStorage.getItem("crm_wsp_number") ?? "+56 9 6433 3760");
 
@@ -433,6 +439,10 @@ export default function AdminSettings() {
     localStorage.setItem("crm_notif_leads", String(notifLeads));
     localStorage.setItem("crm_notif_payments", String(notifPayments));
     localStorage.setItem("admin_notification_sound", String(notifSound));
+    setSoundVolume(soundVolume); // no-op, mantiene estado consistente
+    localStorage.setItem("admin_notification_volume", String(soundVolume / 100));
+    persistNormalTone(normalTone);
+    persistUrgentTone(urgentTone);
     localStorage.setItem("crm_wsp_notif", String(wspNotif));
     localStorage.setItem("crm_wsp_number", wspNumber);
     toast({ title: "Preferencias guardadas" });
@@ -731,11 +741,94 @@ export default function AdminSettings() {
                   <Switch checked={notifPayments} onCheckedChange={setNotifPayments} />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between gap-3">
-                  <div><p className="text-sm font-medium">Sonido de notificación</p><p className="text-xs text-muted-foreground">Reproducir sonido al recibir alertas</p></div>
-                  <Switch checked={notifSound} onCheckedChange={setNotifSound} />
+                <div className="space-y-4 rounded-lg border bg-muted/30 p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      {notifSound && soundVolume > 0 ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+                      <div>
+                        <p className="text-sm font-medium">Sonido de notificación</p>
+                        <p className="text-xs text-muted-foreground">Reproducir alerta al recibir eventos en tiempo real</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifSound} onCheckedChange={setNotifSound} />
+                  </div>
+
+                  {notifSound && (
+                    <>
+                      {/* Volumen */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-medium">Volumen</Label>
+                          <span className="text-xs tabular-nums text-muted-foreground">{soundVolume}%</span>
+                        </div>
+                        <Slider
+                          value={[soundVolume]}
+                          onValueChange={([v]) => setSoundVolume(v)}
+                          min={0}
+                          max={100}
+                          step={5}
+                          aria-label="Volumen de notificaciones"
+                        />
+                      </div>
+
+                      {/* Tono normal */}
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] items-end gap-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">Tono normal</Label>
+                          <Select value={normalTone} onValueChange={(v: NormalTone) => setNormalTone(v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="soft">🔔 Suave (sine)</SelectItem>
+                              <SelectItem value="ping">📍 Ping (dos tonos)</SelectItem>
+                              <SelectItem value="chime">🎶 Campana (triple)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => playNotification({ volume: soundVolume / 100, tone: normalTone })}
+                        >
+                          <Play className="w-3.5 h-3.5" /> Probar
+                        </Button>
+                      </div>
+
+                      {/* Tono urgente */}
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] items-end gap-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium flex items-center gap-1.5">
+                            Tono urgente <Badge variant="destructive" className="h-4 text-[9px] px-1">URGENTE</Badge>
+                          </Label>
+                          <Select value={urgentTone} onValueChange={(v: UrgentTone) => setUrgentTone(v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="alarm">🚨 Alarma (ascendente)</SelectItem>
+                              <SelectItem value="siren">🚓 Sirena (oscilante)</SelectItem>
+                              <SelectItem value="pulse">⚡ Pulso (square)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => playUrgentAlert({ volume: soundVolume / 100, tone: urgentTone })}
+                        >
+                          <Play className="w-3.5 h-3.5" /> Probar
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <Separator />
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div><p className="text-sm font-medium">Notificaciones WhatsApp</p><p className="text-xs text-muted-foreground">Enviar alerta al WhatsApp cuando entre un lead urgente</p></div>

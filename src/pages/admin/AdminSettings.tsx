@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
-import { useNotificationSound, getVolume, setVolume as setSoundVolume, getNormalTone, setNormalTone as persistNormalTone, getUrgentTone, setUrgentTone as persistUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { useNotificationSound, getVolume, setVolume as setSoundVolumeLocal, getNormalTone, setNormalTone as persistNormalTone, getUrgentTone, setUrgentTone as persistUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { useNotificationPrefsSync } from "@/hooks/use-notification-prefs-sync";
 import { Slider } from "@/components/ui/slider";
 import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
@@ -82,6 +83,7 @@ export default function AdminSettings() {
   const [normalTone, setNormalTone] = useState<NormalTone>(() => getNormalTone());
   const [urgentTone, setUrgentTone] = useState<UrgentTone>(() => getUrgentTone());
   const { playNotification, playUrgentAlert } = useNotificationSound();
+  const { savePrefs: savePrefsCloud, loading: prefsLoading } = useNotificationPrefsSync();
   const [wspNotif, setWspNotif] = useState(() => localStorage.getItem("crm_wsp_notif") === "true");
   const [wspNumber, setWspNumber] = useState(() => localStorage.getItem("crm_wsp_number") ?? "+56 9 6433 3760");
 

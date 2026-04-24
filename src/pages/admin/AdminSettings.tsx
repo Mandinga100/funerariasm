@@ -87,6 +87,17 @@ export default function AdminSettings() {
   const [wspNotif, setWspNotif] = useState(() => localStorage.getItem("crm_wsp_notif") === "true");
   const [wspNumber, setWspNumber] = useState(() => localStorage.getItem("crm_wsp_number") ?? "+56 9 6433 3760");
 
+  // Re-hidrata los controles cuando llegan/cambian las preferencias en la nube (login, otro dispositivo).
+  useEffect(() => {
+    if (prefsLoading) return;
+    setNotifSound(localStorage.getItem("admin_notification_sound") !== "false");
+    setSoundVolume(Math.round(getVolume() * 100));
+    setNormalTone(getNormalTone());
+    setUrgentTone(getUrgentTone());
+    setNotifLeads(localStorage.getItem("crm_notif_leads") !== "false");
+    setNotifPayments(localStorage.getItem("crm_notif_payments") !== "false");
+  }, [prefsLoading]);
+
   /* ── Security State ── */
   const [showPass, setShowPass] = useState(false);
   const [newPass, setNewPass] = useState("");

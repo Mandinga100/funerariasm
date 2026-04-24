@@ -4,6 +4,18 @@ import { getComunaAttribution } from "./comuna-tracking";
 import { validateFullName, validateChileanPhone, validateEmail } from "./lead-validation";
 import { checkBotShield, registerShieldHit } from "./bot-shield";
 
+/** Error lanzado por las defensas anti-bot. Permite al UI reaccionar (ej. mostrar captcha). */
+export class BotShieldError extends Error {
+  reason: string;
+  requiresChallenge: boolean;
+  constructor(message: string, reason: string, requiresChallenge: boolean) {
+    super(message);
+    this.name = "BotShieldError";
+    this.reason = reason;
+    this.requiresChallenge = requiresChallenge;
+  }
+}
+
 interface ContactData {
   contactType: string;
   name?: string;
@@ -28,6 +40,8 @@ interface ContactData {
   formStartedAt?: number;
   /** Honeypot — debe venir vacío. */
   honeypot?: string;
+  /** Marca true si el usuario ya pasó el captcha esta sesión. */
+  challengePassed?: boolean;
 }
 
 export const submitContact = async (data: ContactData) => {
@@ -39,9 +53,14 @@ export const submitContact = async (data: ContactData) => {
       honeypot: data.honeypot ?? "",
       startedAt: data.formStartedAt ?? Date.now(),
       formKey: `contact_${data.contactType}`,
+      challengePassed: data.challengePassed,
     });
     if (!shield.ok) {
-      throw new Error(shield.message ?? "Envío bloqueado por motivos de seguridad.");
+      throw new BotShieldError(
+        shield.message ?? "Envío bloqueado por motivos de seguridad.",
+        shield.reason ?? "blocked",
+        shield.requiresChallenge === true,
+      );
     }
   }
 

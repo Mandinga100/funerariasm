@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, forwardRef } from "react";
 import { Send, Phone, MessageCircle, CheckCircle, Loader2 } from "lucide-react";
-import { submitContact } from "@/lib/contacts";
+import { submitContact, BotShieldError } from "@/lib/contacts";
 import { buildWhatsAppUrl, type ContactIntent } from "@/lib/whatsapp";
-import { createShieldTimer, honeypotInputProps } from "@/lib/bot-shield";
+import { createShieldTimer, honeypotInputProps, hasValidChallengePass } from "@/lib/bot-shield";
+import ChallengeGate from "@/components/security/ChallengeGate";
 
 type FormType = "general" | "urgencia" | "cotizacion" | "planificacion";
 
@@ -56,16 +57,16 @@ const ContactForm = ({
   const [whatsappMsg, setWhatsappMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
+  const [needsChallenge, setNeedsChallenge] = useState(false);
+  const [challengePassed, setChallengePassed] = useState(false);
   const startedAtRef = useRef<number>(createShieldTimer());
 
   useEffect(() => {
     startedAtRef.current = createShieldTimer();
-  }, []);
+    setChallengePassed(hasValidChallengePass(`contact_${type}`));
+  }, [type]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || (!form.email.trim() && !form.phone.trim())) return;
-
+  const submit = async (passed: boolean) => {
     setStatus("loading");
     setErrorMsg(null);
     try {
@@ -82,14 +83,32 @@ const ContactForm = ({
         urgency: config.urgency,
         formStartedAt: startedAtRef.current,
         honeypot,
+        challengePassed: passed,
       });
       setWhatsappMsg(result.whatsappMessage);
       setStatus("success");
       onSuccess?.();
     } catch (err) {
+      if (err instanceof BotShieldError && err.requiresChallenge) {
+        setNeedsChallenge(true);
+      }
       setErrorMsg(err instanceof Error ? err.message : null);
       setStatus("error");
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || (!form.email.trim() && !form.phone.trim())) return;
+    await submit(challengePassed);
+  };
+
+  const handleChallengePass = () => {
+    setChallengePassed(true);
+    setNeedsChallenge(false);
+    setErrorMsg(null);
+    // Reintenta el envío automáticamente con el pase recién obtenido.
+    void submit(true);
   };
 
   if (status === "success") {
@@ -229,7 +248,11 @@ const ContactForm = ({
           />
         </div>
 
-        {status === "error" && (
+        {needsChallenge && (
+          <ChallengeGate formKey={`contact_${type}`} onPass={handleChallengePass} />
+        )}
+
+        {status === "error" && !needsChallenge && (
           <p className="text-sm text-destructive">
             {errorMsg || "Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente."}
           </p>

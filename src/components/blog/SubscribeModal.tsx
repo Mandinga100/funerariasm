@@ -10,7 +10,9 @@ import {
   createShieldTimer,
   honeypotInputProps,
   registerShieldHit,
+  hasValidChallengePass,
 } from "@/lib/bot-shield";
+import ChallengeGate from "@/components/security/ChallengeGate";
 
 interface SubscribeModalProps {
   open: boolean;
@@ -58,24 +60,30 @@ const SubscribeModal = ({
   const [error, setError] = useState<string | null>(null);
 
   const [honeypot, setHoneypot] = useState("");
+  const [needsChallenge, setNeedsChallenge] = useState(false);
+  const [challengePassed, setChallengePassed] = useState(false);
   const startedAtRef = useRef<number>(createShieldTimer());
 
   // Reset timer cada vez que se abre el modal
   useEffect(() => {
-    if (open) startedAtRef.current = createShieldTimer();
+    if (open) {
+      startedAtRef.current = createShieldTimer();
+      setChallengePassed(hasValidChallengePass("blog_subscribe"));
+    }
   }, [open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performSubmit = async (passed: boolean) => {
     setError(null);
 
-    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    // Defensa anti-bot: honeypot + timing + throttle por sesión + challenge si corresponde
     const shield = checkBotShield({
       honeypot,
       startedAt: startedAtRef.current,
       formKey: "blog_subscribe",
+      challengePassed: passed,
     });
     if (!shield.ok) {
+      if (shield.requiresChallenge) setNeedsChallenge(true);
       setError(shield.message ?? "Envío bloqueado");
       return;
     }
@@ -125,6 +133,18 @@ const SubscribeModal = ({
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void performSubmit(challengePassed);
+  };
+
+  const handleChallengePass = () => {
+    setChallengePassed(true);
+    setNeedsChallenge(false);
+    setError(null);
+    void performSubmit(true);
+  };
+
   const handleClose = (next: boolean) => {
     if (!next) {
       // Reset cuando se cierra
@@ -135,6 +155,7 @@ const SubscribeModal = ({
         setSuccess(false);
         setSuccessName(null);
         setError(null);
+        setNeedsChallenge(false);
       }, 200);
     }
     onOpenChange(next);
@@ -218,6 +239,11 @@ const SubscribeModal = ({
                 </p>
               )}
             </div>
+
+            {needsChallenge && (
+              <ChallengeGate formKey="blog_subscribe" onPass={handleChallengePass} />
+            )}
+
 
             <button
               type="submit"

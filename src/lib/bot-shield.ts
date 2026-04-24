@@ -38,13 +38,78 @@ interface ShieldCheckInput {
   startedAt: number;
   /** Identificador único del formulario (para throttle por separado). */
   formKey: string;
+  /**
+   * Si el usuario ya resolvió el challenge en esta sesión, omite la exigencia
+   * por tiempo limitado (ver `CHALLENGE_PASS_TTL_MS`).
+   */
+  challengePassed?: boolean;
 }
 
 interface ShieldResult {
   ok: boolean;
-  reason?: "honeypot" | "too_fast" | "throttled";
+  reason?: "honeypot" | "too_fast" | "throttled" | "challenge_required";
   /** Mensaje legible para mostrar al usuario (en español). */
   message?: string;
+  /** True cuando el usuario debe resolver un captcha antes de reintentar. */
+  requiresChallenge?: boolean;
+}
+
+// ---------- Suspicion tracking ----------
+
+function readSuspicionHits(formKey: string): number[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SUSPICION_PREFIX + formKey);
+    const now = Date.now();
+    const hits: number[] = raw ? JSON.parse(raw) : [];
+    return hits.filter((t) => now - t < SUSPICION_WINDOW_MS);
+  } catch {
+    return [];
+  }
+}
+
+function recordSuspicion(formKey: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const recent = readSuspicionHits(formKey);
+    recent.push(Date.now());
+    window.localStorage.setItem(SUSPICION_PREFIX + formKey, JSON.stringify(recent));
+    return recent.length;
+  } catch {
+    return 0;
+  }
+}
+
+/** ¿Hay suficientes señales sospechosas para exigir captcha? */
+export function shouldRequireChallenge(formKey: string): boolean {
+  return readSuspicionHits(formKey).length >= SUSPICION_THRESHOLD;
+}
+
+const challengePassKey = (formKey: string) => `bot_shield_pass:${formKey}`;
+
+/** Marca el challenge como resuelto por un tiempo limitado. */
+export function markChallengePassed(formKey: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      challengePassKey(formKey),
+      String(Date.now() + CHALLENGE_PASS_TTL_MS),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** ¿El pase de challenge sigue vigente? */
+export function hasValidChallengePass(formKey: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(challengePassKey(formKey));
+    if (!raw) return false;
+    return Number(raw) > Date.now();
+  } catch {
+    return false;
+  }
 }
 
 /** Ejecuta las tres capas de defensa antes de enviar. */

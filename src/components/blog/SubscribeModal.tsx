@@ -155,6 +155,7 @@ const SubscribeModal = ({
         setSuccess(false);
         setSuccessName(null);
         setError(null);
+        setNeedsChallenge(false);
       }, 200);
     }
     onOpenChange(next);

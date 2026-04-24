@@ -563,6 +563,20 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             );
           })()}
 
+          {/* Linked Chat Conversations */}
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group">
+              <span className="flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" />
+                Conversaciones de chat vinculadas
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <LinkedChatPanel leadId={lead.id} compact />
+            </CollapsibleContent>
+          </Collapsible>
+
           {/* Activity Timeline */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Timeline de Actividad</label>

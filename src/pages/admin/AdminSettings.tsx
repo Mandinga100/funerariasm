@@ -689,11 +689,6 @@ export default function AdminSettings() {
                                 isAdmin={admin.role === "admin"}
                                 compact
                               />
-                              {founder && (
-                                <Badge variant="outline" className="text-[9px] gap-0.5 border-[#C5A059]/60 text-[#C5A059] px-1.5 py-0 h-4">
-                                  <Lock className="w-2.5 h-2.5" /> Inamovible
-                                </Badge>
-                              )}
                               {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">

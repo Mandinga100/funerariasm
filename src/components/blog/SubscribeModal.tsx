@@ -10,7 +10,9 @@ import {
   createShieldTimer,
   honeypotInputProps,
   registerShieldHit,
+  hasValidChallengePass,
 } from "@/lib/bot-shield";
+import ChallengeGate from "@/components/security/ChallengeGate";
 
 interface SubscribeModalProps {
   open: boolean;

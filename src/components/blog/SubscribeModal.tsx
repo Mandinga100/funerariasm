@@ -72,17 +72,18 @@ const SubscribeModal = ({
     }
   }, [open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performSubmit = async (passed: boolean) => {
     setError(null);
 
-    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    // Defensa anti-bot: honeypot + timing + throttle por sesión + challenge si corresponde
     const shield = checkBotShield({
       honeypot,
       startedAt: startedAtRef.current,
       formKey: "blog_subscribe",
+      challengePassed: passed,
     });
     if (!shield.ok) {
+      if (shield.requiresChallenge) setNeedsChallenge(true);
       setError(shield.message ?? "Envío bloqueado");
       return;
     }
@@ -130,6 +131,18 @@ const SubscribeModal = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void performSubmit(challengePassed);
+  };
+
+  const handleChallengePass = () => {
+    setChallengePassed(true);
+    setNeedsChallenge(false);
+    setError(null);
+    void performSubmit(true);
   };
 
   const handleClose = (next: boolean) => {

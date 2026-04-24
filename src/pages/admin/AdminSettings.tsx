@@ -447,18 +447,33 @@ export default function AdminSettings() {
     setChangingPass(false);
   };
 
-  /* ── Save notification prefs ── */
-  const saveNotifPrefs = () => {
-    localStorage.setItem("crm_notif_leads", String(notifLeads));
-    localStorage.setItem("crm_notif_payments", String(notifPayments));
-    localStorage.setItem("admin_notification_sound", String(notifSound));
-    setSoundVolume(soundVolume); // no-op, mantiene estado consistente
-    localStorage.setItem("admin_notification_volume", String(soundVolume / 100));
-    persistNormalTone(normalTone);
-    persistUrgentTone(urgentTone);
+  /* ── Save notification prefs (sincroniza en Lovable Cloud + cache local) ── */
+  const saveNotifPrefs = async () => {
+    // WhatsApp queda local (config de organización, no por usuario)
     localStorage.setItem("crm_wsp_notif", String(wspNotif));
     localStorage.setItem("crm_wsp_number", wspNumber);
-    toast({ title: "Preferencias guardadas" });
+
+    const { error } = await savePrefsCloud({
+      sound_enabled: notifSound,
+      volume: soundVolume / 100,
+      normal_tone: normalTone,
+      urgent_tone: urgentTone,
+      notif_leads: notifLeads,
+      notif_payments: notifPayments,
+    });
+
+    if (error) {
+      toast({
+        title: "Guardado local",
+        description: "Las preferencias se aplicaron en este dispositivo, pero no se pudieron sincronizar con la nube.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Preferencias sincronizadas",
+        description: "Volumen y tonos disponibles en todos tus dispositivos.",
+      });
+    }
   };
 
   /* ── Save integrations ── */

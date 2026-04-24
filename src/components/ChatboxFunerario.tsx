@@ -114,35 +114,72 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
   // overlay no modal.
 
   /**
-   * Persiste un evento del visitante en `chat_conversations` + `chat_messages`
-   * vía la edge function pública. La primera llamada crea la conversación
-   * (lo que la hace aparecer de inmediato en /admin/chat por Realtime).
-   * Las llamadas siguientes solo agregan mensajes / actualizan datos del visitante.
+   * Cola serializada de eventos del visitante hacia la edge function.
    *
-   * Es no bloqueante: si el endpoint falla, el chat sigue funcionando para el usuario.
+   * Razón: cuando el usuario hace clicks rápidos en el árbol del chat, varias
+   * llamadas a `chat-public-send` se disparan en paralelo. Eso provocaba:
+   *  - Race conditions en el upsert de la conversación (se creaban dobles).
+   *  - Errores 429 "too_fast" desde el edge runtime / reintentos del SDK.
+   *
+   * Solución: cola FIFO + debounce mínimo de 350ms entre envíos + 1 reintento
+   * con backoff si la primera llamada falla. Todo no bloqueante para la UI.
+   */
+  const sendQueueRef = useRef<Array<{ content: string; request_human?: boolean }>>([]);
+  const sendingRef = useRef(false);
+  const lastSentAtRef = useRef(0);
+  const MIN_GAP_MS = 350;
+
+  const flushSendQueue = useCallback(async () => {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      while (sendQueueRef.current.length > 0) {
+        const next = sendQueueRef.current.shift()!;
+        const gap = Date.now() - lastSentAtRef.current;
+        if (gap < MIN_GAP_MS) {
+          await new Promise((r) => setTimeout(r, MIN_GAP_MS - gap));
+        }
+        const token = getOrCreateChatToken();
+        const body = {
+          conversation_token: token,
+          content: next.content,
+          visitor_name: contactData.name || undefined,
+          visitor_phone: contactData.phone || undefined,
+          visitor_email: contactData.email || undefined,
+          request_human: next.request_human,
+          loaded_at: loadedAtRef.current,
+          source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
+        };
+        try {
+          const res = await supabase.functions.invoke("chat-public-send", { body });
+          // Reintento único si el edge respondió con too_fast / 429.
+          const errMsg = (res as { error?: { message?: string } } | null)?.error?.message ?? "";
+          if (/too_fast|429/i.test(errMsg)) {
+            await new Promise((r) => setTimeout(r, 800));
+            await supabase.functions.invoke("chat-public-send", { body });
+          }
+          conversationCreatedRef.current = true;
+        } catch {
+          /* swallow: chat sigue funcionando aunque CRM no reciba el evento */
+        }
+        lastSentAtRef.current = Date.now();
+      }
+    } finally {
+      sendingRef.current = false;
+    }
+  }, [contactData.email, contactData.name, contactData.phone]);
+
+  /**
+   * Encola un evento del visitante para persistirlo en `chat_conversations` +
+   * `chat_messages`. La primera llamada crea la conversación (visible de
+   * inmediato en /admin/chat vía Realtime). No bloqueante.
    */
   const pushVisitorEvent = useCallback(
     (content: string, extras?: { request_human?: boolean }) => {
-      try {
-        const token = getOrCreateChatToken();
-        void supabase.functions.invoke("chat-public-send", {
-          body: {
-            conversation_token: token,
-            content,
-            visitor_name: contactData.name || undefined,
-            visitor_phone: contactData.phone || undefined,
-            visitor_email: contactData.email || undefined,
-            request_human: extras?.request_human,
-            loaded_at: loadedAtRef.current,
-            source_path: typeof window !== "undefined" ? window.location.pathname : undefined,
-          },
-        });
-        conversationCreatedRef.current = true;
-      } catch {
-        /* non-blocking */
-      }
+      sendQueueRef.current.push({ content, request_human: extras?.request_human });
+      void flushSendQueue();
     },
-    [contactData.email, contactData.name, contactData.phone],
+    [flushSendQueue],
   );
 
   // Cierre suave (minimizar): conserva historial y estado.

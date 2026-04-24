@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -12,6 +12,12 @@ import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
 import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
+import {
+  checkBotShield,
+  createShieldTimer,
+  honeypotInputProps,
+  registerShieldHit,
+} from "@/lib/bot-shield";
 
 interface Memorial {
   id: string;
@@ -72,6 +78,8 @@ const MemorialDetail = () => {
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
+  const [condolenceHoneypot, setCondolenceHoneypot] = useState("");
+  const condolenceStartedAtRef = useRef<number>(createShieldTimer());
   const [sending, setSending] = useState(false);
   const [crownModalOpen, setCrownModalOpen] = useState(false);
   const [tributesModalOpen, setTributesModalOpen] = useState(false);
@@ -166,6 +174,18 @@ const MemorialDetail = () => {
   const handleCondolenceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authorName.trim() || !message.trim() || !memorial) return;
+
+    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    const shield = checkBotShield({
+      honeypot: condolenceHoneypot,
+      startedAt: condolenceStartedAtRef.current,
+      formKey: `condolence_${memorial.id}`,
+    });
+    if (!shield.ok) {
+      toast.error(shield.message ?? "Envío bloqueado.");
+      return;
+    }
+
     setSending(true);
     const { error } = await supabase.from("condolences").insert({
       memorial_id: memorial.id,
@@ -176,9 +196,12 @@ const MemorialDetail = () => {
     if (error) {
       toast.error("No se pudo enviar su condolencia.");
     } else {
+      registerShieldHit(`condolence_${memorial.id}`);
       toast.success("Condolencia enviada. Gracias.");
       setAuthorName("");
       setMessage("");
+      setCondolenceHoneypot("");
+      condolenceStartedAtRef.current = createShieldTimer();
     }
   };
 
@@ -237,6 +260,7 @@ const MemorialDetail = () => {
       return;
     }
 
+    registerShieldHit("memorial_offering");
     setBaseOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);
@@ -396,6 +420,12 @@ const MemorialDetail = () => {
 
             <form onSubmit={handleCondolenceSubmit} className="bg-primary-foreground/[0.02] border border-primary-foreground/10 rounded-lg p-6 mb-8">
               <h3 className="text-sm font-medium text-primary-foreground/70 mb-4">Envíe sus condolencias</h3>
+              {/* Honeypot — invisible para humanos, visible para bots */}
+              <input
+                {...honeypotInputProps}
+                value={condolenceHoneypot}
+                onChange={(e) => setCondolenceHoneypot(e.target.value)}
+              />
               <div className="space-y-4">
                 <input
                   type="text"

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Crown } from "lucide-react";
+import { checkBotShield, createShieldTimer, honeypotInputProps } from "@/lib/bot-shield";
 
 interface CrownDonationModalProps {
   open: boolean;
@@ -20,6 +21,16 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
   const [donorName, setDonorName] = useState("");
   const [message, setMessage] = useState("");
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const startedAtRef = useRef<number>(createShieldTimer());
+
+  // Reset timer y honeypot cada vez que se abre el modal
+  useEffect(() => {
+    if (open) {
+      startedAtRef.current = createShieldTimer();
+      setHoneypot("");
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -28,6 +39,21 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
 
   const handleSubmit = (simulate: boolean) => {
     if (!isValid || !selected) return;
+
+    // Defensa anti-bot — el shield aplica también para simulaciones para
+    // evitar que bots inunden la UI con coronas falsas.
+    const shield = checkBotShield({
+      honeypot,
+      startedAt: startedAtRef.current,
+      formKey: "memorial_offering",
+    });
+    if (!shield.ok) {
+      // Mensaje en consola; no rompemos UX silenciosa con toast aquí porque
+      // el modal no tiene contenedor de errores. El usuario verá que no pasó nada.
+      console.warn("[CrownDonationModal] Shield bloqueó envío:", shield.reason);
+      return;
+    }
+
     onDonate({
       donorName: donorName.trim(),
       message: message.trim(),
@@ -60,6 +86,12 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
         </p>
 
         <div className="px-6 space-y-4 pb-6">
+          {/* Honeypot — invisible para humanos, visible para bots */}
+          <input
+            {...honeypotInputProps}
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+          />
           {/* Donor name */}
           <div>
             <label className="text-xs text-primary-foreground/50 mb-1.5 block">Nombre o Familia *</label>

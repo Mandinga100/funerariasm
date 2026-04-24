@@ -1,7 +1,8 @@
-import { useState, forwardRef } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { Send, Phone, MessageCircle, CheckCircle, Loader2 } from "lucide-react";
 import { submitContact } from "@/lib/contacts";
 import { buildWhatsAppUrl, type ContactIntent } from "@/lib/whatsapp";
+import { createShieldTimer, honeypotInputProps } from "@/lib/bot-shield";
 
 type FormType = "general" | "urgencia" | "cotizacion" | "planificacion";
 
@@ -53,12 +54,20 @@ const ContactForm = ({
   });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [whatsappMsg, setWhatsappMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const startedAtRef = useRef<number>(createShieldTimer());
+
+  useEffect(() => {
+    startedAtRef.current = createShieldTimer();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || (!form.email.trim() && !form.phone.trim())) return;
 
     setStatus("loading");
+    setErrorMsg(null);
     try {
       const result = await submitContact({
         contactType: type,
@@ -71,11 +80,14 @@ const ContactForm = ({
         comuna: form.comuna,
         selectedPlan,
         urgency: config.urgency,
+        formStartedAt: startedAtRef.current,
+        honeypot,
       });
       setWhatsappMsg(result.whatsappMessage);
       setStatus("success");
       onSuccess?.();
-    } catch {
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : null);
       setStatus("error");
     }
   };

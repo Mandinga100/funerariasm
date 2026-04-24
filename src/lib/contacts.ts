@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContactIntent, buildWhatsAppMessage } from "./whatsapp";
 import { getComunaAttribution } from "./comuna-tracking";
 import { validateFullName, validateChileanPhone, validateEmail } from "./lead-validation";
+import { checkBotShield, registerShieldHit } from "./bot-shield";
 
 interface ContactData {
   contactType: string;
@@ -19,9 +20,31 @@ interface ContactData {
    * registrado al primer click del chatbox antes de pedir datos).
    */
   skipValidation?: boolean;
+  /**
+   * Timestamp (Date.now()) cuando el formulario fue cargado/abierto.
+   * Si se provee, se aplica timing check + throttle por sesión.
+   * Si se omite, solo se aplica throttle (chatbox no tiene timer claro).
+   */
+  formStartedAt?: number;
+  /** Honeypot — debe venir vacío. */
+  honeypot?: string;
 }
 
 export const submitContact = async (data: ContactData) => {
+  // Defensa anti-bot opcional: solo se aplica cuando el caller envía
+  // formStartedAt y/o honeypot (formularios tradicionales). El chatbox
+  // omite estos campos y sigue funcionando como antes.
+  if (data.formStartedAt !== undefined || data.honeypot !== undefined) {
+    const shield = checkBotShield({
+      honeypot: data.honeypot ?? "",
+      startedAt: data.formStartedAt ?? Date.now(),
+      formKey: `contact_${data.contactType}`,
+    });
+    if (!shield.ok) {
+      throw new Error(shield.message ?? "Envío bloqueado por motivos de seguridad.");
+    }
+  }
+
   // Validación de defensa en profundidad: si vienen nombre/teléfono/email,
   // se exige que sean reales. Esto bloquea bots y formularios mal armados
   // antes de tocar la base de datos. El chatbox ya valida paso a paso,
@@ -138,6 +161,11 @@ export const submitContact = async (data: ContactData) => {
   if (dbError) {
     console.error("Error saving contact lead:", dbError);
     throw new Error("No se pudo registrar el contacto");
+  }
+
+  // Registra el hit en el throttle por sesión solo si vino con shield activo
+  if (data.formStartedAt !== undefined || data.honeypot !== undefined) {
+    registerShieldHit(`contact_${data.contactType}`);
   }
 
   // 2. Send email copy via edge function

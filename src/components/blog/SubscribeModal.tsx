@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, Sparkles, CheckCircle2, Loader2, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { detectSubscriptionSource } from "@/lib/subscription-source";
+import {
+  checkBotShield,
+  createShieldTimer,
+  honeypotInputProps,
+  registerShieldHit,
+} from "@/lib/bot-shield";
 
 interface SubscribeModalProps {
   open: boolean;
@@ -51,9 +57,29 @@ const SubscribeModal = ({
   const [successName, setSuccessName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [honeypot, setHoneypot] = useState("");
+  const startedAtRef = useRef<number>(createShieldTimer());
+
+  // Reset timer cada vez que se abre el modal
+  useEffect(() => {
+    if (open) startedAtRef.current = createShieldTimer();
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Defensa anti-bot: honeypot + timing + throttle por sesión
+    const shield = checkBotShield({
+      honeypot,
+      startedAt: startedAtRef.current,
+      formKey: "blog_subscribe",
+    });
+    if (!shield.ok) {
+      setError(shield.message ?? "Envío bloqueado");
+      return;
+    }
+
     const parsedEmail = emailSchema.safeParse(email);
     if (!parsedEmail.success) {
       setError(parsedEmail.error.issues[0]?.message ?? "Correo inválido");
@@ -88,6 +114,7 @@ const SubscribeModal = ({
           setError("No fue posible procesar la suscripción. Intente nuevamente.");
         }
       } else {
+        registerShieldHit("blog_subscribe");
         setSuccessName(cleanName);
         setSuccess(true);
       }
@@ -104,6 +131,7 @@ const SubscribeModal = ({
       setTimeout(() => {
         setEmail("");
         setName("");
+        setHoneypot("");
         setSuccess(false);
         setSuccessName(null);
         setError(null);
@@ -142,6 +170,12 @@ const SubscribeModal = ({
 
         {!success && (
           <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+            {/* Honeypot — invisible para humanos, visible para bots */}
+            <input
+              {...honeypotInputProps}
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
               <Input

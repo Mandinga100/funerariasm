@@ -27,6 +27,37 @@ interface ConvoRow {
   visitor_phone: string | null;
 }
 
+const STATUS_META: Record<string, { label: string; className: string }> = {
+  humano_activo: {
+    label: "Humano activo",
+    className: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200",
+  },
+  pendiente_humano: {
+    label: "Pendiente",
+    className: "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 animate-pulse",
+  },
+  bot: {
+    label: "Bot",
+    className: "bg-sky-100 text-sky-900 dark:bg-sky-950/60 dark:text-sky-200",
+  },
+  cerrado: {
+    label: "Cerrado",
+    className: "bg-muted text-muted-foreground",
+  },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const meta = STATUS_META[status] ?? {
+    label: status.replace("_", " "),
+    className: "bg-muted text-muted-foreground",
+  };
+  return (
+    <Badge variant="outline" className={`h-4 px-1.5 text-[10px] border-0 ${meta.className}`}>
+      {meta.label}
+    </Badge>
+  );
+}
+
 /**
  * Reusable panel that finds chat conversations linked to a lead or service case
  * and renders the thread inline. Used in LeadDetailSheet and CaseDetailSheet.
@@ -140,12 +171,24 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
       )}
 
       <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="h-4 px-1 text-[10px] capitalize">{active.status.replace("_", " ")}</Badge>
-          <span>·</span>
-          <span>Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <StatusBadge status={active.status} />
+          {(active.priority === "urgente" || active.priority === "alta") && (
+            <Badge
+              variant="outline"
+              className={`h-4 px-1.5 text-[10px] capitalize border-0 ${
+                active.priority === "urgente"
+                  ? "bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200 animate-pulse"
+                  : "bg-orange-100 text-orange-900 dark:bg-orange-950/60 dark:text-orange-200"
+              }`}
+            >
+              {active.priority}
+            </Badge>
+          )}
+          <span className="hidden sm:inline">·</span>
+          <span className="truncate">Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
         </div>
-        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2">
+        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2 shrink-0">
           <Link to={`/admin/chat?conversation=${active.id}`}>
             Bandeja completa
           </Link>

@@ -170,6 +170,12 @@ const SubscribeModal = ({
 
         {!success && (
           <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+            {/* Honeypot — invisible para humanos, visible para bots */}
+            <input
+              {...honeypotInputProps}
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
               <Input

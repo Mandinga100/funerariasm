@@ -1,7 +1,8 @@
-import { useState, forwardRef } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { Send, Phone, MessageCircle, CheckCircle, Loader2 } from "lucide-react";
 import { submitContact } from "@/lib/contacts";
 import { buildWhatsAppUrl, type ContactIntent } from "@/lib/whatsapp";
+import { createShieldTimer, honeypotInputProps } from "@/lib/bot-shield";
 
 type FormType = "general" | "urgencia" | "cotizacion" | "planificacion";
 

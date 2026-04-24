@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { MessageThread } from "./MessageThread";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MessageSquare, ExternalLink, Hand } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   /** Filter conversations linked to this lead. */
@@ -66,6 +68,31 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
   const [convos, setConvos] = useState<ConvoRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attending, setAttending] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  async function handleAttendNow(convoId: string) {
+    if (!user || attending) return;
+    setAttending(true);
+    const { error } = await supabase
+      .from("chat_conversations")
+      .update({ status: "humano_activo", assigned_to: user.id })
+      .eq("id", convoId);
+    if (error) {
+      toast({ title: "No se pudo tomar el chat", description: error.message, variant: "destructive" });
+      setAttending(false);
+      return;
+    }
+    await supabase.from("chat_messages").insert({
+      conversation_id: convoId,
+      sender_type: "system",
+      content: "Un asesor se ha unido a la conversación.",
+    });
+    setAttending(false);
+    navigate(`/admin/chat?conversation=${convoId}`);
+  }
 
   useEffect(() => {
     if (!leadId && !serviceCaseId) return;
@@ -188,11 +215,23 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
           <span className="hidden sm:inline">·</span>
           <span className="truncate">Última actividad {formatDistanceToNow(new Date(active.last_message_at), { addSuffix: true, locale: es })}</span>
         </div>
-        <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2 shrink-0">
-          <Link to={`/admin/chat?conversation=${active.id}`}>
-            Bandeja completa
-          </Link>
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          {active.status !== "cerrado" && (
+            <Button
+              size="sm"
+              onClick={() => handleAttendNow(active.id)}
+              disabled={attending}
+              className="h-6 text-[10px] px-2 gap-1"
+            >
+              <Hand className="w-3 h-3" /> Atender ahora
+            </Button>
+          )}
+          <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2">
+            <Link to={`/admin/chat?conversation=${active.id}`}>
+              Bandeja completa
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className={`rounded-md border overflow-hidden ${compact ? "h-[420px]" : "h-[520px]"}`}>

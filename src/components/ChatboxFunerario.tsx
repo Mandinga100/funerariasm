@@ -287,12 +287,12 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
    */
   const handleContactInput = async (value: string) => {
     setMessages((prev) => [...prev, { role: "user", content: value }]);
-    // Refleja cada respuesta del visitante (nombre/teléfono/email) en la bandeja CRM.
-    pushVisitorEvent(value);
 
     if (contactStep === "name") {
       const result = validateFullName(value);
       if (!result.ok) {
+        // Eco al CRM solo del texto crudo (sin override) — entrada inválida.
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nPor favor escriba nuevamente su nombre completo.` },
@@ -300,6 +300,8 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
         return;
       }
       setContactData((prev) => ({ ...prev, name: result.value! }));
+      // Override inmediato: el CRM ve el nombre validado en esta misma llamada.
+      pushVisitorEvent(value, { overrides: { name: result.value! } });
       setContactStep("phone");
       setMessages((prev) => [
         ...prev,
@@ -311,6 +313,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (contactStep === "phone") {
       const result = validateChileanPhone(value);
       if (!result.ok) {
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nIngrese su celular chileno nuevamente.` },
@@ -318,6 +321,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
         return;
       }
       setContactData((prev) => ({ ...prev, phone: result.value! }));
+      pushVisitorEvent(value, { overrides: { phone: result.value! } });
       setContactStep("email");
       setMessages((prev) => [
         ...prev,
@@ -329,6 +333,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (contactStep === "email") {
       const result = validateEmail(value, { required: true });
       if (!result.ok) {
+        pushVisitorEvent(value);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `${result.error}\n\nVerifique su correo e intente nuevamente.` },
@@ -337,6 +342,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
       }
       const finalData = { ...contactData, email: result.value! };
       setContactData(finalData);
+      pushVisitorEvent(value, { overrides: { email: result.value! } });
       setContactStep("done");
 
       // Decidir urgency desde el intent — clasificación determinista del lead

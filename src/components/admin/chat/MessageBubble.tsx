@@ -11,6 +11,7 @@ export interface ChatMessageRow {
   attachment_url: string | null;
   attachment_name: string | null;
   voice_url: string | null;
+  read_by_admin_at: string | null;
   created_at: string;
 }
 

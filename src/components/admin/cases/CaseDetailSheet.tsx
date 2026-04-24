@@ -137,14 +137,28 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   return (
     <Sheet open={!!serviceCase} onOpenChange={() => onClose()}>
       <SheetContent className="w-full sm:w-[640px] sm:max-w-[640px] overflow-y-auto p-4 sm:p-6">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <span className="font-mono text-sm text-muted-foreground">{serviceCase.case_number}</span>
-          </SheetTitle>
-          <p className="text-lg font-semibold">{serviceCase.client_name ?? "Sin nombre"}</p>
-          {serviceCase.deceased_name && (
-            <p className="text-xs text-muted-foreground">Fallecido/a: <span className="font-medium text-foreground">{serviceCase.deceased_name}</span></p>
-          )}
+        <SheetHeader className="pr-10">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <SheetTitle className="flex items-center gap-2">
+                <span className="font-mono text-sm text-muted-foreground">{serviceCase.case_number}</span>
+              </SheetTitle>
+              <p className="text-lg font-semibold truncate">{serviceCase.client_name ?? "Sin nombre"}</p>
+              {serviceCase.deceased_name && (
+                <p className="text-xs text-muted-foreground">Fallecido/a: <span className="font-medium text-foreground">{serviceCase.deceased_name}</span></p>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="default"
+              className="h-8 shrink-0 gap-1.5"
+              onClick={() => setAgendaOpen(true)}
+              title="Agendar evento vinculado a este caso"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              <span className="hidden xs:inline sm:inline">Agendar</span>
+            </Button>
+          </div>
         </SheetHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-4">

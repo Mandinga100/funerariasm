@@ -113,18 +113,43 @@ export function hasValidChallengePass(formKey: string): boolean {
 }
 
 /** Ejecuta las tres capas de defensa antes de enviar. */
-export function checkBotShield({ honeypot, startedAt, formKey }: ShieldCheckInput): ShieldResult {
+export function checkBotShield({
+  honeypot,
+  startedAt,
+  formKey,
+  challengePassed,
+}: ShieldCheckInput): ShieldResult {
+  // 0. Si ya hay sospechas acumuladas, exigimos challenge salvo que tenga pase válido.
+  const challengeNeeded =
+    shouldRequireChallenge(formKey) && !(challengePassed || hasValidChallengePass(formKey));
+  if (challengeNeeded) {
+    return {
+      ok: false,
+      reason: "challenge_required",
+      requiresChallenge: true,
+      message: "Por favor confirme que no es un robot antes de continuar.",
+    };
+  }
+
   // 1. Honeypot
   if (honeypot && honeypot.trim().length > 0) {
-    return { ok: false, reason: "honeypot", message: "Envío bloqueado por motivos de seguridad." };
+    const count = recordSuspicion(formKey);
+    return {
+      ok: false,
+      reason: "honeypot",
+      requiresChallenge: count >= SUSPICION_THRESHOLD,
+      message: "Envío bloqueado por motivos de seguridad.",
+    };
   }
 
   // 2. Timing
   const elapsed = Date.now() - startedAt;
   if (elapsed < MIN_FILL_MS) {
+    const count = recordSuspicion(formKey);
     return {
       ok: false,
       reason: "too_fast",
+      requiresChallenge: count >= SUSPICION_THRESHOLD,
       message: "Por favor revise el formulario antes de enviarlo.",
     };
   }
@@ -138,9 +163,11 @@ export function checkBotShield({ honeypot, startedAt, formKey }: ShieldCheckInpu
       const hits: number[] = raw ? JSON.parse(raw) : [];
       const recent = hits.filter((t) => now - t < THROTTLE_WINDOW_MS);
       if (recent.length >= THROTTLE_MAX) {
+        const count = recordSuspicion(formKey);
         return {
           ok: false,
           reason: "throttled",
+          requiresChallenge: count >= SUSPICION_THRESHOLD,
           message: "Ha enviado demasiados formularios. Intente nuevamente en unos minutos.",
         };
       }

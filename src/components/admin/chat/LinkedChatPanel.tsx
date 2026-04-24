@@ -68,6 +68,31 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
   const [convos, setConvos] = useState<ConvoRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attending, setAttending] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  async function handleAttendNow(convoId: string) {
+    if (!user || attending) return;
+    setAttending(true);
+    const { error } = await supabase
+      .from("chat_conversations")
+      .update({ status: "humano_activo", assigned_to: user.id })
+      .eq("id", convoId);
+    if (error) {
+      toast({ title: "No se pudo tomar el chat", description: error.message, variant: "destructive" });
+      setAttending(false);
+      return;
+    }
+    await supabase.from("chat_messages").insert({
+      conversation_id: convoId,
+      sender_type: "system",
+      content: "Un asesor se ha unido a la conversación.",
+    });
+    setAttending(false);
+    navigate(`/admin/chat?conversation=${convoId}`);
+  }
 
   useEffect(() => {
     if (!leadId && !serviceCaseId) return;

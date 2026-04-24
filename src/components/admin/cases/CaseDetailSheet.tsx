@@ -65,7 +65,9 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   const [internalNotes, setInternalNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("resumen");
+  const [agendaOpen, setAgendaOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!serviceCase) return;

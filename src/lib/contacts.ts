@@ -40,6 +40,8 @@ interface ContactData {
   formStartedAt?: number;
   /** Honeypot — debe venir vacío. */
   honeypot?: string;
+  /** Marca true si el usuario ya pasó el captcha esta sesión. */
+  challengePassed?: boolean;
 }
 
 export const submitContact = async (data: ContactData) => {

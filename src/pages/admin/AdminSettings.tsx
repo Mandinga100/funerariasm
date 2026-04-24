@@ -30,6 +30,14 @@ import {
 
 type AppRole = "ceo" | "admin" | "moderator";
 
+/**
+ * CEO fundador inamovible. Su rol CEO está protegido a nivel de base de datos
+ * mediante el trigger `protect_founder_ceo` (ni siquiera otro CEO puede removerlo).
+ * La UI también bloquea editar, eliminar o cambiar su rol.
+ */
+const FOUNDER_USER_ID = "637e3028-414a-4c56-b4a0-6895cd152683";
+const isFounder = (userId: string | undefined | null) => userId === FOUNDER_USER_ID;
+
 interface AdminUser {
   id: string;
   user_id: string;
@@ -363,6 +371,15 @@ export default function AdminSettings() {
       toast({ title: "Acceso denegado", description: "Solo el CEO puede modificar roles de CEO.", variant: "destructive" });
       return;
     }
+    // CEO fundador inamovible: ni siquiera otro CEO puede degradar su rol
+    if (isFounder(targetUserId) && target?.role === "ceo" && role !== "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle está protegido y no puede ser modificado.",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase.from("user_roles").update({ role }).eq("id", adminId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -379,6 +396,15 @@ export default function AdminSettings() {
     if (!isCeo && selectedAdmin.role === "ceo") {
       toast({ title: "Acceso denegado", description: "No puede editar un CEO.", variant: "destructive" });
       setEditDialog(false);
+      return;
+    }
+    // Bloqueo extra: nadie puede degradar al CEO fundador
+    if (isFounder(selectedAdmin.user_id) && selectedAdmin.role === "ceo" && newRole !== "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle no puede ser modificado.",
+        variant: "destructive",
+      });
       return;
     }
     setSaving(true);
@@ -401,7 +427,7 @@ export default function AdminSettings() {
     setEditDialog(false);
   };
 
-  /* ── Delete admin ── */
+  /* ── Delete admin / moderator / CEO ── */
   const handleDeleteAdmin = async () => {
     if (!selectedAdmin) return;
     if (selectedAdmin.user_id === user?.id) {
@@ -412,12 +438,37 @@ export default function AdminSettings() {
       toast({ title: "Acceso denegado", description: "Solo el CEO puede remover a otro CEO.", variant: "destructive" });
       return;
     }
+    // CEO fundador inamovible: ni siquiera otro CEO puede eliminarlo
+    if (isFounder(selectedAdmin.user_id) && selectedAdmin.role === "ceo") {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "El rol CEO de Daniel Misle está protegido permanentemente y no puede ser removido.",
+        variant: "destructive",
+      });
+      setDeleteDialog(false);
+      setSelectedAdmin(null);
+      return;
+    }
+    setSaving(true);
     const { error } = await supabase.from("user_roles").delete().eq("id", selectedAdmin.id);
+    setSaving(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      // El trigger protect_founder_ceo lanza un mensaje claro si intenta tocar al fundador
+      toast({ title: "No se pudo eliminar", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Acceso removido" });
-      logAudit({ action: "remove_member", module: "equipo", description: `Removió acceso de ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`, entity_type: "user_role", entity_id: selectedAdmin.id, old_data: { role: selectedAdmin.role } });
+      const roleLabel = ROLE_META[selectedAdmin.role].label;
+      toast({
+        title: `${roleLabel} removido`,
+        description: `${selectedAdmin.display_name ?? "El miembro"} ya no tiene acceso al CRM.`,
+      });
+      logAudit({
+        action: "remove_member",
+        module: "equipo",
+        description: `Removió ${roleLabel} ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`,
+        entity_type: "user_role",
+        entity_id: selectedAdmin.id,
+        old_data: { role: selectedAdmin.role, user_id: selectedAdmin.user_id },
+      });
       loadAdmins();
     }
     setDeleteDialog(false);
@@ -603,9 +654,11 @@ export default function AdminSettings() {
               ) : (
                 <div className="space-y-2">
                   {admins.map(admin => {
-                    const canManage = isCeo && admin.user_id !== user?.id;
-                    const canChangeRole = isCeo;
+                    const founder = isFounder(admin.user_id) && admin.role === "ceo";
                     const isSelf = admin.user_id === user?.id;
+                    // El fundador es inamovible: nadie puede gestionar su rol CEO ni eliminarlo
+                    const canManage = isCeo && !isSelf && !founder;
+                    const canChangeRole = isCeo && !founder;
                     const initials = (admin.display_name ?? admin.email ?? admin.user_id).slice(0, 2).toUpperCase();
                     return (
                       <div
@@ -614,10 +667,11 @@ export default function AdminSettings() {
                           "flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border transition-colors",
                           isSelf
                             ? "bg-[#C5A059]/5 border-[#C5A059]/40 hover:bg-[#C5A059]/10 cursor-pointer"
-                            : "hover:bg-muted/30"
+                            : "hover:bg-muted/30",
+                          founder && !isSelf && "border-[#C5A059]/40 bg-[#C5A059]/5"
                         )}
                         onClick={isSelf ? openOwnProfile : undefined}
-                        title={isSelf ? "Click para editar tu nombre y foto" : undefined}
+                        title={isSelf ? "Click para editar tu nombre y foto" : (founder ? "CEO fundador inamovible" : undefined)}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 overflow-hidden flex items-center justify-center shrink-0">
@@ -635,11 +689,17 @@ export default function AdminSettings() {
                                 isAdmin={admin.role === "admin"}
                                 compact
                               />
+                              {founder && (
+                                <Badge variant="outline" className="text-[9px] gap-0.5 border-[#C5A059]/60 text-[#C5A059] px-1.5 py-0 h-4">
+                                  <Lock className="w-2.5 h-2.5" /> Inamovible
+                                </Badge>
+                              )}
                               {isSelf && <Pencil className="w-3 h-3 text-[#C5A059]" />}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">
                               {admin.email ?? `ID: ${admin.user_id.slice(0, 12)}...`}
                               {isSelf && <span className="ml-1 text-[#C5A059] font-medium">(Tú — click para editar)</span>}
+                              {founder && !isSelf && <span className="ml-1 text-[#C5A059] font-medium">· CEO fundador</span>}
                             </p>
                           </div>
                         </div>
@@ -1400,17 +1460,31 @@ export default function AdminSettings() {
       </Dialog>
 
       {/* ═══════════════ DELETE DIALOG ═══════════════ */}
-      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+      <Dialog open={deleteDialog} onOpenChange={(v) => { if (!saving) setDeleteDialog(v); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-destructive" />Remover Acceso</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {selectedAdmin ? `Eliminar ${ROLE_META[selectedAdmin.role].label}` : "Eliminar miembro"}
+            </DialogTitle>
             <DialogDescription>
-              ¿Está seguro de remover el acceso de <strong>{selectedAdmin?.display_name ?? selectedAdmin?.user_id.slice(0, 12)}</strong>? Perderá acceso al CRM inmediatamente.
+              ¿Está seguro de eliminar a{" "}
+              <strong>{selectedAdmin?.display_name ?? selectedAdmin?.email ?? selectedAdmin?.user_id.slice(0, 12)}</strong>
+              {selectedAdmin && (
+                <> como <strong>{ROLE_META[selectedAdmin.role].label}</strong></>
+              )}?{" "}
+              Perderá acceso al CRM inmediatamente. Esta acción queda registrada en el log de auditoría.
             </DialogDescription>
           </DialogHeader>
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+            Solo se elimina este rol del usuario. Si tiene otros roles asignados (por ejemplo, también es Moderador),
+            esos no se ven afectados.
+          </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
-            <Button variant="destructive" onClick={handleDeleteAdmin} className="w-full sm:w-auto">Remover Acceso</Button>
+            <Button variant="outline" disabled={saving} onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button variant="destructive" disabled={saving} onClick={handleDeleteAdmin} className="w-full sm:w-auto">
+              {saving ? "Eliminando..." : `Sí, eliminar ${selectedAdmin ? ROLE_META[selectedAdmin.role].label : ""}`}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

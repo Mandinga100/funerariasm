@@ -260,6 +260,7 @@ const MemorialDetail = () => {
       return;
     }
 
+    registerShieldHit("memorial_offering");
     setBaseOfferings((prev) => [inserted as Offering, ...prev]);
     toast.success("🌺 Corona de flores ofrecida en su memoria");
     setCrownModalOpen(false);

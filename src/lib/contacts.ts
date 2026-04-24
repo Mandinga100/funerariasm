@@ -53,9 +53,14 @@ export const submitContact = async (data: ContactData) => {
       honeypot: data.honeypot ?? "",
       startedAt: data.formStartedAt ?? Date.now(),
       formKey: `contact_${data.contactType}`,
+      challengePassed: data.challengePassed,
     });
     if (!shield.ok) {
-      throw new Error(shield.message ?? "Envío bloqueado por motivos de seguridad.");
+      throw new BotShieldError(
+        shield.message ?? "Envío bloqueado por motivos de seguridad.",
+        shield.reason ?? "blocked",
+        shield.requiresChallenge === true,
+      );
     }
   }
 

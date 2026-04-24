@@ -151,6 +151,12 @@ const ContactForm = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Honeypot anti-bot: invisible para humanos, irresistible para bots */}
+        <input
+          {...honeypotInputProps}
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs text-muted-foreground uppercase tracking-wide-brand mb-1 block">
@@ -225,7 +231,7 @@ const ContactForm = ({
 
         {status === "error" && (
           <p className="text-sm text-destructive">
-            Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente.
+            {errorMsg || "Hubo un error al enviar su mensaje. Por favor intente nuevamente o contáctenos directamente."}
           </p>
         )}
 

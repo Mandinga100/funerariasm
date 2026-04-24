@@ -223,10 +223,18 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
               disabled={attending}
               className="h-6 text-[10px] px-2 gap-1"
             >
-              <Hand className="w-3 h-3" /> Atender ahora
+              {attending ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" /> Tomando…
+                </>
+              ) : (
+                <>
+                  <Hand className="w-3 h-3" /> Atender ahora
+                </>
+              )}
             </Button>
           )}
-          <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2">
+          <Button asChild size="sm" variant="ghost" className="h-6 text-[10px] px-2" disabled={attending}>
             <Link to={`/admin/chat?conversation=${active.id}`}>
               Bandeja completa
             </Link>

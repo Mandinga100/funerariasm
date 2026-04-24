@@ -419,6 +419,12 @@ const MemorialDetail = () => {
 
             <form onSubmit={handleCondolenceSubmit} className="bg-primary-foreground/[0.02] border border-primary-foreground/10 rounded-lg p-6 mb-8">
               <h3 className="text-sm font-medium text-primary-foreground/70 mb-4">Envíe sus condolencias</h3>
+              {/* Honeypot — invisible para humanos, visible para bots */}
+              <input
+                {...honeypotInputProps}
+                value={condolenceHoneypot}
+                onChange={(e) => setCondolenceHoneypot(e.target.value)}
+              />
               <div className="space-y-4">
                 <input
                   type="text"

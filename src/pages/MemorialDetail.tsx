@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -12,6 +12,12 @@ import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
 import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
+import {
+  checkBotShield,
+  createShieldTimer,
+  honeypotInputProps,
+  registerShieldHit,
+} from "@/lib/bot-shield";
 
 interface Memorial {
   id: string;

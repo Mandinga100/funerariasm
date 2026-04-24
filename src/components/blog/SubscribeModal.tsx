@@ -240,6 +240,11 @@ const SubscribeModal = ({
               )}
             </div>
 
+            {needsChallenge && (
+              <ChallengeGate formKey="blog_subscribe" onPass={handleChallengePass} />
+            )}
+
+
             <button
               type="submit"
               disabled={loading}

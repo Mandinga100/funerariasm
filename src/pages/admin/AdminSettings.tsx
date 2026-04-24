@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import RoleBadge from "@/components/admin/RoleBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminTheme } from "@/hooks/use-admin-theme";
+import { useNotificationSound, getVolume, setVolume as setSoundVolume, getNormalTone, setNormalTone as persistNormalTone, getUrgentTone, setUrgentTone as persistUrgentTone, type NormalTone, type UrgentTone } from "@/hooks/use-notification-sound";
+import { Slider } from "@/components/ui/slider";
 import { signAvatarUrl, signAvatarUrls } from "@/lib/avatar-url";
 import {
   Users, Shield, Bell, Moon, Sun, Monitor, BarChart3, Trash2,

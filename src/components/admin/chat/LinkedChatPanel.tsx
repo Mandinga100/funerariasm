@@ -53,8 +53,34 @@ export function LinkedChatPanel({ leadId, serviceCaseId, compact = false }: Prop
       const { data } = await q;
       if (cancelled) return;
       const rows = (data ?? []) as ConvoRow[];
-      setConvos(rows);
-      setActiveId(rows[0]?.id ?? null);
+      // Relevance: open > pending handoff > unread > most recent.
+      // Closed conversations always sort last so the panel highlights live work first.
+      const statusRank: Record<string, number> = {
+        humano_activo: 0,
+        pendiente_humano: 1,
+        bot: 2,
+        cerrado: 3,
+      };
+      const priorityRank: Record<string, number> = {
+        urgente: 0,
+        alta: 1,
+        normal: 2,
+        baja: 3,
+      };
+      const sorted = [...rows].sort((a, b) => {
+        const sa = statusRank[a.status] ?? 9;
+        const sb = statusRank[b.status] ?? 9;
+        if (sa !== sb) return sa - sb;
+        if ((b.unread_admin ?? 0) !== (a.unread_admin ?? 0)) {
+          return (b.unread_admin ?? 0) - (a.unread_admin ?? 0);
+        }
+        const pa = priorityRank[a.priority] ?? 9;
+        const pb = priorityRank[b.priority] ?? 9;
+        if (pa !== pb) return pa - pb;
+        return new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime();
+      });
+      setConvos(sorted);
+      setActiveId(sorted[0]?.id ?? null);
       setLoading(false);
     })();
 

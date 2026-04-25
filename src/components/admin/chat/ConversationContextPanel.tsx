@@ -125,6 +125,7 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
   useEffect(() => {
     setChangeLog([]);
     setLogOpen(false);
+    setExpandedBatches({});
   }, [convo.id]);
 
   useEffect(() => {

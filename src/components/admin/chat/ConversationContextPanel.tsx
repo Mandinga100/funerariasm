@@ -80,30 +80,52 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
   // ("executive" = guardado manual del ejecutivo / "realtime" = sync automático
   // desde la DB porque el visitante o un colega lo modificó).
   type ChangeOrigin = "executive" | "realtime";
+  type ChangeField = "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
   type ChangeEntry = {
     id: string;
     at: number;
-    field: "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
+    field: ChangeField;
     from: string;
     to: string;
     origin: ChangeOrigin;
+    batchId: string; // Agrupa entradas creadas en una misma operación (ej. saveDetails).
   };
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);
+  // Controla qué batches están expandidos en el panel (los multi-campo arrancan colapsados).
+  const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
 
-  function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
+  function pushChange(entry: Omit<ChangeEntry, "id" | "at" | "batchId">) {
     if ((entry.from ?? "") === (entry.to ?? "")) return;
     const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     setChangeLog((prev) => [
-      { ...entry, id: crypto.randomUUID(), at: Date.now() },
+      { ...entry, id: crypto.randomUUID(), at: Date.now(), batchId: crypto.randomUUID() },
       ...prev,
     ].slice(0, cap));
+  }
+
+  // Inserta múltiples cambios en una sola actualización de estado, compartiendo batchId
+  // para que el log los muestre como una sola fila agrupada por operación.
+  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId">>) {
+    const filtered = entries.filter((e) => (e.from ?? "") !== (e.to ?? ""));
+    if (filtered.length === 0) return;
+    const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
+    const batchId = crypto.randomUUID();
+    const now = Date.now();
+    const fresh: ChangeEntry[] = filtered.map((e) => ({
+      ...e,
+      id: crypto.randomUUID(),
+      at: now,
+      batchId,
+    }));
+    setChangeLog((prev) => [...fresh, ...prev].slice(0, cap));
   }
 
   // Reset del log al cambiar de conversación seleccionada.
   useEffect(() => {
     setChangeLog([]);
     setLogOpen(false);
+    setExpandedBatches({});
   }, [convo.id]);
 
   useEffect(() => {
@@ -181,10 +203,13 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      pushChange({ field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" });
-      pushChange({ field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" });
-      pushChange({ field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" });
-      pushChange({ field: "priority", from: prev.priority, to: priority, origin: "executive" });
+      // Agrupamos todos los cambios de este guardado en una sola fila del log.
+      pushChangeBatch([
+        { field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" },
+        { field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" },
+        { field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" },
+        { field: "priority", from: prev.priority, to: priority, origin: "executive" },
+      ]);
       toast({ title: "Datos actualizados" });
     }
     setBusy(false);
@@ -354,44 +379,115 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
             {changeLog.length === 0 ? (
               <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
             ) : (
-              changeLog.map((e) => {
-                const isExec = e.origin === "executive";
-                const fieldLabel: Record<ChangeEntry["field"], string> = {
+              (() => {
+                const fieldLabel: Record<ChangeField, string> = {
                   visitor_name: "Nombre",
                   visitor_phone: "Teléfono",
                   visitor_email: "Email",
                   priority: "Prioridad",
                 };
-                return (
-                  <div
-                    key={e.id}
-                    className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-0.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{fieldLabel[e.field]}</span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          isExec
-                            ? "bg-primary/10 text-primary"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                        title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
-                      >
-                        {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
-                        {isExec ? "Ejecutivo" : "Realtime"}
-                      </span>
+
+                // Agrupamos entradas consecutivas que comparten batchId, preservando el
+                // orden cronológico (más recientes arriba) que ya tiene changeLog.
+                const groups: { batchId: string; entries: ChangeEntry[] }[] = [];
+                for (const entry of changeLog) {
+                  const last = groups[groups.length - 1];
+                  if (last && last.batchId === entry.batchId) {
+                    last.entries.push(entry);
+                  } else {
+                    groups.push({ batchId: entry.batchId, entries: [entry] });
+                  }
+                }
+
+                return groups.map((group) => {
+                  const head = group.entries[0];
+                  const isExec = head.origin === "executive";
+                  const isMulti = group.entries.length > 1;
+                  const expanded = expandedBatches[group.batchId] ?? false;
+                  const fieldsSummary = group.entries
+                    .map((e) => fieldLabel[e.field])
+                    .join(" · ");
+
+                  return (
+                    <div
+                      key={group.batchId}
+                      className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium truncate">
+                          {isMulti ? `${group.entries.length} cambios` : fieldLabel[head.field]}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isExec
+                              ? "bg-primary/10 text-primary"
+                              : "bg-secondary text-secondary-foreground"
+                          }`}
+                          title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
+                        >
+                          {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
+                          {isExec ? "Ejecutivo" : "Realtime"}
+                        </span>
+                      </div>
+
+                      {isMulti && !expanded ? (
+                        <div className="text-muted-foreground truncate">
+                          {fieldsSummary}
+                        </div>
+                      ) : isMulti && expanded ? (
+                        <div className="space-y-1 pt-0.5 border-t border-border/60">
+                          {group.entries.map((e) => (
+                            <div key={e.id} className="space-y-0.5">
+                              <div className="text-[10px] font-medium text-foreground/80">
+                                {fieldLabel[e.field]}
+                              </div>
+                              <div className="text-muted-foreground truncate">
+                                <span className="line-through opacity-60">
+                                  {sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}
+                                </span>
+                                <span className="mx-1">→</span>
+                                <span className="text-foreground">
+                                  {sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground truncate">
+                          <span className="line-through opacity-60">
+                            {sanitizeForLog(head.field, head.from, logPrivacyMode) || "—"}
+                          </span>
+                          <span className="mx-1">→</span>
+                          <span className="text-foreground">
+                            {sanitizeForLog(head.field, head.to, logPrivacyMode) || "—"}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground/70 text-[10px]">
+                          {new Date(head.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </span>
+                        {isMulti && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedBatches((prev) => ({
+                                ...prev,
+                                [group.batchId]: !expanded,
+                              }))
+                            }
+                            className="text-[10px] text-primary hover:underline"
+                          >
+                            {expanded ? "Ocultar detalle" : "Ver detalle"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-muted-foreground truncate">
-                      <span className="line-through opacity-60">{sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}</span>
-                      <span className="mx-1">→</span>
-                      <span className="text-foreground">{sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}</span>
-                    </div>
-                    <div className="text-muted-foreground/70 text-[10px]">
-                      {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                });
+              })()
             )}
           </div>
         )}

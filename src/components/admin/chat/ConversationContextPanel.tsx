@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandoffControls } from "./HandoffControls";
-import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw } from "lucide-react";
+import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw, History, ChevronDown, ChevronUp, Wifi, UserCog } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ConversationRow } from "./ConversationList";
 

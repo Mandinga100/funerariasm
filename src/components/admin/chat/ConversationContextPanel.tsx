@@ -59,6 +59,12 @@ export function ConversationContextPanel({ convo }: Props) {
     ].slice(0, 30));
   }
 
+  // Reset del log al cambiar de conversación seleccionada.
+  useEffect(() => {
+    setChangeLog([]);
+    setLogOpen(false);
+  }, [convo.id]);
+
   useEffect(() => {
     const incoming = {
       visitor_name: convo.visitor_name ?? "",

@@ -288,6 +288,70 @@ export function ConversationContextPanel({ convo }: Props) {
           <span className="text-xs text-muted-foreground">Sin SLA</span>
         )}
       </div>
+
+      <div className="p-3 border-b">
+        <button
+          type="button"
+          onClick={() => setLogOpen((v) => !v)}
+          className="w-full flex items-center justify-between text-sm font-semibold hover:text-primary transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5" /> Log de cambios
+            {changeLog.length > 0 && (
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                {changeLog.length}
+              </Badge>
+            )}
+          </span>
+          {logOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
+        {logOpen && (
+          <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+            {changeLog.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
+            ) : (
+              changeLog.map((e) => {
+                const isExec = e.origin === "executive";
+                const fieldLabel: Record<ChangeEntry["field"], string> = {
+                  visitor_name: "Nombre",
+                  visitor_phone: "Teléfono",
+                  visitor_email: "Email",
+                  priority: "Prioridad",
+                };
+                return (
+                  <div
+                    key={e.id}
+                    className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-0.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{fieldLabel[e.field]}</span>
+                      <span
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          isExec
+                            ? "bg-primary/10 text-primary"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}
+                        title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
+                      >
+                        {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
+                        {isExec ? "Ejecutivo" : "Realtime"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground truncate">
+                      <span className="line-through opacity-60">{e.from || "—"}</span>
+                      <span className="mx-1">→</span>
+                      <span className="text-foreground">{e.to || "—"}</span>
+                    </div>
+                    <div className="text-muted-foreground/70 text-[10px]">
+                      {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

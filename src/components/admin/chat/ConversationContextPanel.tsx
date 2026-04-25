@@ -23,12 +23,10 @@ export function ConversationContextPanel({ convo }: Props) {
   const [priority, setPriority] = useState(convo.priority);
   const [busy, setBusy] = useState(false);
 
-  // Refs para detectar foco — si el admin está editando un input, NO lo sobrescribimos
-  // con el valor que llega por realtime (evita perder lo que está tipeando).
-  // Si el campo no está enfocado, sincronizamos en vivo desde la DB.
-  const nameRef = useRef<HTMLInputElement | null>(null);
-  const phoneRef = useRef<HTMLInputElement | null>(null);
-  const emailRef = useRef<HTMLInputElement | null>(null);
+  // Estado de foco controlado por handlers onFocus/onBlur en cada input.
+  // Evita depender de `document.activeElement` (que no existe en SSR y puede
+  // dar lecturas inconsistentes durante re-renders o transiciones de foco).
+  const [focusedField, setFocusedField] = useState<"name" | "phone" | "email" | null>(null);
 
   // Indicador visual: hay datos nuevos del visitante que aún no se aplicaron
   // localmente porque el admin está editando. Permite refrescar manualmente.
@@ -46,16 +44,14 @@ export function ConversationContextPanel({ convo }: Props) {
     };
 
     // Aplicar sólo a los campos que NO están enfocados, para no romper edición en curso.
-    const focusedEl = typeof document !== "undefined" ? document.activeElement : null;
-
     let deferred = false;
-    if (nameRef.current !== focusedEl) setName(incoming.visitor_name);
+    if (focusedField !== "name") setName(incoming.visitor_name);
     else if (incoming.visitor_name !== name) deferred = true;
 
-    if (phoneRef.current !== focusedEl) setPhone(incoming.visitor_phone);
+    if (focusedField !== "phone") setPhone(incoming.visitor_phone);
     else if (incoming.visitor_phone !== phone) deferred = true;
 
-    if (emailRef.current !== focusedEl) setEmail(incoming.visitor_email);
+    if (focusedField !== "email") setEmail(incoming.visitor_email);
     else if (incoming.visitor_email !== email) deferred = true;
 
     setPriority(convo.priority);
@@ -147,14 +143,35 @@ export function ConversationContextPanel({ convo }: Props) {
             <span className="text-primary font-medium">Aplicar</span>
           </button>
         )}
-        <Input ref={nameRef} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="h-8 text-sm" />
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onFocus={() => setFocusedField("name")}
+          onBlur={() => setFocusedField((f) => (f === "name" ? null : f))}
+          placeholder="Nombre"
+          className="h-8 text-sm"
+        />
         <div className="relative">
           <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input ref={phoneRef} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Teléfono" className="h-8 pl-7 text-sm" />
+          <Input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            onFocus={() => setFocusedField("phone")}
+            onBlur={() => setFocusedField((f) => (f === "phone" ? null : f))}
+            placeholder="Teléfono"
+            className="h-8 pl-7 text-sm"
+          />
         </div>
         <div className="relative">
           <Mail className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input ref={emailRef} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-8 pl-7 text-sm" />
+          <Input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField((f) => (f === "email" ? null : f))}
+            placeholder="Email"
+            className="h-8 pl-7 text-sm"
+          />
         </div>
         <div>
           <label className="text-[11px] text-muted-foreground">Prioridad</label>

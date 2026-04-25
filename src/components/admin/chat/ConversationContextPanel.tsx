@@ -89,6 +89,8 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
     to: string;
     origin: ChangeOrigin;
     batchId: string; // Agrupa entradas creadas en una misma operación (ej. saveDetails).
+    /** true cuando from === to: el campo formó parte del batch pero no se modificó. */
+    unchanged?: boolean;
   };
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);

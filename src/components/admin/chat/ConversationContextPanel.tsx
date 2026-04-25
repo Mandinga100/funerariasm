@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandoffControls } from "./HandoffControls";
-import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw } from "lucide-react";
+import { Mail, Phone, User as UserIcon, Briefcase, MessageSquare, ExternalLink, Plus, RefreshCw, History, ChevronDown, ChevronUp, Wifi, UserCog } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ConversationRow } from "./ConversationList";
 
@@ -36,6 +36,35 @@ export function ConversationContextPanel({ convo }: Props) {
     visitor_email: string | null;
   }>(null);
 
+  // Log interno de cambios de campo: distingue origen del cambio
+  // ("executive" = guardado manual del ejecutivo / "realtime" = sync automático
+  // desde la DB porque el visitante o un colega lo modificó).
+  type ChangeOrigin = "executive" | "realtime";
+  type ChangeEntry = {
+    id: string;
+    at: number;
+    field: "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
+    from: string;
+    to: string;
+    origin: ChangeOrigin;
+  };
+  const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(false);
+
+  function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
+    if ((entry.from ?? "") === (entry.to ?? "")) return;
+    setChangeLog((prev) => [
+      { ...entry, id: crypto.randomUUID(), at: Date.now() },
+      ...prev,
+    ].slice(0, 30));
+  }
+
+  // Reset del log al cambiar de conversación seleccionada.
+  useEffect(() => {
+    setChangeLog([]);
+    setLogOpen(false);
+  }, [convo.id]);
+
   useEffect(() => {
     const incoming = {
       visitor_name: convo.visitor_name ?? "",
@@ -45,15 +74,31 @@ export function ConversationContextPanel({ convo }: Props) {
 
     // Aplicar sólo a los campos que NO están enfocados, para no romper edición en curso.
     let deferred = false;
-    if (focusedField !== "name") setName(incoming.visitor_name);
-    else if (incoming.visitor_name !== name) deferred = true;
 
-    if (focusedField !== "phone") setPhone(incoming.visitor_phone);
-    else if (incoming.visitor_phone !== phone) deferred = true;
+    if (focusedField !== "name") {
+      if (incoming.visitor_name !== name) {
+        pushChange({ field: "visitor_name", from: name, to: incoming.visitor_name, origin: "realtime" });
+      }
+      setName(incoming.visitor_name);
+    } else if (incoming.visitor_name !== name) deferred = true;
 
-    if (focusedField !== "email") setEmail(incoming.visitor_email);
-    else if (incoming.visitor_email !== email) deferred = true;
+    if (focusedField !== "phone") {
+      if (incoming.visitor_phone !== phone) {
+        pushChange({ field: "visitor_phone", from: phone, to: incoming.visitor_phone, origin: "realtime" });
+      }
+      setPhone(incoming.visitor_phone);
+    } else if (incoming.visitor_phone !== phone) deferred = true;
 
+    if (focusedField !== "email") {
+      if (incoming.visitor_email !== email) {
+        pushChange({ field: "visitor_email", from: email, to: incoming.visitor_email, origin: "realtime" });
+      }
+      setEmail(incoming.visitor_email);
+    } else if (incoming.visitor_email !== email) deferred = true;
+
+    if (convo.priority !== priority) {
+      pushChange({ field: "priority", from: priority, to: convo.priority, origin: "realtime" });
+    }
     setPriority(convo.priority);
 
     setPendingSync(deferred ? {
@@ -75,6 +120,13 @@ export function ConversationContextPanel({ convo }: Props) {
   async function saveDetails() {
     setBusy(true);
     const slaMinutes = SLA_MIN[priority] ?? 240;
+    // Snapshot previo para diff con origen "executive".
+    const prev = {
+      visitor_name: convo.visitor_name ?? "",
+      visitor_phone: convo.visitor_phone ?? "",
+      visitor_email: convo.visitor_email ?? "",
+      priority: convo.priority,
+    };
     const { error } = await supabase
       .from("chat_conversations")
       .update({
@@ -85,8 +137,15 @@ export function ConversationContextPanel({ convo }: Props) {
         sla_due_at: convo.status === "cerrado" ? convo.sla_due_at : new Date(Date.now() + slaMinutes * 60_000).toISOString(),
       })
       .eq("id", convo.id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Datos actualizados" });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      pushChange({ field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" });
+      pushChange({ field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" });
+      pushChange({ field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" });
+      pushChange({ field: "priority", from: prev.priority, to: priority, origin: "executive" });
+      toast({ title: "Datos actualizados" });
+    }
     setBusy(false);
   }
 
@@ -227,6 +286,70 @@ export function ConversationContextPanel({ convo }: Props) {
           </div>
         ) : (
           <span className="text-xs text-muted-foreground">Sin SLA</span>
+        )}
+      </div>
+
+      <div className="p-3 border-b">
+        <button
+          type="button"
+          onClick={() => setLogOpen((v) => !v)}
+          className="w-full flex items-center justify-between text-sm font-semibold hover:text-primary transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5" /> Log de cambios
+            {changeLog.length > 0 && (
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                {changeLog.length}
+              </Badge>
+            )}
+          </span>
+          {logOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
+        {logOpen && (
+          <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+            {changeLog.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
+            ) : (
+              changeLog.map((e) => {
+                const isExec = e.origin === "executive";
+                const fieldLabel: Record<ChangeEntry["field"], string> = {
+                  visitor_name: "Nombre",
+                  visitor_phone: "Teléfono",
+                  visitor_email: "Email",
+                  priority: "Prioridad",
+                };
+                return (
+                  <div
+                    key={e.id}
+                    className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-0.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{fieldLabel[e.field]}</span>
+                      <span
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          isExec
+                            ? "bg-primary/10 text-primary"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}
+                        title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
+                      >
+                        {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
+                        {isExec ? "Ejecutivo" : "Realtime"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground truncate">
+                      <span className="line-through opacity-60">{e.from || "—"}</span>
+                      <span className="mx-1">→</span>
+                      <span className="text-foreground">{e.to || "—"}</span>
+                    </div>
+                    <div className="text-muted-foreground/70 text-[10px]">
+                      {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
       </div>
     </div>

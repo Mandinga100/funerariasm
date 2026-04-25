@@ -379,9 +379,9 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
                       </span>
                     </div>
                     <div className="text-muted-foreground truncate">
-                      <span className="line-through opacity-60">{e.from || "—"}</span>
+                      <span className="line-through opacity-60">{sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}</span>
                       <span className="mx-1">→</span>
-                      <span className="text-foreground">{e.to || "—"}</span>
+                      <span className="text-foreground">{sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}</span>
                     </div>
                     <div className="text-muted-foreground/70 text-[10px]">
                       {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}

@@ -114,6 +114,13 @@ export function ConversationContextPanel({ convo }: Props) {
   async function saveDetails() {
     setBusy(true);
     const slaMinutes = SLA_MIN[priority] ?? 240;
+    // Snapshot previo para diff con origen "executive".
+    const prev = {
+      visitor_name: convo.visitor_name ?? "",
+      visitor_phone: convo.visitor_phone ?? "",
+      visitor_email: convo.visitor_email ?? "",
+      priority: convo.priority,
+    };
     const { error } = await supabase
       .from("chat_conversations")
       .update({
@@ -124,8 +131,15 @@ export function ConversationContextPanel({ convo }: Props) {
         sla_due_at: convo.status === "cerrado" ? convo.sla_due_at : new Date(Date.now() + slaMinutes * 60_000).toISOString(),
       })
       .eq("id", convo.id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Datos actualizados" });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      pushChange({ field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" });
+      pushChange({ field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" });
+      pushChange({ field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" });
+      pushChange({ field: "priority", from: prev.priority, to: priority, origin: "executive" });
+      toast({ title: "Datos actualizados" });
+    }
     setBusy(false);
   }
 

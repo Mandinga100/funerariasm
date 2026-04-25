@@ -93,10 +93,11 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
 
   function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
     if ((entry.from ?? "") === (entry.to ?? "")) return;
+    const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     setChangeLog((prev) => [
       { ...entry, id: crypto.randomUUID(), at: Date.now() },
       ...prev,
-    ].slice(0, 30));
+    ].slice(0, cap));
   }
 
   // Reset del log al cambiar de conversación seleccionada.

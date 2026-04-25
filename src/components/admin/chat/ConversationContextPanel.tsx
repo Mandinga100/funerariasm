@@ -379,44 +379,115 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
             {changeLog.length === 0 ? (
               <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
             ) : (
-              changeLog.map((e) => {
-                const isExec = e.origin === "executive";
-                const fieldLabel: Record<ChangeEntry["field"], string> = {
+              (() => {
+                const fieldLabel: Record<ChangeField, string> = {
                   visitor_name: "Nombre",
                   visitor_phone: "Teléfono",
                   visitor_email: "Email",
                   priority: "Prioridad",
                 };
-                return (
-                  <div
-                    key={e.id}
-                    className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-0.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{fieldLabel[e.field]}</span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          isExec
-                            ? "bg-primary/10 text-primary"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                        title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
-                      >
-                        {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
-                        {isExec ? "Ejecutivo" : "Realtime"}
-                      </span>
+
+                // Agrupamos entradas consecutivas que comparten batchId, preservando el
+                // orden cronológico (más recientes arriba) que ya tiene changeLog.
+                const groups: { batchId: string; entries: ChangeEntry[] }[] = [];
+                for (const entry of changeLog) {
+                  const last = groups[groups.length - 1];
+                  if (last && last.batchId === entry.batchId) {
+                    last.entries.push(entry);
+                  } else {
+                    groups.push({ batchId: entry.batchId, entries: [entry] });
+                  }
+                }
+
+                return groups.map((group) => {
+                  const head = group.entries[0];
+                  const isExec = head.origin === "executive";
+                  const isMulti = group.entries.length > 1;
+                  const expanded = expandedBatches[group.batchId] ?? false;
+                  const fieldsSummary = group.entries
+                    .map((e) => fieldLabel[e.field])
+                    .join(" · ");
+
+                  return (
+                    <div
+                      key={group.batchId}
+                      className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium truncate">
+                          {isMulti ? `${group.entries.length} cambios` : fieldLabel[head.field]}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isExec
+                              ? "bg-primary/10 text-primary"
+                              : "bg-secondary text-secondary-foreground"
+                          }`}
+                          title={isExec ? "Modificado por el ejecutivo" : "Sincronizado por realtime"}
+                        >
+                          {isExec ? <UserCog className="w-2.5 h-2.5" /> : <Wifi className="w-2.5 h-2.5" />}
+                          {isExec ? "Ejecutivo" : "Realtime"}
+                        </span>
+                      </div>
+
+                      {isMulti && !expanded ? (
+                        <div className="text-muted-foreground truncate">
+                          {fieldsSummary}
+                        </div>
+                      ) : isMulti && expanded ? (
+                        <div className="space-y-1 pt-0.5 border-t border-border/60">
+                          {group.entries.map((e) => (
+                            <div key={e.id} className="space-y-0.5">
+                              <div className="text-[10px] font-medium text-foreground/80">
+                                {fieldLabel[e.field]}
+                              </div>
+                              <div className="text-muted-foreground truncate">
+                                <span className="line-through opacity-60">
+                                  {sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}
+                                </span>
+                                <span className="mx-1">→</span>
+                                <span className="text-foreground">
+                                  {sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground truncate">
+                          <span className="line-through opacity-60">
+                            {sanitizeForLog(head.field, head.from, logPrivacyMode) || "—"}
+                          </span>
+                          <span className="mx-1">→</span>
+                          <span className="text-foreground">
+                            {sanitizeForLog(head.field, head.to, logPrivacyMode) || "—"}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground/70 text-[10px]">
+                          {new Date(head.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </span>
+                        {isMulti && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedBatches((prev) => ({
+                                ...prev,
+                                [group.batchId]: !expanded,
+                              }))
+                            }
+                            className="text-[10px] text-primary hover:underline"
+                          >
+                            {expanded ? "Ocultar detalle" : "Ver detalle"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-muted-foreground truncate">
-                      <span className="line-through opacity-60">{sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}</span>
-                      <span className="mx-1">→</span>
-                      <span className="text-foreground">{sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}</span>
-                    </div>
-                    <div className="text-muted-foreground/70 text-[10px]">
-                      {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                });
+              })()
             )}
           </div>
         )}

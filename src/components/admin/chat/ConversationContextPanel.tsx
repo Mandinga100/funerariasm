@@ -11,11 +11,51 @@ import type { ConversationRow } from "./ConversationList";
 
 interface Props {
   convo: ConversationRow;
+  /** Máximo de entradas conservadas en el log interno. Default: 30. */
+  logMaxEntries?: number;
+  /**
+   * Privacidad aplicada a teléfono/email dentro del log:
+   *  - "full": muestra el valor completo (sólo recomendado en entornos privados).
+   *  - "mask" (default): enmascara dígitos centrales del teléfono y la parte local del email.
+   *  - "truncate": muestra sólo los primeros caracteres + "…".
+   *  - "hide": reemplaza por "•••" (no se ve nada del valor).
+   */
+  logPrivacyMode?: "full" | "mask" | "truncate" | "hide";
 }
 
 const SLA_MIN: Record<string, number> = { urgente: 15, alta: 60, normal: 240, baja: 1440 };
 
-export function ConversationContextPanel({ convo }: Props) {
+function sanitizeForLog(
+  field: "visitor_name" | "visitor_phone" | "visitor_email" | "priority",
+  raw: string,
+  mode: NonNullable<Props["logPrivacyMode"]>,
+): string {
+  if (!raw) return "";
+  // Nombre y prioridad nunca se consideran sensibles.
+  if (field === "visitor_name" || field === "priority") return raw;
+  if (mode === "full") return raw;
+  if (mode === "hide") return "•••";
+  if (mode === "truncate") {
+    return raw.length <= 4 ? raw : `${raw.slice(0, 4)}…`;
+  }
+  // mode === "mask"
+  if (field === "visitor_phone") {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length <= 4) return "••••";
+    const last = digits.slice(-2);
+    const first = digits.slice(0, 2);
+    return `${first}${"•".repeat(Math.max(2, digits.length - 4))}${last}`;
+  }
+  // email
+  const at = raw.indexOf("@");
+  if (at < 0) return `${raw.slice(0, 1)}•••`;
+  const local = raw.slice(0, at);
+  const domain = raw.slice(at);
+  const visible = local.slice(0, 1);
+  return `${visible}${"•".repeat(Math.max(2, local.length - 1))}${domain}`;
+}
+
+export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacyMode = "mask" }: Props) {
   const { toast } = useToast();
   const [name, setName] = useState(convo.visitor_name ?? "");
   const [phone, setPhone] = useState(convo.visitor_phone ?? "");
@@ -53,10 +93,11 @@ export function ConversationContextPanel({ convo }: Props) {
 
   function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
     if ((entry.from ?? "") === (entry.to ?? "")) return;
+    const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     setChangeLog((prev) => [
       { ...entry, id: crypto.randomUUID(), at: Date.now() },
       ...prev,
-    ].slice(0, 30));
+    ].slice(0, cap));
   }
 
   // Reset del log al cambiar de conversación seleccionada.
@@ -307,6 +348,9 @@ export function ConversationContextPanel({ convo }: Props) {
         </button>
         {logOpen && (
           <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+            <p className="text-[10px] text-muted-foreground/80">
+              Privacidad: <span className="font-medium">{logPrivacyMode}</span> · Máx: <span className="font-medium">{logMaxEntries}</span> entradas
+            </p>
             {changeLog.length === 0 ? (
               <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
             ) : (
@@ -338,9 +382,9 @@ export function ConversationContextPanel({ convo }: Props) {
                       </span>
                     </div>
                     <div className="text-muted-foreground truncate">
-                      <span className="line-through opacity-60">{e.from || "—"}</span>
+                      <span className="line-through opacity-60">{sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}</span>
                       <span className="mx-1">→</span>
-                      <span className="text-foreground">{e.to || "—"}</span>
+                      <span className="text-foreground">{sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}</span>
                     </div>
                     <div className="text-muted-foreground/70 text-[10px]">
                       {new Date(e.at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}

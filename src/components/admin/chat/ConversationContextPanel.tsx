@@ -89,6 +89,8 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
     to: string;
     origin: ChangeOrigin;
     batchId: string; // Agrupa entradas creadas en una misma operación (ej. saveDetails).
+    /** true cuando from === to: el campo formó parte del batch pero no se modificó. */
+    unchanged?: boolean;
   };
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);
@@ -106,17 +108,20 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
 
   // Inserta múltiples cambios en una sola actualización de estado, compartiendo batchId
   // para que el log los muestre como una sola fila agrupada por operación.
-  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId">>) {
-    const filtered = entries.filter((e) => (e.from ?? "") !== (e.to ?? ""));
-    if (filtered.length === 0) return;
+  // Si al menos un campo cambió realmente, conservamos también los campos sin cambios
+  // marcados con `unchanged: true`, para que el detalle muestre "qué cambió vs qué quedó igual".
+  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId" | "unchanged">>) {
+    const hasRealChange = entries.some((e) => (e.from ?? "") !== (e.to ?? ""));
+    if (!hasRealChange) return;
     const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     const batchId = crypto.randomUUID();
     const now = Date.now();
-    const fresh: ChangeEntry[] = filtered.map((e) => ({
+    const fresh: ChangeEntry[] = entries.map((e) => ({
       ...e,
       id: crypto.randomUUID(),
       at: now,
       batchId,
+      unchanged: (e.from ?? "") === (e.to ?? ""),
     }));
     setChangeLog((prev) => [...fresh, ...prev].slice(0, cap));
   }
@@ -402,9 +407,13 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
                 return groups.map((group) => {
                   const head = group.entries[0];
                   const isExec = head.origin === "executive";
+                  const changedEntries = group.entries.filter((e) => !e.unchanged);
+                  const unchangedEntries = group.entries.filter((e) => e.unchanged);
+                  const changedCount = changedEntries.length;
                   const isMulti = group.entries.length > 1;
                   const expanded = expandedBatches[group.batchId] ?? false;
-                  const fieldsSummary = group.entries
+                  // Resumen colapsado: muestra sólo los campos que efectivamente cambiaron.
+                  const fieldsSummary = (changedEntries.length > 0 ? changedEntries : group.entries)
                     .map((e) => fieldLabel[e.field])
                     .join(" · ");
 
@@ -414,8 +423,19 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
                       className="text-[11px] rounded-md border bg-muted/30 px-2 py-1.5 space-y-1"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium truncate">
-                          {isMulti ? `${group.entries.length} cambios` : fieldLabel[head.field]}
+                        <span className="font-medium truncate flex items-center gap-1.5">
+                          {isMulti ? (
+                            <>
+                              <span>{changedCount} {changedCount === 1 ? "cambio" : "cambios"}</span>
+                              {unchangedEntries.length > 0 && (
+                                <span className="text-[10px] font-normal text-muted-foreground">
+                                  · {unchangedEntries.length} sin cambio
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            fieldLabel[head.field]
+                          )}
                         </span>
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
@@ -437,19 +457,40 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
                       ) : isMulti && expanded ? (
                         <div className="space-y-1 pt-0.5 border-t border-border/60">
                           {group.entries.map((e) => (
-                            <div key={e.id} className="space-y-0.5">
-                              <div className="text-[10px] font-medium text-foreground/80">
-                                {fieldLabel[e.field]}
-                              </div>
-                              <div className="text-muted-foreground truncate">
-                                <span className="line-through opacity-60">
-                                  {sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}
+                            <div
+                              key={e.id}
+                              className={`space-y-0.5 rounded px-1.5 py-1 ${
+                                e.unchanged
+                                  ? "opacity-60"
+                                  : "bg-primary/5 border-l-2 border-primary/60"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="text-[10px] font-medium text-foreground/80 flex items-center gap-1">
+                                  {fieldLabel[e.field]}
+                                  {!e.unchanged && (
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary" title="Campo modificado" />
+                                  )}
+                                </div>
+                                <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70">
+                                  {e.unchanged ? "sin cambio" : "modificado"}
                                 </span>
-                                <span className="mx-1">→</span>
-                                <span className="text-foreground">
+                              </div>
+                              {e.unchanged ? (
+                                <div className="text-muted-foreground truncate italic">
                                   {sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}
-                                </span>
-                              </div>
+                                </div>
+                              ) : (
+                                <div className="text-muted-foreground truncate">
+                                  <span className="line-through opacity-60">
+                                    {sanitizeForLog(e.field, e.from, logPrivacyMode) || "—"}
+                                  </span>
+                                  <span className="mx-1">→</span>
+                                  <span className="text-foreground font-medium">
+                                    {sanitizeForLog(e.field, e.to, logPrivacyMode) || "—"}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

@@ -203,10 +203,13 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      pushChange({ field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" });
-      pushChange({ field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" });
-      pushChange({ field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" });
-      pushChange({ field: "priority", from: prev.priority, to: priority, origin: "executive" });
+      // Agrupamos todos los cambios de este guardado en una sola fila del log.
+      pushChangeBatch([
+        { field: "visitor_name", from: prev.visitor_name, to: name, origin: "executive" },
+        { field: "visitor_phone", from: prev.visitor_phone, to: phone, origin: "executive" },
+        { field: "visitor_email", from: prev.visitor_email, to: email, origin: "executive" },
+        { field: "priority", from: prev.priority, to: priority, origin: "executive" },
+      ]);
       toast({ title: "Datos actualizados" });
     }
     setBusy(false);

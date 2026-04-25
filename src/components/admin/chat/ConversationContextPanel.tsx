@@ -80,24 +80,45 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
   // ("executive" = guardado manual del ejecutivo / "realtime" = sync automático
   // desde la DB porque el visitante o un colega lo modificó).
   type ChangeOrigin = "executive" | "realtime";
+  type ChangeField = "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
   type ChangeEntry = {
     id: string;
     at: number;
-    field: "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
+    field: ChangeField;
     from: string;
     to: string;
     origin: ChangeOrigin;
+    batchId: string; // Agrupa entradas creadas en una misma operación (ej. saveDetails).
   };
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);
+  // Controla qué batches están expandidos en el panel (los multi-campo arrancan colapsados).
+  const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
 
-  function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
+  function pushChange(entry: Omit<ChangeEntry, "id" | "at" | "batchId">) {
     if ((entry.from ?? "") === (entry.to ?? "")) return;
     const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     setChangeLog((prev) => [
-      { ...entry, id: crypto.randomUUID(), at: Date.now() },
+      { ...entry, id: crypto.randomUUID(), at: Date.now(), batchId: crypto.randomUUID() },
       ...prev,
     ].slice(0, cap));
+  }
+
+  // Inserta múltiples cambios en una sola actualización de estado, compartiendo batchId
+  // para que el log los muestre como una sola fila agrupada por operación.
+  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId">>) {
+    const filtered = entries.filter((e) => (e.from ?? "") !== (e.to ?? ""));
+    if (filtered.length === 0) return;
+    const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
+    const batchId = crypto.randomUUID();
+    const now = Date.now();
+    const fresh: ChangeEntry[] = filtered.map((e) => ({
+      ...e,
+      id: crypto.randomUUID(),
+      at: now,
+      batchId,
+    }));
+    setChangeLog((prev) => [...fresh, ...prev].slice(0, cap));
   }
 
   // Reset del log al cambiar de conversación seleccionada.

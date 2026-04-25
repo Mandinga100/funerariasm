@@ -348,6 +348,9 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
         </button>
         {logOpen && (
           <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+            <p className="text-[10px] text-muted-foreground/80">
+              Privacidad: <span className="font-medium">{logPrivacyMode}</span> · Máx: <span className="font-medium">{logMaxEntries}</span> entradas
+            </p>
             {changeLog.length === 0 ? (
               <p className="text-[11px] text-muted-foreground italic">Sin cambios registrados aún.</p>
             ) : (

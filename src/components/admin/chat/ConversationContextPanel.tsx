@@ -36,6 +36,29 @@ export function ConversationContextPanel({ convo }: Props) {
     visitor_email: string | null;
   }>(null);
 
+  // Log interno de cambios de campo: distingue origen del cambio
+  // ("executive" = guardado manual del ejecutivo / "realtime" = sync automático
+  // desde la DB porque el visitante o un colega lo modificó).
+  type ChangeOrigin = "executive" | "realtime";
+  type ChangeEntry = {
+    id: string;
+    at: number;
+    field: "visitor_name" | "visitor_phone" | "visitor_email" | "priority";
+    from: string;
+    to: string;
+    origin: ChangeOrigin;
+  };
+  const [changeLog, setChangeLog] = useState<ChangeEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(false);
+
+  function pushChange(entry: Omit<ChangeEntry, "id" | "at">) {
+    if ((entry.from ?? "") === (entry.to ?? "")) return;
+    setChangeLog((prev) => [
+      { ...entry, id: crypto.randomUUID(), at: Date.now() },
+      ...prev,
+    ].slice(0, 30));
+  }
+
   useEffect(() => {
     const incoming = {
       visitor_name: convo.visitor_name ?? "",
@@ -45,15 +68,31 @@ export function ConversationContextPanel({ convo }: Props) {
 
     // Aplicar sólo a los campos que NO están enfocados, para no romper edición en curso.
     let deferred = false;
-    if (focusedField !== "name") setName(incoming.visitor_name);
-    else if (incoming.visitor_name !== name) deferred = true;
 
-    if (focusedField !== "phone") setPhone(incoming.visitor_phone);
-    else if (incoming.visitor_phone !== phone) deferred = true;
+    if (focusedField !== "name") {
+      if (incoming.visitor_name !== name) {
+        pushChange({ field: "visitor_name", from: name, to: incoming.visitor_name, origin: "realtime" });
+      }
+      setName(incoming.visitor_name);
+    } else if (incoming.visitor_name !== name) deferred = true;
 
-    if (focusedField !== "email") setEmail(incoming.visitor_email);
-    else if (incoming.visitor_email !== email) deferred = true;
+    if (focusedField !== "phone") {
+      if (incoming.visitor_phone !== phone) {
+        pushChange({ field: "visitor_phone", from: phone, to: incoming.visitor_phone, origin: "realtime" });
+      }
+      setPhone(incoming.visitor_phone);
+    } else if (incoming.visitor_phone !== phone) deferred = true;
 
+    if (focusedField !== "email") {
+      if (incoming.visitor_email !== email) {
+        pushChange({ field: "visitor_email", from: email, to: incoming.visitor_email, origin: "realtime" });
+      }
+      setEmail(incoming.visitor_email);
+    } else if (incoming.visitor_email !== email) deferred = true;
+
+    if (convo.priority !== priority) {
+      pushChange({ field: "priority", from: priority, to: convo.priority, origin: "realtime" });
+    }
     setPriority(convo.priority);
 
     setPendingSync(deferred ? {

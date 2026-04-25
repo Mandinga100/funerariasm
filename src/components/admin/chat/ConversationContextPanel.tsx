@@ -108,17 +108,20 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
 
   // Inserta múltiples cambios en una sola actualización de estado, compartiendo batchId
   // para que el log los muestre como una sola fila agrupada por operación.
-  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId">>) {
-    const filtered = entries.filter((e) => (e.from ?? "") !== (e.to ?? ""));
-    if (filtered.length === 0) return;
+  // Si al menos un campo cambió realmente, conservamos también los campos sin cambios
+  // marcados con `unchanged: true`, para que el detalle muestre "qué cambió vs qué quedó igual".
+  function pushChangeBatch(entries: Array<Omit<ChangeEntry, "id" | "at" | "batchId" | "unchanged">>) {
+    const hasRealChange = entries.some((e) => (e.from ?? "") !== (e.to ?? ""));
+    if (!hasRealChange) return;
     const cap = Math.max(1, Math.min(500, Math.floor(logMaxEntries)));
     const batchId = crypto.randomUUID();
     const now = Date.now();
-    const fresh: ChangeEntry[] = filtered.map((e) => ({
+    const fresh: ChangeEntry[] = entries.map((e) => ({
       ...e,
       id: crypto.randomUUID(),
       at: now,
       batchId,
+      unchanged: (e.from ?? "") === (e.to ?? ""),
     }));
     setChangeLog((prev) => [...fresh, ...prev].slice(0, cap));
   }

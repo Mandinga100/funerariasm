@@ -145,6 +145,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       setEventType(event.event_type);
       setStatus(event.status);
       setPriority(event.priority);
+      setVisibility(event.visibility ?? "private");
       setStartAt(toLocalInput(event.start_at));
       setEndAt(toLocalInput(event.end_at));
       setLocationName(event.location_name ?? "");
@@ -166,6 +167,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       setEventType(prefill?.eventType ?? "reunion");
       setStatus(defaultStatus ?? "programado");
       setPriority(prefill?.priority ?? "normal");
+      setVisibility("private");
       setStartAt(toLocalInput(start));
       setEndAt(toLocalInput(end));
       setLocationName("");

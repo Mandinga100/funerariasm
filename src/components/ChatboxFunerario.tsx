@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
+import { X, Send, Phone, User, ArrowLeft, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
@@ -7,6 +7,8 @@ import { getOrCreateChatToken } from "@/lib/chat-token";
 import { supabase } from "@/integrations/supabase/client";
 import { useChatLiveSync, type InboundMessage } from "@/hooks/use-chat-live-sync";
 import assistantAvatar from "@/assets/assistant-avatar.png";
+import { getOperatorAvatarUrl } from "@/lib/operator-avatar";
+import { isChatboxMuted, setChatboxMuted, notifyChatboxInbound } from "@/lib/chatbox-sound";
 
 interface ChatMessage {
   role: "assistant" | "user";
@@ -100,6 +102,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
   const [contactStep, setContactStep] = useState<ContactStep>("idle");
   const [contactData, setContactData] = useState<ContactFormData>({ name: "", phone: "", email: "" });
   const [isListening, setIsListening] = useState(false);
+  const [muted, setMuted] = useState<boolean>(() => isChatboxMuted());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -167,6 +170,10 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
       }));
       return [...prev, ...additions];
     });
+    // Notificación sonora + vibración al visitante (respeta el mute persistido).
+    // Aplica solo a mensajes humanos (admin) o de sistema; ignoramos bot.
+    const hasHumanReply = fresh.some((m) => m.sender_type === "admin" || m.sender_type === "system");
+    if (hasHumanReply) notifyChatboxInbound();
     if (live.operatorActive && mode === "tree") {
       // El operador está activo: salimos del menú-árbol y mostramos el input.
       setMode("ai");
@@ -686,18 +693,43 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
         }}
       >
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-3 sm:p-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/40 shrink-0">
-              <img src={assistantAvatar} alt="Asistente virtual" className="w-full h-full object-cover" loading="lazy" width={40} height={40} />
+        <div className="bg-primary text-primary-foreground p-3 sm:p-4 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/40 shrink-0 bg-background">
+              {live.operatorActive ? (
+                <img
+                  src={
+                    live.operatorAvatarUrl ||
+                    getOperatorAvatarUrl({
+                      userId: live.operatorUserId,
+                      gender: live.operatorGender,
+                      displayName: live.operatorName,
+                    })
+                  }
+                  alt={live.operatorName ?? "Asesor"}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                <img
+                  src={assistantAvatar}
+                  alt="Asistente virtual"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={40}
+                  height={40}
+                />
+              )}
             </div>
-            <div>
-              <p className="font-playfair text-sm font-semibold leading-tight">
+            <div className="min-w-0">
+              <p className="font-playfair text-sm font-semibold leading-tight truncate">
                 {live.operatorActive && live.operatorName ? live.operatorName : "Santa Margarita"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`w-2 h-2 rounded-full animate-pulse ${live.operatorActive ? "bg-emerald-300" : "bg-green-400"}`} />
-                <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase">
+                <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase truncate">
                   {live.operatorActive
                     ? "Asesor en línea"
                     : live.status === "pendiente_humano"
@@ -707,23 +739,46 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
               </div>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="group relative p-1.5 rounded-full text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors duration-300"
-            aria-label="Cerrar chat"
-          >
-            <span
-              className={`absolute inset-0 rounded-full border border-primary-foreground/20 transition-all duration-500 ${
-                isClosing ? "scale-125 opacity-0" : "scale-100 opacity-100"
+          {/* Acciones header: mute + cerrar. Mute queda separado de la X
+              con un divider sutil para no confundir y conserva su zona de tap. */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setChatboxMuted(next);
+              }}
+              aria-label={muted ? "Activar sonido de la conversación" : "Silenciar conversación"}
+              aria-pressed={muted}
+              title={muted ? "Activar sonido" : "Silenciar"}
+              className={`p-1.5 rounded-full transition-colors duration-200 ${
+                muted
+                  ? "bg-primary-foreground/15 text-primary-foreground"
+                  : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10"
               }`}
-              aria-hidden="true"
-            />
-            <X
-              className={`relative w-5 h-5 transition-transform duration-500 ease-in-out group-hover:rotate-90 group-hover:scale-110 ${
-                isClosing ? "rotate-[180deg] scale-90" : "rotate-0 scale-100"
-              }`}
-            />
-          </button>
+            >
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <span className="w-px h-4 bg-primary-foreground/15 mx-0.5" aria-hidden="true" />
+            <button
+              onClick={handleClose}
+              className="group relative p-1.5 rounded-full text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors duration-300"
+              aria-label="Cerrar chat"
+            >
+              <span
+                className={`absolute inset-0 rounded-full border border-primary-foreground/20 transition-all duration-500 ${
+                  isClosing ? "scale-125 opacity-0" : "scale-100 opacity-100"
+                }`}
+                aria-hidden="true"
+              />
+              <X
+                className={`relative w-5 h-5 transition-transform duration-500 ease-in-out group-hover:rotate-90 group-hover:scale-110 ${
+                  isClosing ? "rotate-[180deg] scale-90" : "rotate-0 scale-100"
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -736,8 +791,25 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex items-start gap-2 ${msg.role === "user" ? "max-w-[80%]" : "max-w-[88%]"}`}>
                 {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1">
-                    <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} loading="lazy" decoding="async" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1 bg-background">
+                    <img
+                      src={
+                        live.operatorActive
+                          ? (live.operatorAvatarUrl ||
+                              getOperatorAvatarUrl({
+                                userId: live.operatorUserId,
+                                gender: live.operatorGender,
+                                displayName: live.operatorName,
+                              }))
+                          : assistantAvatar
+                      }
+                      alt=""
+                      className="w-full h-full object-cover"
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                 )}
                 <div className="flex-1">

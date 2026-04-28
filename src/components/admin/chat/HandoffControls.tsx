@@ -58,6 +58,26 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
         sender_type: "system",
         content: `${executiveName} se ha unido a la conversación${visitorLabel} y le acompañará desde ahora.`,
       });
+      // Si la conversación está vinculada a un Lead que aún está en "nuevo",
+      // lo movemos automáticamente a "contactado" — al tomar control el
+      // ejecutivo ya estableció contacto humano.
+      if (convo.lead_id) {
+        const { data: leadRow } = await supabase
+          .from("contact_leads")
+          .select("pipeline_stage")
+          .eq("id", convo.lead_id)
+          .maybeSingle();
+        if (leadRow && (leadRow.pipeline_stage === "nuevo" || leadRow.pipeline_stage === null)) {
+          await supabase
+            .from("contact_leads")
+            .update({
+              pipeline_stage: "contactado",
+              last_contacted_at: new Date().toISOString(),
+              assigned_to: user.id,
+            })
+            .eq("id", convo.lead_id);
+        }
+      }
     }
     setBusy(false);
   }

@@ -378,43 +378,96 @@ export default function AdminAgenda() {
         </div>
       </div>
 
-      {/* Selector de ámbito de agenda (Personal / Compartidos / Empresarial / Todos) */}
+      {/* Selector de ámbito de agenda (Personal / Compartidos / Empresarial / Todos)
+          Cada pestaña tiene una identidad cromática propia para que sea intuitivo
+          identificar de un vistazo qué tipo de agenda se está visualizando. */}
       <Tabs value={scope} onValueChange={(v) => setScope(v as AgendaScope)}>
-        <TabsList className="flex flex-wrap h-auto">
-          <TabsTrigger value="mine" className="gap-1.5">
-            <User className="w-3.5 h-3.5" /> Mi agenda
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+          {/* Mi agenda → Azul (privacidad / propio) */}
+          <TabsTrigger
+            value="mine"
+            className="gap-1.5 border border-transparent data-[state=active]:bg-sky-50 data-[state=active]:text-sky-700 data-[state=active]:border-sky-200 data-[state=active]:shadow-sm dark:data-[state=active]:bg-sky-950/40 dark:data-[state=active]:text-sky-300 dark:data-[state=active]:border-sky-900"
+          >
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-300">
+              <User className="w-3 h-3" />
+            </span>
+            Mi agenda
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-900/50 dark:text-sky-300">
               {events.filter(e => e.created_by === myUserId || e.assigned_to === myUserId).length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="shared" className="gap-1.5">
-            <Share2 className="w-3.5 h-3.5" /> Compartidos conmigo
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+
+          {/* Compartidos conmigo → Ámbar (atención / colaboración) */}
+          <TabsTrigger
+            value="shared"
+            className="gap-1.5 border border-transparent data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 data-[state=active]:border-amber-200 data-[state=active]:shadow-sm dark:data-[state=active]:bg-amber-950/40 dark:data-[state=active]:text-amber-300 dark:data-[state=active]:border-amber-900"
+          >
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-300">
+              <Share2 className="w-3 h-3" />
+            </span>
+            Compartidos conmigo
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/50 dark:text-amber-300">
               {events.filter(e => sharedSet.has(e.id) && e.created_by !== myUserId && e.assigned_to !== myUserId).length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-1.5">
-            <Building2 className="w-3.5 h-3.5" /> Empresarial
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+
+          {/* Empresarial → Esmeralda (equipo / públicado) */}
+          <TabsTrigger
+            value="team"
+            className="gap-1.5 border border-transparent data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:border-emerald-200 data-[state=active]:shadow-sm dark:data-[state=active]:bg-emerald-950/40 dark:data-[state=active]:text-emerald-300 dark:data-[state=active]:border-emerald-900"
+          >
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300">
+              <Building2 className="w-3 h-3" />
+            </span>
+            Empresarial
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-300">
               {events.filter(e => e.visibility === "team").length}
             </Badge>
           </TabsTrigger>
+
+          {/* Toda la empresa → Dorado/Accent (privilegio CEO/Admin) */}
           {isAdmin && (
-            <TabsTrigger value="all" className="gap-1.5">
-              <LayoutGrid className="w-3.5 h-3.5" /> Toda la empresa
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{events.length}</Badge>
+            <TabsTrigger
+              value="all"
+              className="gap-1.5 border border-transparent data-[state=active]:bg-[hsl(var(--accent))]/15 data-[state=active]:text-[hsl(var(--accent))] data-[state=active]:border-[hsl(var(--accent))]/30 data-[state=active]:shadow-sm"
+            >
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]">
+                <LayoutGrid className="w-3 h-3" />
+              </span>
+              Toda la empresa
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/15">
+                {events.length}
+              </Badge>
             </TabsTrigger>
           )}
         </TabsList>
       </Tabs>
 
-      {/* Aviso contextual del ámbito */}
-      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md px-3 py-2">
-        {scope === "mine" && <><Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo CEO y administradores pueden ver toda la empresa.</span></>}
-        {scope === "shared" && <><Share2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Eventos que <strong>otros miembros del equipo te compartieron</strong>. Podrás editar solo aquellos con permiso explícito.</span></>}
-        {scope === "team" && <><Building2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para creador, asignado, admin/CEO).</span></>}
-        {scope === "all" && <><LayoutGrid className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Vista de <strong>toda la empresa</strong> (solo CEO y administradores). Filtra por responsable para ver la agenda de un trabajador específico.</span></>}
-      </div>
+      {/* Aviso contextual del ámbito (mismo color que la pestaña activa) */}
+      {scope === "mine" && (
+        <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-sky-50/60 border-sky-200 text-sky-800 dark:bg-sky-950/30 dark:border-sky-900 dark:text-sky-200">
+          <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400" />
+          <span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo CEO y administradores pueden ver toda la empresa.</span>
+        </div>
+      )}
+      {scope === "shared" && (
+        <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-amber-50/60 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-200">
+          <Share2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span>Eventos que <strong>otros miembros del equipo te compartieron</strong>. Podrás editar solo aquellos con permiso explícito.</span>
+        </div>
+      )}
+      {scope === "team" && (
+        <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-emerald-50/60 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-200">
+          <Building2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para creador, asignado, admin/CEO).</span>
+        </div>
+      )}
+      {scope === "all" && (
+        <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-[hsl(var(--accent))]/10 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))]">
+          <LayoutGrid className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span className="text-foreground/80">Vista de <strong className="text-[hsl(var(--accent))]">toda la empresa</strong> (solo CEO y administradores). Filtra por responsable para ver la agenda de un trabajador específico.</span>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

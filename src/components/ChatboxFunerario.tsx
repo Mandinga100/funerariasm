@@ -522,6 +522,14 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
       return;
     }
 
+    // Cuando un operador humano tomó la conversación, NO llamamos al bot IA:
+    // sólo persistimos el mensaje en el CRM y el operador responde desde /admin/chat.
+    if (live.operatorActive) {
+      setMessages((prev) => [...prev, { role: "user", content: value }]);
+      pushVisitorEvent(value);
+      return;
+    }
+
     if (mode === "ai") {
       await handleAIMessage(value);
     }

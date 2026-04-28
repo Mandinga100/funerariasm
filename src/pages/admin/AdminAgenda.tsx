@@ -378,6 +378,44 @@ export default function AdminAgenda() {
         </div>
       </div>
 
+      {/* Selector de ámbito de agenda (Personal / Compartidos / Empresarial / Todos) */}
+      <Tabs value={scope} onValueChange={(v) => setScope(v as AgendaScope)}>
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="mine" className="gap-1.5">
+            <User className="w-3.5 h-3.5" /> Mi agenda
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => e.created_by === myUserId || e.assigned_to === myUserId).length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="shared" className="gap-1.5">
+            <Share2 className="w-3.5 h-3.5" /> Compartidos conmigo
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => sharedSet.has(e.id) && e.created_by !== myUserId && e.assigned_to !== myUserId).length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="gap-1.5">
+            <Building2 className="w-3.5 h-3.5" /> Empresarial
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => e.visibility === "team").length}
+            </Badge>
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="all" className="gap-1.5">
+              <LayoutGrid className="w-3.5 h-3.5" /> Toda la empresa
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{events.length}</Badge>
+            </TabsTrigger>
+          )}
+        </TabsList>
+      </Tabs>
+
+      {/* Aviso contextual del ámbito */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md px-3 py-2">
+        {scope === "mine" && <><Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo CEO y administradores pueden ver toda la empresa.</span></>}
+        {scope === "shared" && <><Share2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Eventos que <strong>otros miembros del equipo te compartieron</strong>. Podrás editar solo aquellos con permiso explícito.</span></>}
+        {scope === "team" && <><Building2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para creador, asignado, admin/CEO).</span></>}
+        {scope === "all" && <><LayoutGrid className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Vista de <strong>toda la empresa</strong> (solo CEO y administradores). Filtra por responsable para ver la agenda de un trabajador específico.</span></>}
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="Hoy" value={kpis.today} icon={CalendarIcon} />

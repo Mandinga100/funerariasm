@@ -191,6 +191,16 @@ const Memoriales = () => {
                       {/* Gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
+                      {/* Demo badge — solo en los 4 memoriales template */}
+                      {isTemplateMemorial(mem.id) && (
+                        <div className="absolute top-3 left-3 right-3 z-10 flex justify-center">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-[11px] font-bold tracking-wide uppercase shadow-lg">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Solo demostración
+                          </span>
+                        </div>
+                      )}
+
                       {/* Hover overlay */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
                         <span className="text-primary-foreground/80 text-sm tracking-[0.2em] uppercase font-light">
@@ -210,6 +220,45 @@ const Memoriales = () => {
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* Aviso global de demostración — texto blanco bold legible */}
+              <div className="mt-10 max-w-3xl mx-auto text-center">
+                <p className="text-white font-bold text-sm md:text-base leading-relaxed bg-white/5 border border-white/10 rounded-2xl px-6 py-4">
+                  Los Legados Eternos mostrados arriba son <span className="text-gold">solo de demostración</span>. Al crear un Legado Eterno real, este será personalizado, persistente y gestionado por el equipo de Funeraria Santa Margarita junto a la familia.
+                </p>
+              </div>
+
+              {/* CTA: Ingresa a tu Legado Eterno */}
+              <div className="mt-16 max-w-2xl mx-auto">
+                <div className="relative rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-primary-foreground/5 to-transparent p-8 md:p-10 text-center overflow-hidden">
+                  <div className="absolute -top-12 -right-12 w-40 h-40 bg-gold/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="relative">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gold/15 border border-gold/30 mb-5">
+                      <KeyRound className="w-6 h-6 text-gold" />
+                    </div>
+                    <h3 className="font-playfair italic text-3xl md:text-4xl text-primary-foreground mb-3">
+                      Ingresa a tu Legado Eterno
+                    </h3>
+                    <p className="text-primary-foreground/70 text-base md:text-lg leading-relaxed mb-6 max-w-xl mx-auto">
+                      Si tu familia tiene un Legado Eterno creado, accede con el link único y seguro entregado por nuestro equipo para gestionar la memoria de tu ser querido.
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-xs text-primary-foreground/50 mb-6">
+                      <ShieldCheck className="w-4 h-4 text-gold/60" />
+                      <span>Acceso cifrado · Sesión renovable · Datos protegidos</span>
+                    </div>
+                    <Link
+                      to="/legados-eternos/acceso"
+                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gold text-primary font-semibold text-sm tracking-wide hover:bg-gold/90 transition-all duration-300 shadow-[0_0_24px_-4px_hsl(var(--gold)/0.5)]"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      Ingresar con mi link
+                    </Link>
+                    <p className="text-[11px] text-primary-foreground/40 mt-5">
+                      ¿Perdiste tu acceso? Usa tu código de recuperación o contáctanos al WhatsApp.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Pagination */}

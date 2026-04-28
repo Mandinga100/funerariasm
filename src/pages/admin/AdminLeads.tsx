@@ -311,13 +311,18 @@ export default function AdminLeads() {
     const now = new Date();
     const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
-      // Filtro por pestaña de categoría comercial (Urgencias / Cotizaciones / Previsión).
+      // Filtro de archivado: por defecto se ocultan los leads auto-archivados.
+      const isArchived = !!l.auto_archived_at;
+      if (showArchived) {
+        if (!isArchived) return false;
+      } else {
+        if (isArchived) return false;
+      }
       if (categoryTab !== "all" && getLeadCategory(l.urgency) !== categoryTab) return false;
       if (filterUrgency !== "all") {
         const normalizedUrgency = l.urgency === "immediate" ? "inmediata" : l.urgency;
         if (normalizedUrgency !== filterUrgency) return false;
       }
-      // In kanban mode, don't filter by stage — all stages are visible as columns
       if (!isKanban && filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
       if (filterOverdue) {
         if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
@@ -328,7 +333,9 @@ export default function AdminLeads() {
       }
       return true;
     });
-  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab]);
+  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab, showArchived]);
+
+  const archivedCount = useMemo(() => leads.filter(l => !!l.auto_archived_at).length, [leads]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};

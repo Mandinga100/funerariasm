@@ -44,14 +44,18 @@ interface CaseRef { id: string; case_number: string; }
 interface ShareRow { event_id: string; can_edit: boolean; }
 
 export default function AdminAgenda() {
-  const { isCeo } = useAuth();
+  const { isCeo, isAdmin, user } = useAuth();
+  const myUserId = user?.id ?? "";
   const { toast } = useToast();
 
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [cases, setCases] = useState<CaseRef[]>([]);
+  const [shares, setShares] = useState<ShareRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Ámbito por defecto: admins/CEO ven "all", el resto ve "mine".
+  const [scope, setScope] = useState<AgendaScope>(isAdmin ? "all" : "mine");
   const [view, setView] = useState<"kanban" | "calendar">("kanban");
   const [search, setSearch] = useState("");
   const [filterRange, setFilterRange] = useState<DateRange>("week");

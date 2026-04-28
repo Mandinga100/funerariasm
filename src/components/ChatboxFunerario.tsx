@@ -314,25 +314,37 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
   }, [onMinimize]);
 
   // Cierre duro (X): destruye el componente y resetea todo.
+  // Notifica al CRM como mensaje de sistema para que el operador sepa que
+  // el visitante cerró la ventana — la conversación queda intacta y se
+  // podrá retomar con todo el historial cuando el visitante regrese.
   const handleClose = useCallback(() => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
       setIsListening(false);
     }
+    // Solo notificar si la conversación ya fue persistida en el CRM.
+    if (conversationCreatedRef.current) {
+      pushVisitorEvent("[Sistema] El visitante cerró la ventana del chat. La conversación queda guardada y podrá retomarse.");
+    }
     setIsClosing(true);
     setTimeout(() => {
       onHardClose();
     }, 500);
-  }, [onHardClose]);
+  }, [onHardClose, pushVisitorEvent]);
 
   const resetChat = useCallback(() => {
+    // Notificar al CRM que el visitante volvió al menú principal (perdió
+    // el contexto de la conversación previa pero el historial sigue intacto).
+    if (conversationCreatedRef.current) {
+      pushVisitorEvent("[Sistema] El visitante volvió al menú principal del chat.");
+    }
     setMessages([GREETING]);
     setShowMainOptions(true);
     setMode("tree");
     setContactStep("idle");
     setContactData({ name: "", phone: "", email: "" });
     setInputText("");
-  }, []);
+  }, [pushVisitorEvent]);
 
   // Voice input via Web Speech API
   const toggleVoice = useCallback(() => {

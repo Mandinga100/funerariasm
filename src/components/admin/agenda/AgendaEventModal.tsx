@@ -522,6 +522,73 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
             </div>
           </div>
 
+          {/* Visibilidad + Compartidos */}
+          {canManageSharing && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    {visibility === "team" ? <Building2 className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                    Visibilidad
+                  </label>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <Switch checked={visibility === "team"} onCheckedChange={(v) => setVisibility(v ? "team" : "private")} />
+                    <span className="text-xs">
+                      {visibility === "team"
+                        ? "Empresarial — visible para todo el equipo"
+                        : "Personal — solo creador, asignado, compartidos y admin/CEO"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Share2 className="w-3 h-3" />Compartir con miembros del equipo</label>
+                  <div className="flex gap-2 mt-1">
+                    <Select value={shareUserPick || "__none__"} onValueChange={(v) => {
+                      if (v === "__none__") return;
+                      if (sharedUsers.some(s => s.user_id === v)) return;
+                      setSharedUsers([...sharedUsers, { user_id: v, can_edit: false }]);
+                      setShareUserPick("");
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Agregar persona…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Seleccionar —</SelectItem>
+                        {allTeam
+                          .filter(u => u.user_id !== user?.id && u.user_id !== assignedTo && !sharedUsers.some(s => s.user_id === u.user_id))
+                          .map(u => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name ?? u.user_id.slice(0, 8)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {sharedUsers.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {sharedUsers.map((s) => {
+                        const name = allTeam.find(u => u.user_id === s.user_id)?.display_name ?? s.user_id.slice(0, 8);
+                        return (
+                          <li key={s.user_id} className="flex items-center justify-between gap-2 text-xs border rounded-md px-2 py-1.5">
+                            <span className="truncate">{name}</span>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <label className="flex items-center gap-1.5">
+                                <Switch checked={s.can_edit} onCheckedChange={(v) =>
+                                  setSharedUsers(sharedUsers.map(x => x.user_id === s.user_id ? { ...x, can_edit: v } : x))
+                                } />
+                                <span className="text-[11px]">{s.can_edit ? "Puede editar" : "Solo ver"}</span>
+                              </label>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0"
+                                onClick={() => setSharedUsers(sharedUsers.filter(x => x.user_id !== s.user_id))}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Descripción + notas */}
           <div>
             <label className="text-xs font-medium text-muted-foreground">Descripción</label>

@@ -30,6 +30,7 @@ const PreguntasFrecuentes = lazy(() => import("./pages/PreguntasFrecuentes.tsx")
 const Pagos = lazy(() => import("./pages/Pagos.tsx"));
 const FunerariaComuna = lazy(() => import("./pages/FunerariaComuna.tsx"));
 const CoberturaRM = lazy(() => import("./pages/CoberturaRM.tsx"));
+const Diag = lazy(() => import("./pages/Diag.tsx"));
 
 // Admin shell + pages — lazy-loaded so the admin bundle never ships to public visitors
 const ProtectedRoute = lazy(() => import("./components/admin/ProtectedRoute.tsx"));
@@ -96,6 +97,7 @@ const App = () => (
             <Route path="/cobertura-region-metropolitana" element={<Suspense fallback={<PageFallback />}><CoberturaRM /></Suspense>} />
             <Route path="/funeraria/:comuna" element={<Suspense fallback={<PageFallback />}><FunerariaComuna /></Suspense>} />
             <Route path="/login" element={<Login />} />
+            <Route path="/__diag" element={<Suspense fallback={<PageFallback />}><Diag /></Suspense>} />
 
             {/* Admin — wrapped in Suspense; chunks load on demand only when /admin is visited */}
             <Route

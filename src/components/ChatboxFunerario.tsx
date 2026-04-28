@@ -617,7 +617,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     }
   };
 
-  const showInput = mode === "ai" || (contactStep !== "idle" && contactStep !== "done");
+  const showInput = mode === "ai" || live.operatorActive || (contactStep !== "idle" && contactStep !== "done");
 
   const getPlaceholder = () => {
     if (contactStep === "name") return "Ej: María González Pérez";

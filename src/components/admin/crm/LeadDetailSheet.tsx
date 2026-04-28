@@ -56,6 +56,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   useEffect(() => {
     if (!lead) return;
     setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    // Mapear intent del lead → tipo de servicio
+    const intentMap: Record<string, ServiceTypeId> = {
+      servicio_funerario_urgente: "servicio_funerario",
+      cotizacion: "servicio_funerario",
+      cremacion: "cremacion",
+      traslado: "traslado",
+      prevision_funeraria: "prevision",
+      memorial_legado: "memorial",
+    };
+    const meta = (lead.metadata ?? {}) as any;
+    setServiceType(meta.service_type ?? intentMap[lead.intent] ?? "");
+    setServiceOption(meta.service_option ?? lead.selected_plan ?? "");
     setLocalClassification(lead.ai_classification && Object.keys(lead.ai_classification).length > 0 ? lead.ai_classification : null);
     setLocalSummary(lead.ai_summary ?? null);
     loadNotes();

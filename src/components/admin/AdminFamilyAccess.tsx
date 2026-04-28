@@ -22,6 +22,9 @@ import {
   Eye,
   EyeOff,
   Clock,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { generateSecureToken, generateRecoveryCode } from "@/lib/family-access";
 import type { Tables } from "@/integrations/supabase/types";
@@ -68,6 +71,11 @@ export default function AdminFamilyAccess() {
   const [newCreds, setNewCreds] = useState<NewCredentials | null>(null);
   const [showSecrets, setShowSecrets] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 8;
+
+
   const load = async () => {
     setLoading(true);
     const [memRes, accRes] = await Promise.all([
@@ -85,6 +93,28 @@ export default function AdminFamilyAccess() {
   useEffect(() => { load(); }, []);
 
   const memorialMap = Object.fromEntries(memorials.map((m) => [m.id, m]));
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredAccesses = normalizedSearch
+    ? accesses.filter((acc) => {
+        const mem = memorialMap[acc.memorial_id];
+        const haystack = [
+          acc.family_name,
+          acc.family_email,
+          acc.notes ?? "",
+          mem?.full_name ?? "",
+          mem?.slug ?? "",
+        ].join(" ").toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : accesses;
+
+  const totalPages = Math.max(1, Math.ceil(filteredAccesses.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedAccesses = filteredAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [search]);
+
 
   const handleCreate = async () => {
     if (!memorialId || !familyEmail || !familyName) {
@@ -204,6 +234,18 @@ export default function AdminFamilyAccess() {
         </CardContent>
       </Card>
 
+      {!loading && accesses.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por familiar, email, memorial o slug…"
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -217,9 +259,15 @@ export default function AdminFamilyAccess() {
             Crear primer acceso
           </Button>
         </div>
+      ) : filteredAccesses.length === 0 ? (
+        <div className="text-center py-12 border border-dashed rounded-lg">
+          <Search className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">Ningún acceso coincide con "{search}".</p>
+          <Button variant="ghost" size="sm" className="mt-2" onClick={() => setSearch("")}>Limpiar búsqueda</Button>
+        </div>
       ) : (
         <div className="space-y-3">
-          {accesses.map((acc) => {
+          {paginatedAccesses.map((acc) => {
             const mem = memorialMap[acc.memorial_id];
             const expired = new Date(acc.expires_at) < new Date();
             const daysLeft = Math.ceil((new Date(acc.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -274,6 +322,23 @@ export default function AdminFamilyAccess() {
               </Card>
             );
           })}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+              <span>
+                Mostrando {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredAccesses.length)} de {filteredAccesses.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <span className="px-2">Página {safePage} / {totalPages}</span>
+                <Button size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

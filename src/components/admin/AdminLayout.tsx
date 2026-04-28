@@ -304,11 +304,14 @@ function AdminLayoutInner() {
           );
         })}
       </nav>
-      <div className="p-2 border-t">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4" />
-          Cerrar sesión
-        </Button>
+      <div className="border-t pt-2">
+        <RoleViewSwitcher />
+        <div className="px-2 pb-2">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4" />
+            Cerrar sesión
+          </Button>
+        </div>
       </div>
     </>
   );

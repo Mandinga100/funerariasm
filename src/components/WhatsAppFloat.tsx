@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, forwardRef } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
+import { useChatLiveSync } from "@/hooks/use-chat-live-sync";
 
 const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   // Tres estados de la ventana del chat:

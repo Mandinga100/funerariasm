@@ -1,6 +1,7 @@
 // Edge function: invite-team-member
-// Crea un nuevo usuario (con o sin contraseña) y le asigna un rol,
-// usando la service role key para no afectar la sesión del invitador.
+// Modo "invite": registra una invitación pendiente (correo + rol). El usuario debe
+//   ir al login del CRM y crear su propia contraseña; al registrarse recibe el rol.
+// Modo "manual": el CEO/admin crea el usuario con correo + contraseña + rol asignado.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -81,7 +82,6 @@ Deno.serve(async (req) => {
     if (!allowedRoles.includes(role)) {
       return jsonResponse({ error: "Rol inválido" }, 400);
     }
-    // Solo CEO puede asignar CEO o admin
     if ((role === "ceo" || role === "admin") && !isCeo) {
       return jsonResponse(
         { error: "Solo el CEO puede asignar este rol" },
@@ -96,10 +96,70 @@ Deno.serve(async (req) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const meta = { display_name: display_name?.trim() || cleanEmail.split("@")[0] };
+    const cleanName = display_name?.trim() || cleanEmail.split("@")[0];
 
-    // 4. Buscar si el usuario ya existe
-    let userId: string | null = null;
+    // ─────────────── MODO INVITE: solo registrar invitación pendiente ───────────────
+    if (mode === "invite") {
+      // ¿Ya existe usuario con este correo?
+      const { data: existing } = await admin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      const existingUser = existing?.users.find(
+        (u) => u.email?.toLowerCase() === cleanEmail,
+      );
+      if (existingUser) {
+        // Ya existe: simplemente asignar el rol directamente
+        const { data: existingRole } = await admin
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", existingUser.id)
+          .eq("role", role)
+          .maybeSingle();
+        if (!existingRole) {
+          const { error: roleErr } = await admin
+            .from("user_roles")
+            .insert({ user_id: existingUser.id, role });
+          if (roleErr) {
+            return jsonResponse({ error: roleErr.message }, 500);
+          }
+        }
+        return jsonResponse({
+          success: true,
+          mode: "invite",
+          already_existed: true,
+          message: "El usuario ya existía. Se le asignó el rol directamente.",
+        });
+      }
+
+      // Revocar invitaciones pendientes previas para este correo
+      await admin
+        .from("pending_invitations")
+        .update({ status: "revoked", updated_at: new Date().toISOString() })
+        .eq("status", "pending")
+        .ilike("email", cleanEmail);
+
+      // Crear nueva invitación pendiente
+      const { error: invErr } = await admin.from("pending_invitations").insert({
+        email: cleanEmail,
+        display_name: cleanName,
+        role,
+        invited_by: inviterId,
+      });
+      if (invErr) {
+        return jsonResponse({ error: invErr.message }, 500);
+      }
+
+      return jsonResponse({
+        success: true,
+        mode: "invite",
+        already_existed: false,
+        message:
+          "Invitación registrada. La persona debe ir al login del CRM y crear su cuenta con este correo.",
+      });
+    }
+
+    // ─────────────── MODO MANUAL: crear usuario con contraseña asignada ───────────────
     const { data: existing } = await admin.auth.admin.listUsers({
       page: 1,
       perPage: 200,
@@ -107,56 +167,35 @@ Deno.serve(async (req) => {
     const existingUser = existing?.users.find(
       (u) => u.email?.toLowerCase() === cleanEmail,
     );
-
     if (existingUser) {
-      userId = existingUser.id;
-    } else {
-      // Crear usuario
-      if (mode === "manual") {
-        const { data: created, error: createErr } =
-          await admin.auth.admin.createUser({
-            email: cleanEmail,
-            password,
-            email_confirm: false,
-            user_metadata: meta,
-          });
-        if (createErr || !created.user) {
-          return jsonResponse(
-            { error: createErr?.message ?? "No se pudo crear el usuario" },
-            400,
-          );
-        }
-        userId = created.user.id;
-      } else {
-        // invite: crear sin contraseña y enviar magic link
-        const { data: created, error: createErr } =
-          await admin.auth.admin.createUser({
-            email: cleanEmail,
-            email_confirm: true, // confirmar para que el magic link funcione
-            user_metadata: meta,
-          });
-        if (createErr || !created.user) {
-          return jsonResponse(
-            { error: createErr?.message ?? "No se pudo crear el usuario" },
-            400,
-          );
-        }
-        userId = created.user.id;
-      }
+      return jsonResponse(
+        { error: "Ya existe un usuario con ese correo" },
+        409,
+      );
     }
 
-    if (!userId) {
-      return jsonResponse({ error: "No se pudo determinar el usuario" }, 500);
+    const { data: created, error: createErr } =
+      await admin.auth.admin.createUser({
+        email: cleanEmail,
+        password,
+        email_confirm: true, // confirmado: el CEO ya validó el correo
+        user_metadata: { display_name: cleanName },
+      });
+    if (createErr || !created.user) {
+      return jsonResponse(
+        { error: createErr?.message ?? "No se pudo crear el usuario" },
+        400,
+      );
     }
+    const userId = created.user.id;
 
-    // 5. Asignar rol (idempotente)
+    // Asignar rol
     const { data: existingRole } = await admin
       .from("user_roles")
-      .select("id, role")
+      .select("id")
       .eq("user_id", userId)
       .eq("role", role)
       .maybeSingle();
-
     if (!existingRole) {
       const { error: roleErr } = await admin
         .from("user_roles")
@@ -169,27 +208,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 6. Si es invitación, generar magic link
-    let magicLink: string | null = null;
-    if (mode === "invite") {
-      const { data: linkData, error: linkErr } =
-        await admin.auth.admin.generateLink({
-          type: "magiclink",
-          email: cleanEmail,
-        });
-      if (linkErr) {
-        // No bloqueamos: el usuario quedó creado y con rol
-        console.warn("generateLink error:", linkErr.message);
-      } else {
-        magicLink = linkData?.properties?.action_link ?? null;
-      }
-    }
-
     return jsonResponse({
       success: true,
+      mode: "manual",
       user_id: userId,
-      already_existed: !!existingUser,
-      magic_link: magicLink,
+      message: "Usuario creado correctamente. Ya puede iniciar sesión con la contraseña asignada.",
     });
   } catch (e) {
     console.error("invite-team-member error:", e);

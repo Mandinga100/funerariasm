@@ -1226,6 +1226,60 @@ export type Database = {
           },
         ]
       }
+      memorial_family_access: {
+        Row: {
+          access_token_hash: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          family_email: string
+          family_name: string
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          memorial_id: string
+          notes: string | null
+          recovery_code_hash: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_hash: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          family_email: string
+          family_name: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          memorial_id: string
+          notes?: string | null
+          recovery_code_hash: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_hash?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          family_email?: string
+          family_name?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          memorial_id?: string
+          notes?: string | null
+          recovery_code_hash?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       memorial_offerings: {
         Row: {
           amount: number | null
@@ -1892,6 +1946,15 @@ export type Database = {
           title: string
         }[]
       }
+      family_update_memorial: {
+        Args: {
+          _biography?: string
+          _photo_url?: string
+          _token: string
+          _tribute_text?: string
+        }
+        Returns: boolean
+      }
       get_lead_stats: {
         Args: { _intent: string; _urgency: string }
         Returns: {
@@ -1911,7 +1974,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_family_credentials: {
+        Args: { _recovery_code: string; _token: string }
+        Returns: {
+          recovery_hash: string
+          token_hash: string
+        }[]
+      }
       refresh_lead_classification_stats: { Args: never; Returns: undefined }
+      reset_family_access_with_recovery_code: {
+        Args: { _email: string; _new_token: string; _recovery_code: string }
+        Returns: boolean
+      }
+      validate_family_access_token: {
+        Args: { _token: string }
+        Returns: {
+          access_id: string
+          expires_at: string
+          family_email: string
+          family_name: string
+          memorial_id: string
+          memorial_name: string
+          memorial_slug: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "family" | "ceo" | "moderator"

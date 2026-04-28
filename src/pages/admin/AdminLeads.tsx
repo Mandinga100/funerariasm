@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock } from "lucide-react";
+import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock, Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import { differenceInHours, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,6 +21,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 import { useRowSelection } from "@/hooks/use-row-selection";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleView } from "@/hooks/useRoleView";
 import KpiCard from "@/components/admin/KpiCard";
 import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
 import BulkActionsBar from "@/components/admin/BulkActionsBar";
@@ -72,6 +73,8 @@ interface Lead {
   message: string | null;
   comuna: string | null;
   selected_plan: string | null;
+  auto_archived_at: string | null;
+  archive_reason: string | null;
 }
 
 function getPriorityScore(lead: Lead): number | null {
@@ -97,23 +100,27 @@ export default function AdminLeads() {
     filterStage: searchParams.get("stage") ?? "all",
     filterOverdue: searchParams.get("filter") === "overdue",
     categoryTab: (searchParams.get("category") ?? "all") as "all" | LeadCategory,
+    showArchived: searchParams.get("archived") === "1",
   });
-  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab } = filters;
+  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab, showArchived } = filters;
   const setViewMode = (v: "kanban" | "list") => setFilter("viewMode", v);
   const setFilterUrgency = (v: string) => setFilter("filterUrgency", v);
   const setFilterStage = (v: string) => setFilter("filterStage", v);
   const setFilterOverdue = (v: boolean) => setFilter("filterOverdue", v);
   const setCategoryTab = (v: "all" | LeadCategory) => setFilter("categoryTab", v);
+  const setShowArchived = (v: boolean) => setFilter("showArchived", v);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { isCeo } = useAuth();
+  const { isCeo: realIsCeo } = useAuth();
+  const { effectiveIsCeo: isCeo, effectiveIsAdmin: isAdmin } = useRoleView();
   const selection = useRowSelection<Lead>((l) => l.id);
   const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -229,11 +236,67 @@ export default function AdminLeads() {
   const loadLeads = async () => {
     const { data } = await supabase
       .from("contact_leads")
-      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan")
+      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan, auto_archived_at, archive_reason")
       .order("created_at", { ascending: false })
       .limit(500);
     setLeads((data as Lead[]) ?? []);
     setLoading(false);
+  };
+
+  /** Ejecuta el archivado masivo de leads vencidos sin atender (admin/CEO). */
+  const handleAutoArchive = async () => {
+    setArchiving(true);
+    const { data, error } = await supabase.rpc("auto_archive_stale_leads");
+    setArchiving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    const count = (data as any)?.[0]?.archived_count ?? 0;
+    toast({
+      title: count > 0 ? "✅ Leads archivados" : "Nada que archivar",
+      description: count > 0
+        ? `${count} lead(s) sin atender pasaron a archivados.`
+        : "No hay leads vencidos pendientes de archivar en este momento.",
+    });
+    if (count > 0) {
+      logAudit({
+        action: "update",
+        module: "leads",
+        description: `Archivado automático ejecutado (${count} leads)`,
+        entity_type: "contact_lead",
+        new_data: { archived_count: count },
+      });
+      loadLeads();
+    }
+  };
+
+  /** Restaurar un lead archivado (admin/CEO). */
+  const handleRestore = async (id: string) => {
+    const { error } = await supabase
+      .from("contact_leads")
+      .update({ auto_archived_at: null, archive_reason: null, status: "new" })
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead restaurado", description: "Volvió a la bandeja activa." });
+    logAudit({ action: "update", module: "leads", description: "Restauró lead archivado", entity_type: "contact_lead", entity_id: id });
+    loadLeads();
+  };
+
+  /** Eliminación individual (sólo CEO real). */
+  const handleDeleteOne = async (id: string) => {
+    if (!isCeo) return;
+    const { error } = await supabase.from("contact_leads").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead eliminado", description: "Eliminado definitivamente." });
+    logAudit({ action: "delete", module: "leads", description: "Eliminó lead individual", entity_type: "contact_lead", entity_id: id });
+    loadLeads();
   };
 
   // Conteo por categoría comercial — alimenta los badges de las pestañas.
@@ -248,13 +311,18 @@ export default function AdminLeads() {
     const now = new Date();
     const isKanban = viewMode === "kanban" && !isMobile;
     return leads.filter(l => {
-      // Filtro por pestaña de categoría comercial (Urgencias / Cotizaciones / Previsión).
+      // Filtro de archivado: por defecto se ocultan los leads auto-archivados.
+      const isArchived = !!l.auto_archived_at;
+      if (showArchived) {
+        if (!isArchived) return false;
+      } else {
+        if (isArchived) return false;
+      }
       if (categoryTab !== "all" && getLeadCategory(l.urgency) !== categoryTab) return false;
       if (filterUrgency !== "all") {
         const normalizedUrgency = l.urgency === "immediate" ? "inmediata" : l.urgency;
         if (normalizedUrgency !== filterUrgency) return false;
       }
-      // In kanban mode, don't filter by stage — all stages are visible as columns
       if (!isKanban && filterStage !== "all" && (l.pipeline_stage || "nuevo") !== filterStage) return false;
       if (filterOverdue) {
         if ((l.pipeline_stage ?? "nuevo") !== "nuevo") return false;
@@ -265,7 +333,9 @@ export default function AdminLeads() {
       }
       return true;
     });
-  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab]);
+  }, [leads, filterUrgency, filterStage, filterOverdue, viewMode, isMobile, categoryTab, showArchived]);
+
+  const archivedCount = useMemo(() => leads.filter(l => !!l.auto_archived_at).length, [leads]);
 
   const leadsByStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
@@ -392,6 +462,23 @@ export default function AdminLeads() {
               <span className="sm:hidden">IA</span>
             </Button>
           </AIActionTooltip>
+          {(isAdmin || isCeo) && !showArchived && (
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleAutoArchive} disabled={archiving} title="Archiva leads en 'Nuevo' sin atender según urgencia (urgente >48h, normal >7d, previsión >30d).">
+              <Archive className="w-3.5 h-3.5 mr-1" />
+              <span className="hidden sm:inline">{archiving ? "Archivando..." : "Archivar vencidos"}</span>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant={showArchived ? "default" : "ghost"}
+            className="h-8 text-xs"
+            onClick={() => setShowArchived(!showArchived)}
+            title="Alternar entre bandeja activa y archivados"
+          >
+            {showArchived ? <ArchiveRestore className="w-3.5 h-3.5 mr-1" /> : <Archive className="w-3.5 h-3.5 mr-1" />}
+            <span className="hidden sm:inline">{showArchived ? `Activos` : `Archivados`}</span>
+            {archivedCount > 0 && <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">{archivedCount}</Badge>}
+          </Button>
           {filterOverdue && (
             <Badge variant="destructive" className="h-7 text-xs cursor-pointer" onClick={() => setFilterOverdue(false)}>
               ⚠️ Vencidos ✕

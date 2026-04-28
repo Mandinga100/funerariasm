@@ -18,6 +18,8 @@ import { useNotificationPrefsSync } from "@/hooks/use-notification-prefs-sync";
 import { useChatRealtimeAlerts } from "@/hooks/use-chat-realtime";
 import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
 import { signAvatarUrl } from "@/lib/avatar-url";
+import { RoleViewProvider, useRoleView } from "@/hooks/useRoleView";
+import RoleViewSwitcher from "@/components/admin/RoleViewSwitcher";
 
 // Aplica el tema almacenado antes del primer render para evitar flash visual.
 bootstrapAdminTheme();
@@ -51,7 +53,17 @@ const navItems: NavItem[] = [
 ];
 
 export default function AdminLayout() {
-  const { signOut, user, isCeo, isAdmin } = useAuth();
+  return (
+    <RoleViewProvider>
+      <AdminLayoutInner />
+    </RoleViewProvider>
+  );
+}
+
+function AdminLayoutInner() {
+  const { signOut, user } = useAuth();
+  // Roles efectivos (con simulación CEO→admin/moderator si aplica).
+  const { effectiveIsCeo: isCeo, effectiveIsAdmin: isAdmin } = useRoleView();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -292,11 +304,14 @@ export default function AdminLayout() {
           );
         })}
       </nav>
-      <div className="p-2 border-t">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4" />
-          Cerrar sesión
-        </Button>
+      <div className="border-t pt-2">
+        <RoleViewSwitcher />
+        <div className="px-2 pb-2">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4" />
+            Cerrar sesión
+          </Button>
+        </div>
       </div>
     </>
   );

@@ -1010,7 +1010,9 @@ export type Database = {
         Row: {
           ai_classification: Json | null
           ai_summary: string | null
+          archive_reason: string | null
           assigned_to: string | null
+          auto_archived_at: string | null
           comuna: string | null
           contact_type: string
           created_at: string
@@ -1034,7 +1036,9 @@ export type Database = {
         Insert: {
           ai_classification?: Json | null
           ai_summary?: string | null
+          archive_reason?: string | null
           assigned_to?: string | null
+          auto_archived_at?: string | null
           comuna?: string | null
           contact_type?: string
           created_at?: string
@@ -1058,7 +1062,9 @@ export type Database = {
         Update: {
           ai_classification?: Json | null
           ai_summary?: string | null
+          archive_reason?: string | null
           assigned_to?: string | null
+          auto_archived_at?: string | null
           comuna?: string | null
           contact_type?: string
           created_at?: string
@@ -1967,6 +1973,12 @@ export type Database = {
       }
     }
     Functions: {
+      auto_archive_stale_leads: {
+        Args: never
+        Returns: {
+          archived_count: number
+        }[]
+      }
       case_is_eligible_for_auto_tracking: {
         Args: { _case_id: string; _event_priority?: string }
         Returns: boolean

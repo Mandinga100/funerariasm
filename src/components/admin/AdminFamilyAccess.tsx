@@ -131,7 +131,7 @@ export default function AdminFamilyAccess() {
   const safePage = Math.min(page, totalPages);
   const paginatedAccesses = sortedAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, sortBy]);
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);

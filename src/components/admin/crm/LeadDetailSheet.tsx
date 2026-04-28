@@ -45,6 +45,7 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [localClassification, setLocalClassification] = useState<any>(null);
   const [localSummary, setLocalSummary] = useState<string | null>(null);
   const [classificationHistory, setClassificationHistory] = useState<any[]>([]);
+  const [personInfo, setPersonInfo] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 

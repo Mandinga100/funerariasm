@@ -1,0 +1,1 @@
+DELETE FROM public.user_roles WHERE user_id = '637e3028-414a-4c56-b4a0-6895cd152683' AND role IN ('admin'::app_role, 'moderator'::app_role);

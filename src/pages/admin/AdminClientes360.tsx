@@ -479,6 +479,105 @@ export default function AdminClientes360() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Detalle Cliente 360 */}
+      <Sheet open={!!openPersonId} onOpenChange={(o) => { if (!o) closePerson(); }}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <IdCard className="w-5 h-5 text-primary" />
+              {personDetail?.full_name ?? "Cargando…"}
+            </SheetTitle>
+          </SheetHeader>
+
+          {loadingDetail ? (
+            <div className="flex items-center justify-center py-10 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando expediente…
+            </div>
+          ) : personDetail ? (
+            <div className="space-y-5 mt-4">
+              <div className="rounded-md border bg-muted/30 p-3 space-y-1.5 text-sm">
+                {personDetail.rut && <div><Hash className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.rut}</div>}
+                {personDetail.phone && <div><Phone className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.phone}</div>}
+                {personDetail.email && <div><Mail className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.email}</div>}
+                {personDetail.comuna && <div><MapPin className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.comuna}</div>}
+                {personDetail.source && (
+                  <div className="text-[11px] text-muted-foreground pt-1">
+                    Origen: <Badge variant="outline" className="text-[10px]">{personDetail.source}</Badge>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" /> Casos del titular ({personCases.length})
+                  </h3>
+                </div>
+                {personCases.length === 0 ? (
+                  <div className="text-xs text-muted-foreground border rounded-md p-3">Sin casos asociados aún.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {personCases.map((c: any) => (
+                      <Link
+                        key={c.id}
+                        to={`/admin/casos?case=${c.id}`}
+                        className="block p-2.5 border rounded-md hover:bg-muted/40 transition"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium text-sm">{c.case_number}</div>
+                          <Badge variant="outline" className="text-[10px]">{c.pipeline_stage}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 mt-1">
+                          {c.deceased_name && <span>Fallecido/a: {c.deceased_name}</span>}
+                          {c.total_amount > 0 && <span>${c.total_amount.toLocaleString("es-CL")}</span>}
+                          <span>{format(new Date(c.created_at), "dd MMM yyyy", { locale: es })}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                  <Users className="w-4 h-4" /> Leads históricos ({personLeads.length})
+                </h3>
+                {personLeads.length === 0 ? (
+                  <div className="text-xs text-muted-foreground border rounded-md p-3">Sin leads previos.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {personLeads.map((l: any) => (
+                      <div key={l.id} className="p-2.5 border rounded-md text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{l.name ?? "Sin nombre"}</span>
+                          <Badge variant="outline" className="text-[10px]">{l.pipeline_stage}</Badge>
+                        </div>
+                        <div className="text-muted-foreground mt-0.5 flex flex-wrap gap-x-3">
+                          {l.selected_plan && <span>Plan: {l.selected_plan}</span>}
+                          {l.urgency && <span>{l.urgency}</span>}
+                          <span>{format(new Date(l.created_at), "dd MMM yyyy", { locale: es })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-3">
+                <Link to={`/admin/casos?person=${personDetail.id}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                  Crear nuevo caso para este titular <ExternalLink className="w-3 h-3" />
+                </Link>
+                <p className="text-[10px] text-muted-foreground mt-1 italic">
+                  Los datos del titular se heredarán automáticamente del expediente unificado.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">No se encontró la persona.</div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -103,9 +103,17 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
             ? "scale-0 opacity-0 pointer-events-none"
             : "bg-gold text-accent-foreground hover:bg-gold-dark hover:scale-110 hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.5)] scale-100 opacity-100"
         }`}
-        aria-label="Abrir chat"
+        aria-label={hasUnseen ? `Abrir chat — ${live.unseenCount} mensajes nuevos del asesor` : "Abrir chat"}
       >
         <MessageCircle className="w-7 h-7" />
+        {hasUnseen && (
+          <>
+            <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" aria-hidden="true" />
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-background shadow-md">
+              {live.unseenCount > 9 ? "9+" : live.unseenCount}
+            </span>
+          </>
+        )}
       </button>
 
       {/* Emergency bar */}

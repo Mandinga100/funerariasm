@@ -110,6 +110,37 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
+  /**
+   * Sincronización en tiempo real con el CRM:
+   *  - Inserta como burbujas de asistente los mensajes que el operador o el
+   *    sistema (handoff) envían desde /admin/chat.
+   *  - Refresca el estado del operador asignado para mostrarlo en el header.
+   *  - Persiste el unread mientras el chat está minimizado y notifica al abrir.
+   */
+  const handleInbound = useCallback((batch: InboundMessage[]) => {
+    setMessages((prev) => {
+      const additions: ChatMessage[] = batch.map((m) => ({
+        role: "assistant",
+        content: m.sender_type === "system"
+          ? `🟢 ${m.content}`
+          : m.content,
+      }));
+      return [...prev, ...additions];
+    });
+    if (isOpen) {
+      // Re-mostrar input para responder al operador en modo "humano_activo".
+      setMode("ai");
+    }
+  }, [isOpen]);
+
+  const live = useChatLiveSync({ visible: isOpen, onInbound: handleInbound });
+
+  // Cuando el visitante abre el chat, marcamos como vistos los inbound nuevos.
+  useEffect(() => {
+    if (isOpen) live.markSeen();
+  }, [isOpen, live]);
+
+
   // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir
   // con la página; bloquear el scroll rompe el click-outside y la sensación de
   // overlay no modal.

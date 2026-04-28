@@ -234,6 +234,18 @@ export default function AdminFamilyAccess() {
         </CardContent>
       </Card>
 
+      {!loading && accesses.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por familiar, email, memorial o slug…"
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

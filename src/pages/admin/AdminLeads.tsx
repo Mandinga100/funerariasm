@@ -236,11 +236,67 @@ export default function AdminLeads() {
   const loadLeads = async () => {
     const { data } = await supabase
       .from("contact_leads")
-      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan")
+      .select("id, name, email, phone, contact_type, intent, source, urgency, status, pipeline_stage, estimated_value, next_follow_up, ai_summary, ai_classification, last_contacted_at, created_at, message, comuna, selected_plan, auto_archived_at, archive_reason")
       .order("created_at", { ascending: false })
       .limit(500);
     setLeads((data as Lead[]) ?? []);
     setLoading(false);
+  };
+
+  /** Ejecuta el archivado masivo de leads vencidos sin atender (admin/CEO). */
+  const handleAutoArchive = async () => {
+    setArchiving(true);
+    const { data, error } = await supabase.rpc("auto_archive_stale_leads");
+    setArchiving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    const count = (data as any)?.[0]?.archived_count ?? 0;
+    toast({
+      title: count > 0 ? "✅ Leads archivados" : "Nada que archivar",
+      description: count > 0
+        ? `${count} lead(s) sin atender pasaron a archivados.`
+        : "No hay leads vencidos pendientes de archivar en este momento.",
+    });
+    if (count > 0) {
+      logAudit({
+        action: "update",
+        module: "leads",
+        description: `Archivado automático ejecutado (${count} leads)`,
+        entity_type: "contact_lead",
+        new_data: { archived_count: count },
+      });
+      loadLeads();
+    }
+  };
+
+  /** Restaurar un lead archivado (admin/CEO). */
+  const handleRestore = async (id: string) => {
+    const { error } = await supabase
+      .from("contact_leads")
+      .update({ auto_archived_at: null, archive_reason: null, status: "new" })
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead restaurado", description: "Volvió a la bandeja activa." });
+    logAudit({ action: "update", module: "leads", description: "Restauró lead archivado", entity_type: "contact_lead", entity_id: id });
+    loadLeads();
+  };
+
+  /** Eliminación individual (sólo CEO real). */
+  const handleDeleteOne = async (id: string) => {
+    if (!isCeo) return;
+    const { error } = await supabase.from("contact_leads").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead eliminado", description: "Eliminado definitivamente." });
+    logAudit({ action: "delete", module: "leads", description: "Eliminó lead individual", entity_type: "contact_lead", entity_id: id });
+    loadLeads();
   };
 
   // Conteo por categoría comercial — alimenta los badges de las pestañas.

@@ -1123,6 +1123,7 @@ export type Database = {
           metadata: Json | null
           name: string | null
           next_follow_up: string | null
+          person_id: string | null
           phone: string | null
           pipeline_stage: string
           selected_plan: string | null
@@ -1149,6 +1150,7 @@ export type Database = {
           metadata?: Json | null
           name?: string | null
           next_follow_up?: string | null
+          person_id?: string | null
           phone?: string | null
           pipeline_stage?: string
           selected_plan?: string | null
@@ -1175,6 +1177,7 @@ export type Database = {
           metadata?: Json | null
           name?: string | null
           next_follow_up?: string | null
+          person_id?: string | null
           phone?: string | null
           pipeline_stage?: string
           selected_plan?: string | null
@@ -1183,7 +1186,15 @@ export type Database = {
           urgency?: string | null
           whatsapp_message?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contact_leads_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_group_members: {
         Row: {
@@ -2009,6 +2020,7 @@ export type Database = {
           deceased_death_date: string | null
           deceased_gender: string | null
           deceased_name: string | null
+          deceased_person_id: string | null
           deceased_relationship: string | null
           deceased_rut: string | null
           disposition_type: string | null
@@ -2023,6 +2035,7 @@ export type Database = {
           operational_status: string
           original_message: string | null
           payment_status: string
+          person_id: string | null
           pipeline_stage: string
           requires_autopsy: boolean
           selected_plan: string | null
@@ -2060,6 +2073,7 @@ export type Database = {
           deceased_death_date?: string | null
           deceased_gender?: string | null
           deceased_name?: string | null
+          deceased_person_id?: string | null
           deceased_relationship?: string | null
           deceased_rut?: string | null
           disposition_type?: string | null
@@ -2074,6 +2088,7 @@ export type Database = {
           operational_status?: string
           original_message?: string | null
           payment_status?: string
+          person_id?: string | null
           pipeline_stage?: string
           requires_autopsy?: boolean
           selected_plan?: string | null
@@ -2111,6 +2126,7 @@ export type Database = {
           deceased_death_date?: string | null
           deceased_gender?: string | null
           deceased_name?: string | null
+          deceased_person_id?: string | null
           deceased_relationship?: string | null
           deceased_rut?: string | null
           disposition_type?: string | null
@@ -2125,6 +2141,7 @@ export type Database = {
           operational_status?: string
           original_message?: string | null
           payment_status?: string
+          person_id?: string | null
           pipeline_stage?: string
           requires_autopsy?: boolean
           selected_plan?: string | null
@@ -2138,10 +2155,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "service_cases_deceased_person_id_fkey"
+            columns: ["deceased_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "service_cases_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: true
             referencedRelation: "contact_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_cases_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -2328,6 +2359,19 @@ export type Database = {
           sample_size: number
           top_channel: string
           top_emotion: string
+        }[]
+      }
+      get_person_prefill: {
+        Args: { _person_id: string }
+        Returns: {
+          birth_date: string
+          comuna: string
+          email: string
+          full_name: string
+          last_case_at: string
+          phone: string
+          rut: string
+          total_cases: number
         }[]
       }
       has_role: {

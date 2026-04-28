@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, UserPlus, Phone, Mail, MapPin, Hash, Loader2, AlertTriangle, CheckCircle2, Users } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Search, UserPlus, Phone, Mail, MapPin, Hash, Loader2, AlertTriangle, CheckCircle2, Users, IdCard, FileText, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 type MatchRow = {
   person_id: string;
@@ -73,6 +77,42 @@ export default function AdminClientes360() {
   // Merge suggestions
   const [suggestions, setSuggestions] = useState<MergeSuggestionRow[]>([]);
   const [loadingSugg, setLoadingSugg] = useState(false);
+
+  // Detalle de persona (Cliente 360)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openPersonId = searchParams.get("person");
+  const [personDetail, setPersonDetail] = useState<any>(null);
+  const [personCases, setPersonCases] = useState<any[]>([]);
+  const [personLeads, setPersonLeads] = useState<any[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const openPerson = (id: string) => setSearchParams({ person: id });
+  const closePerson = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("person");
+    setSearchParams(next);
+  };
+
+  useEffect(() => {
+    if (!openPersonId) {
+      setPersonDetail(null);
+      setPersonCases([]);
+      setPersonLeads([]);
+      return;
+    }
+    (async () => {
+      setLoadingDetail(true);
+      const [{ data: pData }, { data: cData }, { data: lData }] = await Promise.all([
+        supabase.from("persons" as any).select("*").eq("id", openPersonId).maybeSingle(),
+        supabase.from("service_cases").select("id, case_number, pipeline_stage, total_amount, deceased_name, created_at").eq("person_id", openPersonId).order("created_at", { ascending: false }),
+        supabase.from("contact_leads").select("id, name, urgency, pipeline_stage, selected_plan, created_at").eq("person_id", openPersonId).order("created_at", { ascending: false }),
+      ]);
+      setPersonDetail(pData);
+      setPersonCases((cData as any) ?? []);
+      setPersonLeads((lData as any) ?? []);
+      setLoadingDetail(false);
+    })();
+  }, [openPersonId]);
 
   const loadPersons = async () => {
     setLoadingPersons(true);
@@ -203,7 +243,7 @@ export default function AdminClientes360() {
           </p>
         </div>
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-          Etapa A · Capa de unificación activa
+          Etapa B · Lead → Caso vinculado
         </Badge>
       </div>
 
@@ -361,7 +401,11 @@ export default function AdminClientes360() {
               ) : (
                 <div className="divide-y">
                   {filteredPersons.map((p) => (
-                    <div key={p.id} className="py-3 flex items-start justify-between gap-3">
+                    <button
+                      key={p.id}
+                      onClick={() => openPerson(p.id)}
+                      className="w-full text-left py-3 px-2 -mx-2 rounded-md flex items-start justify-between gap-3 hover:bg-muted/50 transition"
+                    >
                       <div className="min-w-0">
                         <div className="font-medium truncate flex items-center gap-2">
                           {p.full_name}
@@ -377,7 +421,7 @@ export default function AdminClientes360() {
                       <div className="text-[11px] text-muted-foreground shrink-0">
                         {p.source && <Badge variant="outline" className="text-[10px]">{p.source}</Badge>}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -435,6 +479,105 @@ export default function AdminClientes360() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Detalle Cliente 360 */}
+      <Sheet open={!!openPersonId} onOpenChange={(o) => { if (!o) closePerson(); }}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <IdCard className="w-5 h-5 text-primary" />
+              {personDetail?.full_name ?? "Cargando…"}
+            </SheetTitle>
+          </SheetHeader>
+
+          {loadingDetail ? (
+            <div className="flex items-center justify-center py-10 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando expediente…
+            </div>
+          ) : personDetail ? (
+            <div className="space-y-5 mt-4">
+              <div className="rounded-md border bg-muted/30 p-3 space-y-1.5 text-sm">
+                {personDetail.rut && <div><Hash className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.rut}</div>}
+                {personDetail.phone && <div><Phone className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.phone}</div>}
+                {personDetail.email && <div><Mail className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.email}</div>}
+                {personDetail.comuna && <div><MapPin className="inline w-3.5 h-3.5 mr-1.5 text-muted-foreground" />{personDetail.comuna}</div>}
+                {personDetail.source && (
+                  <div className="text-[11px] text-muted-foreground pt-1">
+                    Origen: <Badge variant="outline" className="text-[10px]">{personDetail.source}</Badge>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" /> Casos del titular ({personCases.length})
+                  </h3>
+                </div>
+                {personCases.length === 0 ? (
+                  <div className="text-xs text-muted-foreground border rounded-md p-3">Sin casos asociados aún.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {personCases.map((c: any) => (
+                      <Link
+                        key={c.id}
+                        to={`/admin/casos?case=${c.id}`}
+                        className="block p-2.5 border rounded-md hover:bg-muted/40 transition"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium text-sm">{c.case_number}</div>
+                          <Badge variant="outline" className="text-[10px]">{c.pipeline_stage}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 mt-1">
+                          {c.deceased_name && <span>Fallecido/a: {c.deceased_name}</span>}
+                          {c.total_amount > 0 && <span>${c.total_amount.toLocaleString("es-CL")}</span>}
+                          <span>{format(new Date(c.created_at), "dd MMM yyyy", { locale: es })}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                  <Users className="w-4 h-4" /> Leads históricos ({personLeads.length})
+                </h3>
+                {personLeads.length === 0 ? (
+                  <div className="text-xs text-muted-foreground border rounded-md p-3">Sin leads previos.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {personLeads.map((l: any) => (
+                      <div key={l.id} className="p-2.5 border rounded-md text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{l.name ?? "Sin nombre"}</span>
+                          <Badge variant="outline" className="text-[10px]">{l.pipeline_stage}</Badge>
+                        </div>
+                        <div className="text-muted-foreground mt-0.5 flex flex-wrap gap-x-3">
+                          {l.selected_plan && <span>Plan: {l.selected_plan}</span>}
+                          {l.urgency && <span>{l.urgency}</span>}
+                          <span>{format(new Date(l.created_at), "dd MMM yyyy", { locale: es })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-3">
+                <Link to={`/admin/casos?person=${personDetail.id}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                  Crear nuevo caso para este titular <ExternalLink className="w-3 h-3" />
+                </Link>
+                <p className="text-[10px] text-muted-foreground mt-1 italic">
+                  Los datos del titular se heredarán automáticamente del expediente unificado.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">No se encontró la persona.</div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

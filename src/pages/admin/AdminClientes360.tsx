@@ -401,7 +401,11 @@ export default function AdminClientes360() {
               ) : (
                 <div className="divide-y">
                   {filteredPersons.map((p) => (
-                    <div key={p.id} className="py-3 flex items-start justify-between gap-3">
+                    <button
+                      key={p.id}
+                      onClick={() => openPerson(p.id)}
+                      className="w-full text-left py-3 px-2 -mx-2 rounded-md flex items-start justify-between gap-3 hover:bg-muted/50 transition"
+                    >
                       <div className="min-w-0">
                         <div className="font-medium truncate flex items-center gap-2">
                           {p.full_name}
@@ -417,7 +421,7 @@ export default function AdminClientes360() {
                       <div className="text-[11px] text-muted-foreground shrink-0">
                         {p.source && <Badge variant="outline" className="text-[10px]">{p.source}</Badge>}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}

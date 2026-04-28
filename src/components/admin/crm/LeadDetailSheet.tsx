@@ -402,31 +402,38 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
           )}
 
           <Separator />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Etapa</label>
-              <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => updateField("pipeline_stage", v)}>
-                <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Valor Estimado</label>
-              <div className="flex gap-1 mt-1">
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  value={estimatedValue}
-                  onChange={e => setEstimatedValue(e.target.value)}
-                  placeholder="$0"
-                />
-                <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => updateField("estimated_value", parseInt(estimatedValue) || 0)}>
-                  <DollarSign className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Etapa del Lead</label>
+            <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => updateField("pipeline_stage", v)}>
+              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Servicio + Valor estimado auto-rellenado desde catálogo */}
+          <ServiceSelector
+            serviceType={serviceType}
+            serviceOption={serviceOption}
+            amount={estimatedValue}
+            onServiceTypeChange={(v) => {
+              setServiceType(v);
+              persistService(v, "");
+            }}
+            onServiceOptionChange={(v) => {
+              setServiceOption(v);
+              persistService(serviceType, v);
+            }}
+            onAmountChange={(v) => {
+              setEstimatedValue(v);
+            }}
+            amountLabel="Valor Estimado (CLP)"
+          />
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => updateField("estimated_value", parseInt(estimatedValue) || 0)}>
+              <DollarSign className="w-3 h-3 mr-1" />Guardar valor
+            </Button>
           </div>
 
           {/* Message */}

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Calendar as CalendarIcon, LayoutGrid, RefreshCw, Download, AlertTriangle } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, LayoutGrid, RefreshCw, Download, AlertTriangle, User, Share2, Building2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import KpiCard from "@/components/admin/KpiCard";
 import {
@@ -30,9 +30,18 @@ import { downloadCSV, downloadXLSX, type ExportColumn } from "@/lib/admin-export
 const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 type DateRange = "today" | "tomorrow" | "week" | "month" | "all";
+/**
+ * Ámbito de visualización de la agenda:
+ *  - mine: eventos creados por mí o asignados a mí (mi agenda personal)
+ *  - shared: eventos que otros me han compartido (vía agenda_event_shares)
+ *  - team: agenda empresarial (eventos marcados visibility='team' visibles a todo el equipo)
+ *  - all: solo CEO/Admin — toda la empresa
+ */
+type AgendaScope = "mine" | "shared" | "team" | "all";
 
 interface UserOpt { user_id: string; display_name: string | null; }
 interface CaseRef { id: string; case_number: string; }
+interface ShareRow { event_id: string; can_edit: boolean; }
 
 export default function AdminAgenda() {
   const { isCeo } = useAuth();

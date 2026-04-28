@@ -83,9 +83,13 @@ interface ChatboxProps {
   onMinimize: () => void;
   /** Cierre real vía X: avisa al padre para destruir el componente y resetear historial. */
   onHardClose: () => void;
+  /** Estado de sincronización en tiempo real con el CRM (provisto por el padre). */
+  live: ReturnType<typeof useChatLiveSync>;
+  /** Lote de mensajes inbound recién recibidos (admin/system/bot). */
+  inboundBatch: InboundMessage[];
 }
 
-const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => {
+const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch }: ChatboxProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");
@@ -111,34 +115,29 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
   }, [messages, isOpen]);
 
   /**
-   * Sincronización en tiempo real con el CRM:
-   *  - Inserta como burbujas de asistente los mensajes que el operador o el
-   *    sistema (handoff) envían desde /admin/chat.
-   *  - Refresca el estado del operador asignado para mostrarlo en el header.
-   *  - Persiste el unread mientras el chat está minimizado y notifica al abrir.
+   * Cada vez que el padre nos pasa un nuevo lote de mensajes inbound desde el
+   * CRM (operador admin, mensaje system de handoff o bot), los agregamos como
+   * burbujas de asistente al historial. Deduplicamos por timestamp+content.
    */
-  const handleInbound = useCallback((batch: InboundMessage[]) => {
+  const lastBatchRef = useRef<string>("");
+  useEffect(() => {
+    if (!inboundBatch || inboundBatch.length === 0) return;
+    const sig = inboundBatch.map((m) => m.id).join("|");
+    if (sig === lastBatchRef.current) return;
+    lastBatchRef.current = sig;
     setMessages((prev) => {
-      const additions: ChatMessage[] = batch.map((m) => ({
+      const additions: ChatMessage[] = inboundBatch.map((m) => ({
         role: "assistant",
-        content: m.sender_type === "system"
-          ? `🟢 ${m.content}`
-          : m.content,
+        content: m.sender_type === "system" ? `🟢 ${m.content}` : m.content,
       }));
       return [...prev, ...additions];
     });
-    if (isOpen) {
-      // Re-mostrar input para responder al operador en modo "humano_activo".
+    if (live.operatorActive && mode === "tree") {
+      // El operador está activo: salimos del menú-árbol y mostramos el input.
       setMode("ai");
+      setShowMainOptions(false);
     }
-  }, [isOpen]);
-
-  const live = useChatLiveSync({ visible: isOpen, onInbound: handleInbound });
-
-  // Cuando el visitante abre el chat, marcamos como vistos los inbound nuevos.
-  useEffect(() => {
-    if (isOpen) live.markSeen();
-  }, [isOpen, live]);
+  }, [inboundBatch, live.operatorActive, mode]);
 
 
   // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir

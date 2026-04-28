@@ -346,9 +346,46 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
             })()}
           </div>
 
-          <Separator />
+          {/* Expediente unificado (Cliente 360) */}
+          {lead.person_id && (
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-primary font-semibold">
+                  <IdCard className="w-3.5 h-3.5" /> Expediente unificado
+                </div>
+                <Link
+                  to={`/admin/clientes-360?person=${lead.person_id}`}
+                  className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Ver Cliente 360 <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+              {personInfo ? (
+                <div className="space-y-1 text-xs">
+                  <div className="font-semibold text-foreground">{personInfo.full_name}</div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                    {personInfo.rut && <span>RUT: {personInfo.rut}</span>}
+                    {personInfo.total_cases > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <History className="w-3 h-3" />
+                        {personInfo.total_cases} caso{personInfo.total_cases !== 1 ? "s" : ""} previo{personInfo.total_cases !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    {personInfo.last_case_at && (
+                      <span>Último: {format(new Date(personInfo.last_case_at), "dd MMM yyyy", { locale: es })}</span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground italic">
+                    Datos heredados automáticamente al convertir este lead en caso.
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-muted-foreground">Cargando expediente…</div>
+              )}
+            </div>
+          )}
 
-          {/* Pipeline & Value */}
+          <Separator />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground">Etapa</label>

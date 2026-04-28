@@ -478,6 +478,54 @@ export default function AdminSettings() {
     setSelectedAdmin(null);
   };
 
+  /* ── Delete full account (auth + roles + profile) — solo CEO ── */
+  const handleDeleteFullAccount = async () => {
+    if (!selectedAdmin) return;
+    if (!isCeo) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede eliminar cuentas completas.", variant: "destructive" });
+      return;
+    }
+    if (selectedAdmin.user_id === user?.id) {
+      toast({ title: "Error", description: "No puede eliminar su propia cuenta.", variant: "destructive" });
+      return;
+    }
+    if (isFounder(selectedAdmin.user_id)) {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "La cuenta del CEO fundador está protegida permanentemente.",
+        variant: "destructive",
+      });
+      setDeleteDialog(false);
+      setSelectedAdmin(null);
+      return;
+    }
+    setSaving(true);
+    const { data, error } = await supabase.functions.invoke("delete-team-member", {
+      body: { user_id: selectedAdmin.user_id },
+    });
+    setSaving(false);
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "No se pudo eliminar la cuenta.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Cuenta eliminada",
+      description: `${selectedAdmin.display_name ?? "El miembro"} fue removido por completo del sistema.`,
+    });
+    logAudit({
+      action: "delete_account",
+      module: "equipo",
+      description: `Eliminó cuenta completa de ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`,
+      entity_type: "user_account",
+      entity_id: selectedAdmin.user_id,
+      old_data: { role: selectedAdmin.role, user_id: selectedAdmin.user_id },
+    });
+    loadAdmins();
+    setDeleteDialog(false);
+    setSelectedAdmin(null);
+  };
+
   /* ── Change password ── */
   const handleChangePassword = async () => {
     if (newPass.length < 8) {
@@ -580,18 +628,18 @@ export default function AdminSettings() {
   };
 
   /* ── Determine available roles for selects ── */
-  // Solo el CEO puede asignar roles privilegiados (ceo, admin).
-  // Los administradores únicamente pueden invitar moderadores.
-  const availableRoles: AppRole[] = isCeo ? ["ceo", "admin", "moderator"] : ["moderator"];
+  // El rol CEO es único e inamovible (protegido por trigger en DB).
+  // El CEO puede asignar admin o moderador. Los administradores solo moderador.
+  const availableRoles: AppRole[] = isCeo ? ["admin", "moderator"] : ["moderator"];
 
-  // Si el rol seleccionado deja de estar permitido (p. ej. admin sin permisos para "admin"),
-  // lo corregimos automáticamente al primer rol disponible.
+  // Si el rol seleccionado deja de estar permitido, lo corregimos automáticamente.
   useEffect(() => {
     if (!availableRoles.includes(newRole)) {
       setNewRole(availableRoles[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCeo, addDialog, editDialog]);
+
 
   return (
     <div className="space-y-4">
@@ -1485,29 +1533,70 @@ export default function AdminSettings() {
 
       {/* ═══════════════ DELETE DIALOG ═══════════════ */}
       <Dialog open={deleteDialog} onOpenChange={(v) => { if (!saving) setDeleteDialog(v); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive" />
-              {selectedAdmin ? `Eliminar ${ROLE_META[selectedAdmin.role].label}` : "Eliminar miembro"}
+              Gestionar acceso de {selectedAdmin?.display_name ?? selectedAdmin?.email ?? selectedAdmin?.user_id.slice(0, 12)}
             </DialogTitle>
             <DialogDescription>
-              ¿Está seguro de eliminar a{" "}
-              <strong>{selectedAdmin?.display_name ?? selectedAdmin?.email ?? selectedAdmin?.user_id.slice(0, 12)}</strong>
-              {selectedAdmin && (
-                <> como <strong>{ROLE_META[selectedAdmin.role].label}</strong></>
-              )}?{" "}
-              Perderá acceso al CRM inmediatamente. Esta acción queda registrada en el log de auditoría.
+              Elija cómo desea retirar el acceso de este miembro. Ambas acciones quedan registradas en el log de auditoría.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-            Solo se elimina este rol del usuario. Si tiene otros roles asignados (por ejemplo, también es Moderador),
-            esos no se ven afectados.
+
+          <div className="space-y-3">
+            {/* Opción 1: solo remover rol */}
+            <div className="rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <Shield className="w-4 h-4 text-amber-700 dark:text-amber-400 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                    Remover solo el rol {selectedAdmin ? ROLE_META[selectedAdmin.role].label : ""}
+                  </p>
+                  <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-tight mt-0.5">
+                    El usuario pierde este rol pero su cuenta permanece. Si tiene otros roles, esos siguen activos.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={saving}
+                onClick={handleDeleteAdmin}
+                className="w-full border-amber-400 text-amber-900 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/40"
+              >
+                {saving ? "Procesando..." : `Remover rol ${selectedAdmin ? ROLE_META[selectedAdmin.role].label : ""}`}
+              </Button>
+            </div>
+
+            {/* Opción 2: eliminar cuenta completa (solo CEO) */}
+            {isCeo && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Trash2 className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-destructive">Eliminar cuenta por completo</p>
+                    <p className="text-[11px] text-destructive/80 leading-tight mt-0.5">
+                      Borra todos los roles, perfil y la cuenta de acceso. Esta acción es <strong>irreversible</strong>.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={saving}
+                  onClick={handleDeleteFullAccount}
+                  className="w-full"
+                >
+                  {saving ? "Eliminando..." : "Sí, eliminar cuenta completa"}
+                </Button>
+              </div>
+            )}
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" disabled={saving} onClick={() => setDeleteDialog(false)} className="w-full sm:w-auto">Cancelar</Button>
-            <Button variant="destructive" disabled={saving} onClick={handleDeleteAdmin} className="w-full sm:w-auto">
-              {saving ? "Eliminando..." : `Sí, eliminar ${selectedAdmin ? ROLE_META[selectedAdmin.role].label : ""}`}
+
+          <DialogFooter>
+            <Button variant="ghost" disabled={saving} onClick={() => setDeleteDialog(false)} className="w-full">
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>

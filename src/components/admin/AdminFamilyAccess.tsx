@@ -256,14 +256,27 @@ export default function AdminFamilyAccess() {
       </Card>
 
       {!loading && accesses.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por familiar, email, memorial o slug…"
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por familiar, email, memorial o slug…"
+              className="pl-9"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="sm:w-[220px]">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_desc">Más recientes primero</SelectItem>
+              <SelectItem value="created_asc">Más antiguos primero</SelectItem>
+              <SelectItem value="last_used_desc">Último ingreso reciente</SelectItem>
+              <SelectItem value="name_asc">Nombre (A–Z)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 

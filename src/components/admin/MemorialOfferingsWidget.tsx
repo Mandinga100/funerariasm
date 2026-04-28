@@ -41,10 +41,11 @@ export default function MemorialOfferingsWidget() {
       const monthStart = startOfMonth(now).toISOString();
       const monthEnd = endOfMonth(now).toISOString();
 
-      // Ofrendas del mes
+      // Ofrendas del mes (excluye simulaciones — solo cuenta donaciones reales/confirmadas)
       const { data: monthOfferings } = await supabase
         .from("memorial_offerings")
-        .select("amount, donor_name, memorial_id")
+        .select("amount, donor_name, memorial_id, payment_status")
+        .neq("payment_status", "simulated")
         .gte("created_at", monthStart)
         .lte("created_at", monthEnd);
 
@@ -52,10 +53,11 @@ export default function MemorialOfferingsWidget() {
       const monthCount = monthOfferings?.length ?? 0;
       const uniqueDonors = new Set((monthOfferings ?? []).map(o => o.donor_name?.toLowerCase().trim() || "anonimo")).size;
 
-      // Top 5 memoriales con más ofrendas (todo histórico)
+      // Top 5 memoriales con más ofrendas reales (todo histórico, sin simulaciones)
       const { data: allOfferings } = await supabase
         .from("memorial_offerings")
-        .select("memorial_id, amount");
+        .select("memorial_id, amount, payment_status")
+        .neq("payment_status", "simulated");
 
       const byMemorial = new Map<string, { amount: number; count: number }>();
       (allOfferings ?? []).forEach(o => {

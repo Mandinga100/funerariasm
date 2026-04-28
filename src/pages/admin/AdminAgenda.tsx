@@ -83,16 +83,20 @@ export default function AdminAgenda() {
   // Cargar datos
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: ev }, { data: pf }, { data: cs }] = await Promise.all([
+    const [{ data: ev }, { data: pf }, { data: cs }, { data: sh }] = await Promise.all([
       supabase.from("agenda_events").select("*").order("start_at", { ascending: true }),
       supabase.from("profiles").select("user_id, display_name"),
       supabase.from("service_cases").select("id, case_number").limit(500),
+      myUserId
+        ? supabase.from("agenda_event_shares").select("event_id, can_edit").eq("shared_with_user_id", myUserId)
+        : Promise.resolve({ data: [] as ShareRow[] }),
     ]);
     setEvents((ev as AgendaEvent[]) ?? []);
     setUsers((pf as UserOpt[]) ?? []);
     setCases((cs as CaseRef[]) ?? []);
+    setShares((sh as ShareRow[]) ?? []);
     setLoading(false);
-  }, []);
+  }, [myUserId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 

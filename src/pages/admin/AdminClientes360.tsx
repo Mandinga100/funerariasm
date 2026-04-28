@@ -78,7 +78,42 @@ export default function AdminClientes360() {
   const [suggestions, setSuggestions] = useState<MergeSuggestionRow[]>([]);
   const [loadingSugg, setLoadingSugg] = useState(false);
 
-  const loadPersons = async () => {
+  // Detalle de persona (Cliente 360)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openPersonId = searchParams.get("person");
+  const [personDetail, setPersonDetail] = useState<any>(null);
+  const [personCases, setPersonCases] = useState<any[]>([]);
+  const [personLeads, setPersonLeads] = useState<any[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const openPerson = (id: string) => setSearchParams({ person: id });
+  const closePerson = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("person");
+    setSearchParams(next);
+  };
+
+  useEffect(() => {
+    if (!openPersonId) {
+      setPersonDetail(null);
+      setPersonCases([]);
+      setPersonLeads([]);
+      return;
+    }
+    (async () => {
+      setLoadingDetail(true);
+      const [{ data: pData }, { data: cData }, { data: lData }] = await Promise.all([
+        supabase.from("persons" as any).select("*").eq("id", openPersonId).maybeSingle(),
+        supabase.from("service_cases").select("id, case_number, pipeline_stage, total_amount, deceased_name, created_at").eq("person_id", openPersonId).order("created_at", { ascending: false }),
+        supabase.from("contact_leads").select("id, name, urgency, pipeline_stage, selected_plan, created_at").eq("person_id", openPersonId).order("created_at", { ascending: false }),
+      ]);
+      setPersonDetail(pData);
+      setPersonCases((cData as any) ?? []);
+      setPersonLeads((lData as any) ?? []);
+      setLoadingDetail(false);
+    })();
+  }, [openPersonId]);
+
     setLoadingPersons(true);
     const { data, error } = await supabase
       .from("persons" as any)

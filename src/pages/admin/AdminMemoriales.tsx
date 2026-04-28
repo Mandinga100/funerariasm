@@ -273,6 +273,13 @@ export default function AdminMemoriales() {
           />
         </>
       )}
+        </TabsContent>
+
+        <TabsContent value="accesos">
+          <AdminFamilyAccess memorials={items.map(m => ({ id: m.id, full_name: m.full_name, slug: m.slug }))} />
+        </TabsContent>
+      </Tabs>
+
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

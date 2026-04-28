@@ -196,6 +196,11 @@ const Planes = () => {
                       </li>
                     ))}
                   </ul>
+                  <p className={`text-xs leading-relaxed italic mb-6 ${
+                    plan.highlighted ? "text-primary-foreground/55" : "text-muted-foreground"
+                  }`}>
+                    <span className="font-semibold not-italic text-gold">PD:</span> El monto a cancelar puede ser menor en función del beneficio <span className="not-italic font-medium">"Cuota Mortuoria"</span> entregado por su AFP o IPS.
+                  </p>
                   <a
                     href={buildWhatsAppUrl({ intent: "cotizacion", selectedPlan: plan.name })}
                     target="_blank"

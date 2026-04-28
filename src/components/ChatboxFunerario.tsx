@@ -791,8 +791,25 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex items-start gap-2 ${msg.role === "user" ? "max-w-[80%]" : "max-w-[88%]"}`}>
                 {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1">
-                    <img src={assistantAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} loading="lazy" decoding="async" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gold/30 shrink-0 mt-1 bg-background">
+                    <img
+                      src={
+                        live.operatorActive
+                          ? (live.operatorAvatarUrl ||
+                              getOperatorAvatarUrl({
+                                userId: live.operatorUserId,
+                                gender: live.operatorGender,
+                                displayName: live.operatorName,
+                              }))
+                          : assistantAvatar
+                      }
+                      alt=""
+                      className="w-full h-full object-cover"
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                 )}
                 <div className="flex-1">

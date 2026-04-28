@@ -114,11 +114,13 @@ export default function AdminLeads() {
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { isCeo } = useAuth();
+  const { isCeo: realIsCeo } = useAuth();
+  const { effectiveIsCeo: isCeo, effectiveIsAdmin: isAdmin } = useRoleView();
   const selection = useRowSelection<Lead>((l) => l.id);
   const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   const stats = useMemo(() => {
     const now = new Date();

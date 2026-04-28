@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, UserPlus, Phone, Mail, MapPin, Hash, Loader2, AlertTriangle, CheckCircle2, Users, IdCard, FileText, ExternalLink } from "lucide-react";
+import { Search, UserPlus, Phone, Mail, MapPin, Hash, Loader2, AlertTriangle, CheckCircle2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import ClientDossierSheet from "@/components/admin/clientes360/ClientDossierSheet";
 
 type MatchRow = {
   person_id: string;

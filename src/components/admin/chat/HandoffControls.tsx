@@ -2,10 +2,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Hand, UserCheck, X, Lock } from "lucide-react";
+import { Hand, UserCheck, X, Lock, ArrowRightLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import type { ConversationRow } from "./ConversationList";
+import { useOnlineOperators } from "@/hooks/use-operator-presence";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export function HandoffControls({ convo }: { convo: ConversationRow }) {
   const { user, isAdmin, isCeo } = useAuth();
@@ -14,6 +23,7 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
   const [executiveName, setExecutiveName] = useState<string>("");
   const [confirmClose, setConfirmClose] = useState(false);
   const canDeleteOnClose = isAdmin || isCeo;
+  const onlineOperators = useOnlineOperators();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -62,11 +72,36 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
     setBusy(false);
   }
 
+  /**
+   * Reasignar la conversación a otro ejecutivo que esté online.
+   * - Cambia `assigned_to` y mantiene `status='humano_activo'`.
+   * - Inserta un mensaje system para que el visitante vea el cambio en vivo
+   *   (esto también actualiza el avatar/nombre en el chatbox vía polling).
+   */
+  async function reassignTo(targetUserId: string, targetName: string | null) {
+    if (!user || busy) return;
+    setBusy(true);
+    const { error } = await supabase
+      .from("chat_conversations")
+      .update({ status: "humano_activo", assigned_to: targetUserId })
+      .eq("id", convo.id);
+    if (error) {
+      toast({ title: "Error al reasignar", description: error.message, variant: "destructive" });
+    } else {
+      await supabase.from("chat_messages").insert({
+        conversation_id: convo.id,
+        sender_type: "system",
+        content: `Conversación transferida a ${targetName ?? "otro asesor"} para continuar la atención.`,
+      });
+      toast({ title: "Conversación reasignada", description: `Asignada a ${targetName ?? "otro asesor"}.` });
+    }
+    setBusy(false);
+  }
+
   async function performClose() {
     if (!user || busy) return;
     setBusy(true);
     if (canDeleteOnClose) {
-      // CEO/Admin: cerrar y eliminar inmediatamente la conversación + mensajes.
       const { error: msgErr } = await supabase
         .from("chat_messages")
         .delete()
@@ -110,6 +145,8 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
 
   const isMine = convo.assigned_to === user?.id;
   const isClosed = convo.status === "cerrado";
+  // Lista de operadores disponibles para reasignar (excluye al actualmente asignado).
+  const reassignTargets = onlineOperators.filter((op) => op.user_id !== convo.assigned_to);
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -123,6 +160,40 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
           <Button size="sm" variant="outline" onClick={release} disabled={busy} className="gap-1.5">
             <UserCheck className="w-3.5 h-3.5" /> Liberar
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={busy} className="gap-1.5">
+                <ArrowRightLeft className="w-3.5 h-3.5" /> Reasignar
+                {reassignTargets.length > 0 && (
+                  <span className="ml-1 text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">
+                    {reassignTargets.length} online
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-[11px]">Ejecutivos en línea</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {reassignTargets.length === 0 ? (
+                <div className="px-2 py-3 text-xs text-muted-foreground italic">
+                  No hay otros ejecutivos online.
+                </div>
+              ) : (
+                reassignTargets.map((op) => (
+                  <DropdownMenuItem
+                    key={op.user_id}
+                    onClick={() => void reassignTo(op.user_id, op.display_name)}
+                    className="gap-2"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="truncate">{op.display_name ?? "Sin nombre"}</span>
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button size="sm" variant="outline" onClick={handleCloseClick} disabled={busy} className="gap-1.5">
             <X className="w-3.5 h-3.5" /> Cerrar{canDeleteOnClose ? " y eliminar" : ""}
           </Button>

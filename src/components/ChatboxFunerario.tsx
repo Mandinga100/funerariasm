@@ -623,6 +623,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     if (contactStep === "name") return "Ej: María González Pérez";
     if (contactStep === "phone") return "Ej: +56 9 6166 1474";
     if (contactStep === "email") return "Ej: nombre@gmail.com";
+    if (live.operatorActive) return `Responder a ${live.operatorName ?? "asesor"}…`;
     return "Escriba su consulta...";
   };
 

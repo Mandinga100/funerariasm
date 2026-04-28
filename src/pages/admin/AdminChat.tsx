@@ -104,7 +104,7 @@ export default function AdminChat() {
   }
 
   return (
-    <div className="h-[calc(100vh-3rem)] flex border rounded-lg overflow-hidden bg-background -m-3 sm:-m-4 md:-m-6">
+    <div className="h-screen md:h-screen flex border-l bg-background overflow-hidden">
       <div className="w-[300px] xl:w-[340px] border-r flex-shrink-0">
         <ConversationList selectedId={selectedId} onSelect={handleSelect} />
       </div>

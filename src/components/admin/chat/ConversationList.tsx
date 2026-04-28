@@ -161,7 +161,7 @@ export function ConversationList({ selectedId, onSelect }: Props) {
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar visitante…" className="h-8 pl-8 text-sm" />
         </div>
-        <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-0.5">
+        <div className="flex flex-wrap gap-1">
           {([
             ["todas","Todas"],
             ["sin_asignar","Sin asignar"],

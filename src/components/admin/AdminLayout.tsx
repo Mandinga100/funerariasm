@@ -20,6 +20,7 @@ import { useAdminTheme, bootstrapAdminTheme } from "@/hooks/use-admin-theme";
 import { signAvatarUrl } from "@/lib/avatar-url";
 import { RoleViewProvider, useRoleView } from "@/hooks/useRoleView";
 import RoleViewSwitcher from "@/components/admin/RoleViewSwitcher";
+import FloatingChatTray from "@/components/admin/chat/FloatingChatTray";
 
 // Aplica el tema almacenado antes del primer render para evitar flash visual.
 bootstrapAdminTheme();
@@ -347,10 +348,14 @@ function AdminLayoutInner() {
           </div>
         </header>
 
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+        <main className={cn(
+          "flex-1 overflow-auto",
+          location.pathname.startsWith("/admin/chat") ? "p-0" : "p-3 sm:p-4 md:p-6"
+        )}>
           <Outlet />
         </main>
       </div>
+      <FloatingChatTray />
     </div>
   );
 }

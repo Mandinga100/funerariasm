@@ -57,7 +57,7 @@ export default function AdminChat() {
 
   if (isMobile) {
     return (
-      <div className="h-[calc(100vh-7rem)] flex flex-col -m-3 sm:-m-4">
+      <div className="h-[calc(100vh-3.5rem)] flex flex-col">
         <Tabs value={mobileTab} onValueChange={(v) => setMobileTab(v as MobileTab)} className="flex-1 flex flex-col">
           <TabsList className="grid grid-cols-3 mx-3 mt-2">
             <TabsTrigger value="lista">Bandeja</TabsTrigger>
@@ -104,8 +104,8 @@ export default function AdminChat() {
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex border rounded-lg overflow-hidden bg-background -m-3 sm:-m-4 md:-m-6 m-3 sm:m-4 md:m-6">
-      <div className="w-[320px] border-r flex-shrink-0">
+    <div className="h-screen md:h-screen flex border-l bg-background overflow-hidden">
+      <div className="w-[300px] xl:w-[340px] border-r flex-shrink-0">
         <ConversationList selectedId={selectedId} onSelect={handleSelect} />
       </div>
       <div className="flex-1 flex flex-col min-w-0">
@@ -133,7 +133,7 @@ export default function AdminChat() {
         )}
       </div>
       {selectedId && convo && (
-        <div className="w-[300px] border-l flex-shrink-0 bg-muted/10">
+        <div className="w-[300px] xl:w-[340px] border-l flex-shrink-0 bg-muted/10">
           <ConversationContextPanel convo={convo} />
         </div>
       )}

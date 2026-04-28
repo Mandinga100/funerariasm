@@ -167,20 +167,29 @@ export default function FloatingChatTray() {
 
   return (
     <>
-      {/* Burbuja flotante */}
+      {/* Burbuja flotante — estilo chatbox web (pill alto) */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Bandeja de chat"
         className={cn(
-          "fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all",
-          "bg-[#25D366] hover:bg-[#20BD5A] text-white",
+          "fixed bottom-5 right-5 z-50 h-14 min-w-[56px] rounded-full shadow-xl flex items-center gap-2.5 pl-4 pr-5 transition-all",
+          "bg-[#25D366] hover:bg-[#20BD5A] text-white font-medium",
           hasPending && "ring-4 ring-amber-400/60 animate-pulse",
         )}
       >
-        <MessageCircle className="w-7 h-7" strokeWidth={2.2} />
+        <span className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15">
+          <MessageCircle className="w-5 h-5" strokeWidth={2.4} />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-300 border-2 border-[#25D366]" />
+        </span>
+        <span className="flex flex-col items-start leading-tight">
+          <span className="text-[13px] font-semibold">Bandeja Chat</span>
+          <span className="text-[10px] opacity-90">
+            {convos.length > 0 ? `${convos.length} activa${convos.length === 1 ? "" : "s"}` : "Sin actividad"}
+          </span>
+        </span>
         {totalUnread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-background">
+          <span className="ml-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-[#25D366]">
             {totalUnread > 99 ? "99+" : totalUnread}
           </span>
         )}

@@ -259,7 +259,6 @@ export default function AdminFamilyAccess() {
             Crear primer acceso
           </Button>
         </div>
-      ) : (
       ) : filteredAccesses.length === 0 ? (
         <div className="text-center py-12 border border-dashed rounded-lg">
           <Search className="w-8 h-8 mx-auto text-muted-foreground mb-2" />

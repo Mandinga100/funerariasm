@@ -106,7 +106,13 @@ export function ConversationList({ selectedId, onSelect }: Props) {
   }, []);
 
   const filtered = useMemo(() => {
+    const cutoff = Date.now() - CLOSED_RETENTION_MS;
     return convos.filter((c) => {
+      // Cerradas: solo visibles si fueron cerradas hace ≤ 7 días
+      if (c.status === "cerrado") {
+        const closedTs = c.closed_at ? new Date(c.closed_at).getTime() : new Date(c.last_message_at).getTime();
+        if (closedTs < cutoff) return false;
+      }
       if (filter === "sin_asignar" && c.assigned_to) return false;
       if (filter === "mias" && c.assigned_to !== user?.id) return false;
       if (filter === "urgentes" && c.priority !== "urgente" && c.priority !== "alta") return false;
@@ -120,6 +126,33 @@ export function ConversationList({ selectedId, onSelect }: Props) {
       return true;
     });
   }, [convos, filter, search, user?.id]);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    // Borrar mensajes primero (no hay FK cascade declarado)
+    const { error: msgErr } = await supabase
+      .from("chat_messages")
+      .delete()
+      .eq("conversation_id", deleteTarget.id);
+    if (msgErr) {
+      toast({ title: "No se pudo eliminar", description: msgErr.message, variant: "destructive" });
+      setDeleting(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("chat_conversations")
+      .delete()
+      .eq("id", deleteTarget.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "No se pudo eliminar", description: error.message, variant: "destructive" });
+      return;
+    }
+    setConvos((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+    toast({ title: "Conversación eliminada", description: "Se borraron los mensajes y el registro." });
+    setDeleteTarget(null);
+  }
 
   return (
     <div className="flex flex-col h-full bg-background">

@@ -276,7 +276,7 @@ export default function AdminMemoriales() {
         </TabsContent>
 
         <TabsContent value="accesos">
-          <AdminFamilyAccess memorials={items.map(m => ({ id: m.id, full_name: m.full_name, slug: m.slug }))} />
+          <AdminFamilyAccess />
         </TabsContent>
       </Tabs>
 

@@ -537,7 +537,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
                     <span className="text-xs">
                       {visibility === "team"
                         ? "Empresarial — visible para todo el equipo"
-                        : "Personal — solo creador, asignado, compartidos y admin/CEO"}
+                        : "Personal — solo creador, asignado, compartidos y administradores"}
                     </span>
                   </div>
                 </div>

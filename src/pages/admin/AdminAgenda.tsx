@@ -425,7 +425,7 @@ export default function AdminAgenda() {
             </Badge>
           </TabsTrigger>
 
-          {/* Toda la empresa → Dorado/Accent (privilegio CEO/Admin) */}
+          {/* Toda la empresa → Dorado/Accent (privilegio dirección) */}
           {isAdmin && (
             <TabsTrigger
               value="all"
@@ -447,7 +447,7 @@ export default function AdminAgenda() {
       {scope === "mine" && (
         <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-sky-50/60 border-sky-200 text-sky-800 dark:bg-sky-950/30 dark:border-sky-900 dark:text-sky-200">
           <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400" />
-          <span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo CEO y administradores pueden ver toda la empresa.</span>
+          <span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo administradores pueden ver toda la empresa.</span>
         </div>
       )}
       {scope === "shared" && (
@@ -459,13 +459,13 @@ export default function AdminAgenda() {
       {scope === "team" && (
         <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-emerald-50/60 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-200">
           <Building2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para creador, asignado, admin/CEO).</span>
+          <span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para el creador, el asignado o un administrador).</span>
         </div>
       )}
       {scope === "all" && (
         <div className="flex items-start gap-2 text-xs rounded-md px-3 py-2 border bg-[hsl(var(--accent))]/10 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))]">
           <LayoutGrid className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span className="text-foreground/80">Vista de <strong className="text-[hsl(var(--accent))]">toda la empresa</strong> (solo CEO y administradores). Filtra por responsable para ver la agenda de un trabajador específico.</span>
+          <span className="text-foreground/80">Vista de <strong className="text-[hsl(var(--accent))]">toda la empresa</strong> (acceso reservado a la dirección). Filtra por responsable para ver la agenda de un trabajador específico.</span>
         </div>
       )}
 

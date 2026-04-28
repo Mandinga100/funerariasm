@@ -12,6 +12,8 @@ import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
 import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
+import { useSimulatedCondolences } from "@/hooks/use-simulated-condolences";
+import { isTemplateMemorial } from "@/lib/template-memorials";
 import {
   checkBotShield,
   createShieldTimer,
@@ -89,8 +91,19 @@ const MemorialDetail = () => {
   // and guarantees a single visible tier across rapid clicks.
   const { simulate: simulateCrown, mergeWithPaid } = useSimulatedCrown(memorial?.id ?? null);
 
+  // Session-only condolences for the 4 template memorials. Never persisted.
+  const isTemplate = isTemplateMemorial(memorial?.id);
+  const { simulated: simulatedCondolences, add: addSimulatedCondolence } =
+    useSimulatedCondolences(isTemplate ? memorial?.id ?? null : null);
+
   // Final list shown in UI: simulated crown (if any) replaces all other crowns.
   const offerings = useMemo(() => mergeWithPaid(baseOfferings), [baseOfferings, mergeWithPaid]);
+
+  // Final condolences = persisted + session-only (templates only).
+  const visibleCondolences = useMemo(
+    () => (isTemplate ? [...simulatedCondolences, ...condolences] : condolences),
+    [isTemplate, simulatedCondolences, condolences],
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

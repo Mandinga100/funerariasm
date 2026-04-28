@@ -26,7 +26,18 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   function handleOpen() {
     setMounted(true);
     setOpen(true);
+    live.markSeen();
   }
+
+  // Si llega un mensaje del operador y el chat está totalmente desmontado
+  // (el visitante cerró con la X y luego el operador respondió), volvemos a
+  // montar el componente — sin abrirlo — para que cargue el historial vía
+  // el hook live y quede listo cuando el visitante haga click.
+  useEffect(() => {
+    if (!mounted && live.unseenCount > 0) {
+      setMounted(true);
+    }
+  }, [live.unseenCount, mounted]);
 
   // Minimizar (click-outside o flecha): conserva historial y estado.
   function handleMinimize() {

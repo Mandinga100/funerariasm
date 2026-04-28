@@ -77,7 +77,7 @@ export default function TeamPerformancePanel() {
       if (ids.length) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("user_id, display_name, email, avatar_url")
+          .select("user_id, display_name, avatar_url")
           .in("user_id", ids);
         for (const p of profs ?? []) profilesById[p.user_id] = p;
       }

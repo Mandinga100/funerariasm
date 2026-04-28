@@ -117,6 +117,11 @@ const PlanCard = ({ plan }: { plan: typeof PLANS[0] }) => {
           ))}
         </div>
 
+        {/* Nota AFP/IPS */}
+        <p className="text-[11px] leading-relaxed text-primary-foreground/55 italic mb-5 px-1">
+          <span className="font-semibold not-italic text-gold/80">PD:</span> El monto a cancelar puede ser menor en función del beneficio <span className="not-italic font-medium text-primary-foreground/70">"Cuota Mortuoria"</span> entregado por su AFP o IPS.
+        </p>
+
         {/* Spacer */}
         <div className="flex-1" />
 

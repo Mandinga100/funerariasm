@@ -57,7 +57,7 @@ export default function AdminChat() {
 
   if (isMobile) {
     return (
-      <div className="h-[calc(100vh-7rem)] flex flex-col -m-3 sm:-m-4">
+      <div className="h-[calc(100vh-3.5rem)] flex flex-col">
         <Tabs value={mobileTab} onValueChange={(v) => setMobileTab(v as MobileTab)} className="flex-1 flex flex-col">
           <TabsList className="grid grid-cols-3 mx-3 mt-2">
             <TabsTrigger value="lista">Bandeja</TabsTrigger>

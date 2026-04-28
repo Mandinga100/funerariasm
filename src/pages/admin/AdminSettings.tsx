@@ -25,8 +25,9 @@ import {
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
   Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
-  Filter, Volume2, VolumeX, Play
+  Filter, Volume2, VolumeX, Play, Trophy
 } from "lucide-react";
+import TeamPerformancePanel from "@/components/admin/TeamPerformancePanel";
 
 type AppRole = "ceo" | "admin" | "moderator";
 

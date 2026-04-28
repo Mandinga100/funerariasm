@@ -17,6 +17,12 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   const chatWrapperRef = useRef<HTMLDivElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
 
+  // Sincronización a nivel del botón flotante: detecta respuestas del operador
+  // aunque el chatbox no esté montado (visitante cerró/recargó la página).
+  // Cuando hay mensajes nuevos, mostramos badge y ping en el botón.
+  const live = useChatLiveSync({ visible: open });
+  const hasUnseen = !open && live.unseenCount > 0;
+
   function handleOpen() {
     setMounted(true);
     setOpen(true);

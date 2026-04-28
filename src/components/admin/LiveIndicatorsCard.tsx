@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, TrendingUp, RefreshCw } from "lucide-react";
+import { Calendar, Clock, TrendingUp, RefreshCw, Landmark, Receipt, DollarSign, Flower2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";

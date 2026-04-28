@@ -21,6 +21,8 @@ import CaseHistoryTab from "./CaseHistoryTab";
 import CaseTrackingWidget from "./CaseTrackingWidget";
 import CaseQuoteTab from "./CaseQuoteTab";
 import CasePaymentsTab from "./CasePaymentsTab";
+import ServiceSelector from "@/components/admin/shared/ServiceSelector";
+import type { ServiceTypeId } from "@/lib/service-catalog";
 import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
 import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { useNavigate } from "react-router-dom";

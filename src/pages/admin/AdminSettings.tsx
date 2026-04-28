@@ -1397,11 +1397,17 @@ export default function AdminSettings() {
                 <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {availableRoles.map(r => (
-                      <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                    {(["ceo","admin","moderator"] as AppRole[]).map(r => (
+                      <SelectItem key={r} value={r} disabled={!availableRoles.includes(r)}>
+                        {ROLE_META[r].icon} {ROLE_META[r].label}
+                        {!availableRoles.includes(r) && <span className="ml-2 text-[10px] opacity-60">(solo CEO)</span>}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {!isCeo && (
+                  <p className="text-[10px] text-muted-foreground mt-1">Como administrador solo puedes invitar moderadores. Pide al CEO para asignar roles superiores.</p>
+                )}
               </div>
               <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" />

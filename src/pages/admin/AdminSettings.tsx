@@ -1368,16 +1368,16 @@ export default function AdminSettings() {
               onClick={() => setAddMode("manual")}
               className={`p-3 rounded-lg border-2 text-center transition-all ${addMode === "manual" ? "border-[#C5A059] bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
             >
-              <Key className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
-              <p className="text-xs font-medium">Crear manualmente</p>
+              <Mail className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
+              <p className="text-xs font-medium">Invitar por correo</p>
               <p className="text-[10px] text-muted-foreground">Asignar correo y contraseña</p>
             </button>
             <button
               onClick={() => setAddMode("invite")}
               className={`p-3 rounded-lg border-2 text-center transition-all ${addMode === "invite" ? "border-[#C5A059] bg-[#C5A059]/5" : "border-muted hover:border-muted-foreground/30"}`}
             >
-              <Mail className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
-              <p className="text-xs font-medium">Invitar por correo</p>
+              <Key className="w-5 h-5 mx-auto mb-1 text-[#C5A059]" />
+              <p className="text-xs font-medium">Crear manualmente</p>
               <p className="text-[10px] text-muted-foreground">Se envía enlace de verificación</p>
             </button>
           </div>

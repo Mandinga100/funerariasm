@@ -90,6 +90,8 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
             isOpen={open}
             onMinimize={handleMinimize}
             onHardClose={handleHardClose}
+            live={live}
+            inboundBatch={live.newMessages}
           />
         </div>
       )}

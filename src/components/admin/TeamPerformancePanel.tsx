@@ -81,13 +81,16 @@ export default function TeamPerformancePanel() {
           .in("user_id", ids);
         for (const p of profs ?? []) profilesById[p.user_id] = p;
       }
-      const memberList: Member[] = (roles ?? []).map((r: any) => ({
-        user_id: r.user_id,
-        role: r.role,
-        display_name: profilesById[r.user_id]?.display_name,
-        email: undefined,
-        avatar_url: profilesById[r.user_id]?.avatar_url ?? null,
-      }));
+      // Excluimos al CEO de la evaluación de rendimiento (no se mide a la dirección).
+      const memberList: Member[] = (roles ?? [])
+        .filter((r: any) => r.role !== "ceo")
+        .map((r: any) => ({
+          user_id: r.user_id,
+          role: r.role,
+          display_name: profilesById[r.user_id]?.display_name,
+          email: undefined,
+          avatar_url: profilesById[r.user_id]?.avatar_url ?? null,
+        }));
 
       // Firmar avatares
       const avatarUrls = memberList.map((m) => m.avatar_url).filter(Boolean) as string[];
@@ -197,7 +200,6 @@ export default function TeamPerformancePanel() {
               <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>
-                <SelectItem value="ceo">CEO</SelectItem>
                 <SelectItem value="admin">Administradores</SelectItem>
                 <SelectItem value="moderator">Moderadores</SelectItem>
               </SelectContent>

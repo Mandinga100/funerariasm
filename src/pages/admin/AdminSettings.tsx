@@ -271,80 +271,95 @@ export default function AdminSettings() {
     resetAddForm();
   };
 
-  /* ── Invite via email (creates user with temp password) ── */
+  /* ── Invite via email (magic link, no password) ── */
   const handleInviteByEmail = async () => {
     if (!inviteEmail.trim()) return;
-    if (!isCeo && newRole === "ceo") {
-      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+    if (!isCeo && (newRole === "ceo" || newRole === "admin")) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar este rol.", variant: "destructive" });
       return;
     }
     setSaving(true);
 
-    // Sign up the user with a temporary password
-    const tempPassword = `Temp_${crypto.randomUUID().slice(0, 12)}!`;
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: inviteEmail.trim(),
-      password: tempPassword,
-      options: { data: { display_name: newDisplayName || inviteEmail.split("@")[0] } }
+    const { data, error } = await supabase.functions.invoke("invite-team-member", {
+      body: {
+        email: inviteEmail.trim(),
+        display_name: newDisplayName,
+        role: newRole,
+        mode: "invite",
+      },
     });
 
-    if (signUpError || !signUpData.user) {
-      toast({ title: "Error al crear usuario", description: signUpError?.message ?? "No se pudo crear el usuario.", variant: "destructive" });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "No se pudo invitar al usuario.";
+      toast({ title: "Error al invitar", description: msg, variant: "destructive" });
       setSaving(false);
       return;
     }
 
-    // Assign role
-    const { error: roleError } = await supabase.from("user_roles").insert({ user_id: signUpData.user.id, role: newRole });
-    if (roleError) {
-      toast({ title: "Usuario creado pero error de rol", description: roleError.message, variant: "destructive" });
+    const magicLink = (data as any)?.magic_link as string | null;
+    if (magicLink) {
+      try {
+        await navigator.clipboard.writeText(magicLink);
+        toast({
+          title: "Invitación creada",
+          description: `Link mágico copiado al portapapeles. Compártelo con ${inviteEmail} (válido por tiempo limitado).`,
+        });
+      } catch {
+        toast({
+          title: "Invitación creada",
+          description: `Link mágico generado. Cópialo manualmente desde la consola.`,
+        });
+        console.info("Magic link:", magicLink);
+      }
     } else {
       toast({
-        title: "Invitación enviada",
-        description: `Se envió un correo de verificación a ${inviteEmail}. El usuario deberá verificar su email para acceder.`,
+        title: "Usuario invitado",
+        description: `Se asignó el rol a ${inviteEmail}. Pídele que revise su correo para acceder.`,
       });
-      loadAdmins();
     }
+    logAudit({ action: "invite_member", module: "equipo", description: `Invitó a ${inviteEmail} como ${ROLE_META[newRole].label}`, entity_type: "user_role", new_data: { email: inviteEmail, role: newRole } });
+    loadAdmins();
     setSaving(false);
     setAddDialog(false);
     resetAddForm();
   };
 
-  /* ── Create manual user ── */
+  /* ── Create manual user (with password, via edge function) ── */
   const handleCreateManual = async () => {
     if (!newEmail.trim() || !newPassword.trim()) return;
     if (newPassword.length < 8) {
       toast({ title: "Error", description: "La contraseña debe tener al menos 8 caracteres.", variant: "destructive" });
       return;
     }
-    if (!isCeo && newRole === "ceo") {
-      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar el rol de CEO.", variant: "destructive" });
+    if (!isCeo && (newRole === "ceo" || newRole === "admin")) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede asignar este rol.", variant: "destructive" });
       return;
     }
     setSaving(true);
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: newEmail.trim(),
-      password: newPassword,
-      options: { data: { display_name: newDisplayName || newEmail.split("@")[0] } }
+    const { data, error } = await supabase.functions.invoke("invite-team-member", {
+      body: {
+        email: newEmail.trim(),
+        display_name: newDisplayName,
+        role: newRole,
+        mode: "manual",
+        password: newPassword,
+      },
     });
 
-    if (signUpError || !signUpData.user) {
-      toast({ title: "Error al crear usuario", description: signUpError?.message ?? "No se pudo crear el usuario.", variant: "destructive" });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "No se pudo crear el usuario.";
+      toast({ title: "Error al crear usuario", description: msg, variant: "destructive" });
       setSaving(false);
       return;
     }
 
-    const { error: roleError } = await supabase.from("user_roles").insert({ user_id: signUpData.user.id, role: newRole });
-    if (roleError) {
-      toast({ title: "Usuario creado pero error de rol", description: roleError.message, variant: "destructive" });
-    } else {
-      toast({
-        title: "Usuario creado",
-        description: `${newEmail} creado como ${ROLE_META[newRole].label}. Deberá verificar su email.`,
-      });
-      loadAdmins();
-    }
+    toast({
+      title: "Usuario creado",
+      description: `${newEmail} creado como ${ROLE_META[newRole].label}. Ya puede iniciar sesión con la contraseña asignada.`,
+    });
+    logAudit({ action: "create_member", module: "equipo", description: `Creó usuario ${newEmail} como ${ROLE_META[newRole].label}`, entity_type: "user_role", new_data: { email: newEmail, role: newRole } });
+    loadAdmins();
     setSaving(false);
     setAddDialog(false);
     resetAddForm();

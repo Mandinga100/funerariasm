@@ -114,6 +114,9 @@ export default function AdminFamilyAccess() {
   const paginatedAccesses = filteredAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
 
   const handleCreate = async () => {

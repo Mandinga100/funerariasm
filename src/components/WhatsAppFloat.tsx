@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, forwardRef } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { buildWhatsAppUrlDirect } from "@/lib/whatsapp";
 import ChatboxFunerario from "./ChatboxFunerario";
+import { useChatLiveSync } from "@/hooks/use-chat-live-sync";
 
 const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   // Tres estados de la ventana del chat:
@@ -16,10 +17,27 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
   const chatWrapperRef = useRef<HTMLDivElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
 
+  // Sincronización a nivel del botón flotante: detecta respuestas del operador
+  // aunque el chatbox no esté montado (visitante cerró/recargó la página).
+  // Cuando hay mensajes nuevos, mostramos badge y ping en el botón.
+  const live = useChatLiveSync({ visible: open });
+  const hasUnseen = !open && live.unseenCount > 0;
+
   function handleOpen() {
     setMounted(true);
     setOpen(true);
+    live.markSeen();
   }
+
+  // Si llega un mensaje del operador y el chat está totalmente desmontado
+  // (el visitante cerró con la X y luego el operador respondió), volvemos a
+  // montar el componente — sin abrirlo — para que cargue el historial vía
+  // el hook live y quede listo cuando el visitante haga click.
+  useEffect(() => {
+    if (!mounted && live.unseenCount > 0) {
+      setMounted(true);
+    }
+  }, [live.unseenCount, mounted]);
 
   // Minimizar (click-outside o flecha): conserva historial y estado.
   function handleMinimize() {
@@ -72,6 +90,8 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
             isOpen={open}
             onMinimize={handleMinimize}
             onHardClose={handleHardClose}
+            live={live}
+            inboundBatch={live.newMessages}
           />
         </div>
       )}
@@ -85,9 +105,17 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_props, ref) => {
             ? "scale-0 opacity-0 pointer-events-none"
             : "bg-gold text-accent-foreground hover:bg-gold-dark hover:scale-110 hover:shadow-[0_8px_30px_-6px_hsl(var(--gold)/0.5)] scale-100 opacity-100"
         }`}
-        aria-label="Abrir chat"
+        aria-label={hasUnseen ? `Abrir chat — ${live.unseenCount} mensajes nuevos del asesor` : "Abrir chat"}
       >
         <MessageCircle className="w-7 h-7" />
+        {hasUnseen && (
+          <>
+            <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" aria-hidden="true" />
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-background shadow-md">
+              {live.unseenCount > 9 ? "9+" : live.unseenCount}
+            </span>
+          </>
+        )}
       </button>
 
       {/* Emergency bar */}

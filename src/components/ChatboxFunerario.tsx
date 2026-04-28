@@ -5,6 +5,7 @@ import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
 import { getOrCreateChatToken } from "@/lib/chat-token";
 import { supabase } from "@/integrations/supabase/client";
+import { useChatLiveSync, type InboundMessage } from "@/hooks/use-chat-live-sync";
 import assistantAvatar from "@/assets/assistant-avatar.png";
 
 interface ChatMessage {
@@ -82,9 +83,13 @@ interface ChatboxProps {
   onMinimize: () => void;
   /** Cierre real vía X: avisa al padre para destruir el componente y resetear historial. */
   onHardClose: () => void;
+  /** Estado de sincronización en tiempo real con el CRM (provisto por el padre). */
+  live: ReturnType<typeof useChatLiveSync>;
+  /** Lote de mensajes inbound recién recibidos (admin/system/bot). */
+  inboundBatch: InboundMessage[];
 }
 
-const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => {
+const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch }: ChatboxProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [mode, setMode] = useState<ChatMode>("tree");
   const [inputText, setInputText] = useState("");
@@ -108,6 +113,32 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
   useEffect(() => {
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
+
+  /**
+   * Cada vez que el padre nos pasa un nuevo lote de mensajes inbound desde el
+   * CRM (operador admin, mensaje system de handoff o bot), los agregamos como
+   * burbujas de asistente al historial. Deduplicamos por timestamp+content.
+   */
+  const lastBatchRef = useRef<string>("");
+  useEffect(() => {
+    if (!inboundBatch || inboundBatch.length === 0) return;
+    const sig = inboundBatch.map((m) => m.id).join("|");
+    if (sig === lastBatchRef.current) return;
+    lastBatchRef.current = sig;
+    setMessages((prev) => {
+      const additions: ChatMessage[] = inboundBatch.map((m) => ({
+        role: "assistant",
+        content: m.sender_type === "system" ? `🟢 ${m.content}` : m.content,
+      }));
+      return [...prev, ...additions];
+    });
+    if (live.operatorActive && mode === "tree") {
+      // El operador está activo: salimos del menú-árbol y mostramos el input.
+      setMode("ai");
+      setShowMainOptions(false);
+    }
+  }, [inboundBatch, live.operatorActive, mode]);
+
 
   // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir
   // con la página; bloquear el scroll rompe el click-outside y la sensación de
@@ -490,6 +521,14 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
       return;
     }
 
+    // Cuando un operador humano tomó la conversación, NO llamamos al bot IA:
+    // sólo persistimos el mensaje en el CRM y el operador responde desde /admin/chat.
+    if (live.operatorActive) {
+      setMessages((prev) => [...prev, { role: "user", content: value }]);
+      pushVisitorEvent(value);
+      return;
+    }
+
     if (mode === "ai") {
       await handleAIMessage(value);
     }
@@ -577,12 +616,13 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
     }
   };
 
-  const showInput = mode === "ai" || (contactStep !== "idle" && contactStep !== "done");
+  const showInput = mode === "ai" || live.operatorActive || (contactStep !== "idle" && contactStep !== "done");
 
   const getPlaceholder = () => {
     if (contactStep === "name") return "Ej: María González Pérez";
     if (contactStep === "phone") return "Ej: +56 9 6166 1474";
     if (contactStep === "email") return "Ej: nombre@gmail.com";
+    if (live.operatorActive) return `Responder a ${live.operatorName ?? "asesor"}…`;
     return "Escriba su consulta...";
   };
 
@@ -617,11 +657,17 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
               <img src={assistantAvatar} alt="Asistente virtual" className="w-full h-full object-cover" loading="lazy" width={40} height={40} />
             </div>
             <div>
-              <p className="font-playfair text-sm font-semibold leading-tight">Santa Margarita</p>
+              <p className="font-playfair text-sm font-semibold leading-tight">
+                {live.operatorActive && live.operatorName ? live.operatorName : "Santa Margarita"}
+              </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className={`w-2 h-2 rounded-full animate-pulse ${live.operatorActive ? "bg-emerald-300" : "bg-green-400"}`} />
                 <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase">
-                  {mode === "ai" ? "Asistente IA" : "En línea · 24/7"}
+                  {live.operatorActive
+                    ? "Asesor en línea"
+                    : live.status === "pendiente_humano"
+                      ? "Conectando con asesor…"
+                      : mode === "ai" ? "Asistente IA" : "En línea · 24/7"}
                 </p>
               </div>
             </div>

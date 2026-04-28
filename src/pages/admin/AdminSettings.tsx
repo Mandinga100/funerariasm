@@ -25,8 +25,9 @@ import {
   Plus, UserCog, Lock, Eye, EyeOff, Settings, FileText, AlertTriangle,
   Check, X, Download, Zap, Bot, Globe, Key, Mail, UserPlus, Pencil,
   Link2, Webhook, Brain, CloudCog, ScrollText, Search, ChevronLeft, ChevronRight,
-  Filter, Volume2, VolumeX, Play
+  Filter, Volume2, VolumeX, Play, Trophy
 } from "lucide-react";
+import TeamPerformancePanel from "@/components/admin/TeamPerformancePanel";
 
 type AppRole = "ceo" | "admin" | "moderator";
 
@@ -56,7 +57,7 @@ const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; i
 
 
 export default function AdminSettings() {
-  const { user, isCeo } = useAuth();
+  const { user, isCeo, isAdmin } = useAuth();
   const { toast } = useToast();
 
   /* ── Admins State ── */
@@ -659,6 +660,11 @@ export default function AdminSettings() {
           <TabsTrigger value="appearance" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Moon className="w-3.5 h-3.5 hidden sm:inline" />Tema
           </TabsTrigger>
+          {(isCeo || isAdmin) && (
+            <TabsTrigger value="performance" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+              <Trophy className="w-3.5 h-3.5 hidden sm:inline" />Rendimiento
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Bell className="w-3.5 h-3.5 hidden sm:inline" />Alertas
           </TabsTrigger>
@@ -1386,6 +1392,13 @@ export default function AdminSettings() {
             <Button onClick={saveIntegrations} className="w-full sm:w-auto" size="lg">
               <CloudCog className="w-4 h-4 mr-2" />Guardar todas las integraciones
             </Button>
+          </TabsContent>
+        )}
+
+        {/* ═══════════════ PERFORMANCE TAB ═══════════════ */}
+        {(isCeo || isAdmin) && (
+          <TabsContent value="performance" className="space-y-4">
+            <TeamPerformancePanel />
           </TabsContent>
         )}
       </Tabs>

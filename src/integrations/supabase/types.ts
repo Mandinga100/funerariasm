@@ -937,6 +937,66 @@ export type Database = {
           },
         ]
       }
+      client_profiles: {
+        Row: {
+          created_at: string
+          family_group_id: string | null
+          id: string
+          internal_notes: string | null
+          last_contacted_at: string | null
+          person_id: string
+          preferences: Json
+          score: number
+          status: string
+          total_cases: number
+          total_paid: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          family_group_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          last_contacted_at?: string | null
+          person_id: string
+          preferences?: Json
+          score?: number
+          status?: string
+          total_cases?: number
+          total_paid?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          family_group_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          last_contacted_at?: string | null
+          person_id?: string
+          preferences?: Json
+          score?: number
+          status?: string
+          total_cases?: number
+          total_paid?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_profiles_family_group_id_fkey"
+            columns: ["family_group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_profiles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: true
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comuna_conversion_events: {
         Row: {
           comuna_nombre: string | null
@@ -1122,6 +1182,87 @@ export type Database = {
           status?: string | null
           urgency?: string | null
           whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
+      family_group_members: {
+        Row: {
+          created_at: string
+          family_group_id: string
+          id: string
+          is_primary_contact: boolean
+          notes: string | null
+          person_id: string
+          relationship: string | null
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          family_group_id: string
+          id?: string
+          is_primary_contact?: boolean
+          notes?: string | null
+          person_id: string
+          relationship?: string | null
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          family_group_id?: string
+          id?: string
+          is_primary_contact?: boolean
+          notes?: string | null
+          person_id?: string
+          relationship?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_group_members_family_group_id_fkey"
+            columns: ["family_group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_group_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_groups: {
+        Row: {
+          comuna: string | null
+          created_at: string
+          created_by: string | null
+          group_name: string
+          id: string
+          metadata: Json
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          comuna?: string | null
+          created_at?: string
+          created_by?: string | null
+          group_name: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comuna?: string | null
+          created_at?: string
+          created_by?: string | null
+          group_name?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1646,6 +1787,120 @@ export type Database = {
         }
         Relationships: []
       }
+      person_merge_suggestions: {
+        Row: {
+          candidate_person_id: string
+          confidence: number
+          created_at: string
+          id: string
+          match_reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_person_id: string
+          status: string
+        }
+        Insert: {
+          candidate_person_id: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          match_reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_person_id: string
+          status?: string
+        }
+        Update: {
+          candidate_person_id?: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          match_reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_person_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_merge_suggestions_candidate_person_id_fkey"
+            columns: ["candidate_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_merge_suggestions_source_person_id_fkey"
+            columns: ["source_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persons: {
+        Row: {
+          birth_date: string | null
+          comuna: string | null
+          contact_preferences: Json
+          created_at: string
+          created_by: string | null
+          email: string | null
+          email_normalized: string | null
+          full_name: string
+          id: string
+          metadata: Json
+          notes: string | null
+          phone: string | null
+          phone_normalized: string | null
+          rut: string | null
+          rut_normalized: string | null
+          source: string | null
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          birth_date?: string | null
+          comuna?: string | null
+          contact_preferences?: Json
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          email_normalized?: string | null
+          full_name: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          phone?: string | null
+          phone_normalized?: string | null
+          rut?: string | null
+          rut_normalized?: string | null
+          source?: string | null
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          birth_date?: string | null
+          comuna?: string | null
+          contact_preferences?: Json
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          email_normalized?: string | null
+          full_name?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          phone?: string | null
+          phone_normalized?: string | null
+          rut?: string | null
+          rut_normalized?: string | null
+          source?: string | null
+          updated_at?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2045,6 +2300,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      find_person_matches: {
+        Args: {
+          _email?: string
+          _name?: string
+          _phone?: string
+          _rut?: string
+        }
+        Returns: {
+          comuna: string
+          confidence: number
+          email: string
+          full_name: string
+          match_reason: string
+          person_id: string
+          phone: string
+          rut: string
+        }[]
+      }
       get_lead_stats: {
         Args: { _intent: string; _urgency: string }
         Returns: {
@@ -2071,10 +2344,26 @@ export type Database = {
           token_hash: string
         }[]
       }
+      normalize_email: { Args: { _email: string }; Returns: string }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
+      normalize_rut: { Args: { _rut: string }; Returns: string }
       refresh_lead_classification_stats: { Args: never; Returns: undefined }
       reset_family_access_with_recovery_code: {
         Args: { _email: string; _new_token: string; _recovery_code: string }
         Returns: boolean
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      upsert_person_by_identity: {
+        Args: {
+          _comuna?: string
+          _email?: string
+          _full_name: string
+          _phone?: string
+          _rut?: string
+          _source?: string
+        }
+        Returns: string
       }
       user_can_edit_agenda_event: {
         Args: { _event_id: string; _user_id: string }

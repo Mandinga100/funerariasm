@@ -438,11 +438,17 @@ const MemorialDetail = () => {
           )}
 
           <div>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center flex-wrap gap-3 mb-6">
               <MessageCircle className="w-5 h-5 text-gold/40" />
               <h2 className="font-playfair text-xl text-primary-foreground">
                 Condolencias ({visibleCondolences.length})
               </h2>
+              {isTemplate && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-400/30 bg-amber-400/10 text-amber-300 text-[11px] font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Solo vista previa (demo) · {simulatedCondolences.length} en esta sesión
+                </span>
+              )}
             </div>
 
             <form onSubmit={handleCondolenceSubmit} className="bg-primary-foreground/[0.02] border border-primary-foreground/10 rounded-lg p-6 mb-8">

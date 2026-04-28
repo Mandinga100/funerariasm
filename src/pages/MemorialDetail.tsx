@@ -441,7 +441,7 @@ const MemorialDetail = () => {
             <div className="flex items-center gap-3 mb-6">
               <MessageCircle className="w-5 h-5 text-gold/40" />
               <h2 className="font-playfair text-xl text-primary-foreground">
-                Condolencias ({condolences.length})
+                Condolencias ({visibleCondolences.length})
               </h2>
             </div>
 
@@ -483,13 +483,13 @@ const MemorialDetail = () => {
               </div>
             </form>
 
-            {condolences.length === 0 ? (
+            {visibleCondolences.length === 0 ? (
               <p className="text-primary-foreground/30 text-sm text-center py-8">
                 Sea el primero en dejar un mensaje de condolencia.
               </p>
             ) : (
               <div className="space-y-4">
-                {condolences.map((c) => (
+                {visibleCondolences.map((c) => (
                   <div key={c.id} className="bg-primary-foreground/[0.02] border border-primary-foreground/10 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm text-primary-foreground/80">{c.author_name}</span>

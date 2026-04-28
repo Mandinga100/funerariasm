@@ -57,7 +57,14 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     loadNotes();
     loadActivities();
     loadClassificationHistory();
+    loadPersonInfo();
   }, [lead?.id]);
+
+  const loadPersonInfo = async () => {
+    if (!lead?.person_id) { setPersonInfo(null); return; }
+    const { data, error } = await supabase.rpc("get_person_prefill", { _person_id: lead.person_id });
+    if (!error && data && data.length) setPersonInfo(data[0]);
+  };
 
   const loadNotes = async () => {
     if (!lead) return;

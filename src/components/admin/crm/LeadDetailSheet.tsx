@@ -20,6 +20,8 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
 import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ServiceSelector from "@/components/admin/shared/ServiceSelector";
+import type { ServiceTypeId } from "@/lib/service-catalog";
 
 interface LeadDetailSheetProps {
   lead: any | null;

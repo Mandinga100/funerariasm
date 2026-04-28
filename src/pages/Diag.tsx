@@ -122,7 +122,8 @@ export default function Diag() {
 
   const buildMode = import.meta.env.MODE;
   const isProd = import.meta.env.PROD;
-  const buildTs = new Date(typeof __BUILD_TIMESTAMP__ !== "undefined" ? __BUILD_TIMESTAMP__ : Date.now()).toISOString();
+  const buildTsRaw = (globalThis as { __BUILD_TIMESTAMP__?: number }).__BUILD_TIMESTAMP__;
+  const buildTs = new Date(typeof buildTsRaw === "number" ? buildTsRaw : Date.now()).toISOString();
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "n/a";
   const viewport = typeof window !== "undefined" ? `${window.innerWidth}×${window.innerHeight}` : "n/a";
 

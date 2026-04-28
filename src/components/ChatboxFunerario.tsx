@@ -115,9 +115,41 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
   }, [messages, isOpen]);
 
   /**
+   * Hidratación: al montar el componente, si en el CRM ya existe una
+   * conversación previa para este `chat_token` (visitante cerró por accidente
+   * o recargó la página), reconstruimos el historial completo en pantalla
+   * — incluyendo sus propios mensajes — para retomar exactamente donde quedó.
+   *
+   * Solo se ejecuta una vez por instancia. Después del rehidratado:
+   *  - Marcamos los IDs como ya vistos para que el effect de `inboundBatch`
+   *    no los vuelva a insertar.
+   *  - Si la conversación ya escaló a humano, salimos del menú-árbol y
+   *    abrimos el input para responder al asesor.
+   */
+  const hydratedRef = useRef(false);
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!live.history || live.history.length === 0) return;
+    hydratedRef.current = true;
+    const restored: ChatMessage[] = live.history.map((m) => {
+      if (m.sender_type === "visitor") return { role: "user", content: m.content };
+      if (m.sender_type === "system") return { role: "assistant", content: `🟢 ${m.content}` };
+      return { role: "assistant", content: m.content };
+    });
+    live.history.forEach((m) => knownIdsRef.current.add(m.id));
+    setMessages([GREETING, ...restored]);
+    setShowMainOptions(false);
+    if (live.operatorActive || live.status === "humano_activo") {
+      setMode("ai");
+    }
+  }, [live.history, live.operatorActive, live.status]);
+
+  /**
    * Cada vez que el padre nos pasa un nuevo lote de mensajes inbound desde el
    * CRM (operador admin, mensaje system de handoff o bot), los agregamos como
-   * burbujas de asistente al historial. Deduplicamos por timestamp+content.
+   * burbujas de asistente al historial. Deduplicamos por id contra los que ya
+   * conocemos (incluyendo los traídos por la hidratación).
    */
   const lastBatchRef = useRef<string>("");
   useEffect(() => {
@@ -125,8 +157,11 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
     const sig = inboundBatch.map((m) => m.id).join("|");
     if (sig === lastBatchRef.current) return;
     lastBatchRef.current = sig;
+    const fresh = inboundBatch.filter((m) => !knownIdsRef.current.has(m.id));
+    if (fresh.length === 0) return;
+    fresh.forEach((m) => knownIdsRef.current.add(m.id));
     setMessages((prev) => {
-      const additions: ChatMessage[] = inboundBatch.map((m) => ({
+      const additions: ChatMessage[] = fresh.map((m) => ({
         role: "assistant",
         content: m.sender_type === "system" ? `🟢 ${m.content}` : m.content,
       }));
@@ -137,7 +172,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
       setMode("ai");
       setShowMainOptions(false);
     }
-  }, [inboundBatch, live.operatorActive, mode]);
+  }, [inboundBatch, live.operatorActive, live.status, mode]);
 
 
   // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir

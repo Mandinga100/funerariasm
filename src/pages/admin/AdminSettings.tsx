@@ -31,6 +31,12 @@ import TeamPerformancePanel from "@/components/admin/TeamPerformancePanel";
 
 type AppRole = "ceo" | "admin" | "moderator";
 
+const ROLE_PRIORITY: Record<AppRole, number> = {
+  ceo: 1,
+  admin: 2,
+  moderator: 3,
+};
+
 /**
  * CEO fundador inamovible. Su rol CEO está protegido a nivel de base de datos
  * mediante el trigger `protect_founder_ceo` (ni siquiera otro CEO puede removerlo).
@@ -167,7 +173,15 @@ export default function AdminSettings() {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url");
     const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
 
-    const adminList: AdminUser[] = roles.map(r => {
+    const dedupedRoles = new Map<string, typeof roles[number]>();
+    for (const roleRow of roles) {
+      const current = dedupedRoles.get(roleRow.user_id);
+      if (!current || ROLE_PRIORITY[roleRow.role as AppRole] < ROLE_PRIORITY[current.role as AppRole]) {
+        dedupedRoles.set(roleRow.user_id, roleRow);
+      }
+    }
+
+    const adminList: AdminUser[] = Array.from(dedupedRoles.values()).filter(r => isCeo || r.role !== "ceo").map(r => {
       const p = profileMap.get(r.user_id);
       return {
         id: r.id,
@@ -705,7 +719,7 @@ export default function AdminSettings() {
             <CardContent>
               {/* Roles legend */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-                {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([key, meta]) => (
+                {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).filter(([key]) => isCeo || key !== "ceo").map(([key, meta]) => (
                   <div key={key} className="flex items-start gap-2 p-2 rounded-lg border bg-muted/30">
                     <Badge className={`${meta.color} text-[10px] shrink-0`} variant="secondary">{meta.icon} {meta.label}</Badge>
                     <p className="text-[11px] text-muted-foreground leading-tight">{meta.desc}</p>

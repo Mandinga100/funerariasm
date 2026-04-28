@@ -155,13 +155,17 @@ export function ConversationList({ selectedId, onSelect }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="p-3 border-b space-y-2">
+    <div className="flex flex-col h-full min-h-0 bg-background">
+      <div className="p-2.5 border-b space-y-2 shrink-0">
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar visitante…" className="h-8 pl-8 text-sm" />
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div
+          className="flex gap-1 overflow-x-auto -mx-0.5 px-0.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="tablist"
+          aria-label="Filtros de conversaciones"
+        >
           {([
             ["todas","Todas"],
             ["sin_asignar","Sin asignar"],
@@ -172,8 +176,10 @@ export function ConversationList({ selectedId, onSelect }: Props) {
             <button
               key={k}
               onClick={() => setFilter(k)}
+              role="tab"
+              aria-selected={filter === k}
               className={cn(
-                "shrink-0 text-[11px] px-2.5 py-1 rounded-full border transition-colors",
+                "shrink-0 whitespace-nowrap text-[11px] leading-none px-2.5 py-1.5 rounded-full border transition-colors",
                 filter === k ? "bg-primary text-primary-foreground border-primary" : "border-input text-muted-foreground hover:bg-muted"
               )}
             >
@@ -193,7 +199,7 @@ export function ConversationList({ selectedId, onSelect }: Props) {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {loading ? (
           <div className="p-4 text-sm text-muted-foreground text-center">Cargando…</div>
         ) : filtered.length === 0 ? (

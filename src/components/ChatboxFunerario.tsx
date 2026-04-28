@@ -649,11 +649,17 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose }: ChatboxProps) => 
               <img src={assistantAvatar} alt="Asistente virtual" className="w-full h-full object-cover" loading="lazy" width={40} height={40} />
             </div>
             <div>
-              <p className="font-playfair text-sm font-semibold leading-tight">Santa Margarita</p>
+              <p className="font-playfair text-sm font-semibold leading-tight">
+                {live.operatorActive && live.operatorName ? live.operatorName : "Santa Margarita"}
+              </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className={`w-2 h-2 rounded-full animate-pulse ${live.operatorActive ? "bg-emerald-300" : "bg-green-400"}`} />
                 <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase">
-                  {mode === "ai" ? "Asistente IA" : "En línea · 24/7"}
+                  {live.operatorActive
+                    ? "Asesor en línea"
+                    : live.status === "pendiente_humano"
+                      ? "Conectando con asesor…"
+                      : mode === "ai" ? "Asistente IA" : "En línea · 24/7"}
                 </p>
               </div>
             </div>

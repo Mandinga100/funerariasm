@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
-import { Search } from "lucide-react";
+import { Search, KeyRound, ShieldCheck } from "lucide-react";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
+import { isTemplateMemorial } from "@/lib/template-memorials";
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: "Legados Eternos", path: "/legados-eternos" }]);
 

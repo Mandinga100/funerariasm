@@ -85,7 +85,7 @@ export default function TeamPerformancePanel() {
         user_id: r.user_id,
         role: r.role,
         display_name: profilesById[r.user_id]?.display_name,
-        email: profilesById[r.user_id]?.email,
+        email: undefined,
         avatar_url: profilesById[r.user_id]?.avatar_url ?? null,
       }));
 

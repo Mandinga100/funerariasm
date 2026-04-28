@@ -256,6 +256,24 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       lead_id: leadId || null,
       reminder_minutes_before: reminder,
       internal_notes: internalNotes.trim() || null,
+      visibility,
+    };
+
+    // Sincroniza la lista de compartidos para un evento existente o recién creado.
+    const syncShares = async (eventId: string) => {
+      if (!canManageSharing) return;
+      // Borra todos y reinserta (lista corta, simple y consistente)
+      await supabase.from("agenda_event_shares").delete().eq("event_id", eventId);
+      if (sharedUsers.length > 0 && user?.id) {
+        await supabase.from("agenda_event_shares").insert(
+          sharedUsers.map(s => ({
+            event_id: eventId,
+            shared_with_user_id: s.user_id,
+            shared_by: user.id,
+            can_edit: s.can_edit,
+          }))
+        );
+      }
     };
 
     if (isEdit && event) {
@@ -263,6 +281,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       if (error) {
         toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
       } else {
+        await syncShares(event.id);
         toast({ title: "✅ Evento actualizado" });
         onSaved();
         onOpenChange(false);
@@ -276,6 +295,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       if (error) {
         toast({ title: "Error al crear", description: error.message, variant: "destructive" });
       } else {
+        if (inserted?.id) await syncShares(inserted.id);
         const reminderTxt = reminder > 0
           ? ` Recordatorio en ${reminder >= 1440 ? `${reminder / 1440} día(s)` : reminder >= 60 ? `${reminder / 60} h` : `${reminder} min`} (sonora + WhatsApp + correo + CRM).`
           : "";

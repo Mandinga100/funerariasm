@@ -23,6 +23,8 @@ export type AgendaEventType =
 
 export type AgendaPriority = "baja" | "normal" | "alta" | "critica";
 
+export type AgendaVisibility = "private" | "team";
+
 export interface AgendaEvent {
   id: string;
   title: string;
@@ -54,6 +56,7 @@ export interface AgendaEvent {
   completed_at: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;
+  visibility: AgendaVisibility;
 }
 
 export const STATUS_COLUMNS: { id: AgendaStatus; label: string; color: string; description: string }[] = [

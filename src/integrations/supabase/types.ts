@@ -126,6 +126,41 @@ export type Database = {
           },
         ]
       }
+      agenda_event_shares: {
+        Row: {
+          can_edit: boolean
+          created_at: string
+          event_id: string
+          id: string
+          shared_by: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          can_edit?: boolean
+          created_at?: string
+          event_id: string
+          id?: string
+          shared_by: string
+          shared_with_user_id: string
+        }
+        Update: {
+          can_edit?: boolean
+          created_at?: string
+          event_id?: string
+          id?: string
+          shared_by?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_event_shares_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agenda_events: {
         Row: {
           address: string | null
@@ -158,6 +193,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           address?: string | null
@@ -190,6 +226,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           address?: string | null
@@ -222,6 +259,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -2035,6 +2073,14 @@ export type Database = {
       refresh_lead_classification_stats: { Args: never; Returns: undefined }
       reset_family_access_with_recovery_code: {
         Args: { _email: string; _new_token: string; _recovery_code: string }
+        Returns: boolean
+      }
+      user_can_edit_agenda_event: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_can_view_agenda_event: {
+        Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
       validate_family_access_token: {

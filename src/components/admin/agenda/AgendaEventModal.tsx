@@ -9,13 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Save, Trash2, Phone, MapPin, Briefcase, Link as LinkIcon } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { AlertTriangle, Save, Trash2, Phone, MapPin, Briefcase, Link as LinkIcon, Building2, Lock, Share2, X } from "lucide-react";
 import { COMUNAS_RM } from "@/lib/comunas-rm";
 import {
   AgendaEvent,
   AgendaEventType,
   AgendaPriority,
   AgendaStatus,
+  AgendaVisibility,
   EVENT_TYPES,
   PRIORITIES,
   STATUS_COLUMNS,
@@ -60,9 +62,11 @@ const toLocalInput = (iso: string | Date) => {
 };
 
 export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, prefill, onSaved }: Props) {
-  const { user, isCeo } = useAuth();
+  const { user, isCeo, isAdmin } = useAuth();
   const { toast } = useToast();
   const isEdit = !!event;
+  // Solo el dueño, admin/CEO pueden compartir y cambiar visibilidad.
+  const canManageSharing = !!user && (isAdmin || isCeo || (event ? event.created_by === user.id : true));
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -76,6 +80,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
   const [eventType, setEventType] = useState<AgendaEventType>("reunion");
   const [status, setStatus] = useState<AgendaStatus>("programado");
   const [priority, setPriority] = useState<AgendaPriority>("normal");
+  const [visibility, setVisibility] = useState<AgendaVisibility>("private");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [locationName, setLocationName] = useState("");
@@ -90,7 +95,12 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
   const [reminder, setReminder] = useState<number>(60);
   const [internalNotes, setInternalNotes] = useState("");
 
+  // Compartidos: lista de { user_id, can_edit }
+  const [sharedUsers, setSharedUsers] = useState<{ user_id: string; can_edit: boolean }[]>([]);
+  const [shareUserPick, setShareUserPick] = useState<string>("");
+
   const [users, setUsers] = useState<UserOption[]>([]);
+  const [allTeam, setAllTeam] = useState<UserOption[]>([]);
   const [cases, setCases] = useState<CaseOption[]>([]);
   const [leads, setLeads] = useState<LeadOption[]>([]);
 
@@ -99,18 +109,32 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     if (!open) return;
     (async () => {
       const [{ data: roles }, { data: pf }, { data: cs }, { data: ld }] = await Promise.all([
-        supabase.from("user_roles").select("user_id").in("role", ["admin", "ceo"]),
+        supabase.from("user_roles").select("user_id").in("role", ["admin", "ceo", "moderator"]),
         supabase.from("profiles").select("user_id, display_name"),
         supabase.from("service_cases").select("id, case_number, client_name").order("created_at", { ascending: false }).limit(100),
         supabase.from("contact_leads").select("id, name, phone").order("created_at", { ascending: false }).limit(100),
       ]);
       const allowedIds = new Set((roles ?? []).map(r => r.user_id));
-      const opts = (pf ?? []).filter(p => allowedIds.has(p.user_id));
-      setUsers(opts);
+      const teamProfiles = (pf ?? []).filter(p => allowedIds.has(p.user_id));
+      // "users" para asignar = miembros con rol; "allTeam" = igual (todo el equipo con rol).
+      setUsers(teamProfiles);
+      setAllTeam(teamProfiles);
       setCases(cs ?? []);
       setLeads(ld ?? []);
     })();
   }, [open]);
+
+  // Cargar compartidos del evento
+  useEffect(() => {
+    if (!open || !event) { setSharedUsers([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("agenda_event_shares")
+        .select("shared_with_user_id, can_edit")
+        .eq("event_id", event.id);
+      setSharedUsers((data ?? []).map(r => ({ user_id: r.shared_with_user_id, can_edit: r.can_edit })));
+    })();
+  }, [open, event]);
 
   // Inicializar formulario
   useEffect(() => {
@@ -121,6 +145,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       setEventType(event.event_type);
       setStatus(event.status);
       setPriority(event.priority);
+      setVisibility(event.visibility ?? "private");
       setStartAt(toLocalInput(event.start_at));
       setEndAt(toLocalInput(event.end_at));
       setLocationName(event.location_name ?? "");
@@ -142,6 +167,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       setEventType(prefill?.eventType ?? "reunion");
       setStatus(defaultStatus ?? "programado");
       setPriority(prefill?.priority ?? "normal");
+      setVisibility("private");
       setStartAt(toLocalInput(start));
       setEndAt(toLocalInput(end));
       setLocationName("");
@@ -230,6 +256,24 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       lead_id: leadId || null,
       reminder_minutes_before: reminder,
       internal_notes: internalNotes.trim() || null,
+      visibility,
+    };
+
+    // Sincroniza la lista de compartidos para un evento existente o recién creado.
+    const syncShares = async (eventId: string) => {
+      if (!canManageSharing) return;
+      // Borra todos y reinserta (lista corta, simple y consistente)
+      await supabase.from("agenda_event_shares").delete().eq("event_id", eventId);
+      if (sharedUsers.length > 0 && user?.id) {
+        await supabase.from("agenda_event_shares").insert(
+          sharedUsers.map(s => ({
+            event_id: eventId,
+            shared_with_user_id: s.user_id,
+            shared_by: user.id,
+            can_edit: s.can_edit,
+          }))
+        );
+      }
     };
 
     if (isEdit && event) {
@@ -237,6 +281,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       if (error) {
         toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
       } else {
+        await syncShares(event.id);
         toast({ title: "✅ Evento actualizado" });
         onSaved();
         onOpenChange(false);
@@ -250,6 +295,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
       if (error) {
         toast({ title: "Error al crear", description: error.message, variant: "destructive" });
       } else {
+        if (inserted?.id) await syncShares(inserted.id);
         const reminderTxt = reminder > 0
           ? ` Recordatorio en ${reminder >= 1440 ? `${reminder / 1440} día(s)` : reminder >= 60 ? `${reminder / 60} h` : `${reminder} min`} (sonora + WhatsApp + correo + CRM).`
           : "";
@@ -475,6 +521,73 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
               {linkedLabel && <Badge variant="secondary" className="mt-2 text-xs">{linkedLabel}</Badge>}
             </div>
           </div>
+
+          {/* Visibilidad + Compartidos */}
+          {canManageSharing && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    {visibility === "team" ? <Building2 className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                    Visibilidad
+                  </label>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <Switch checked={visibility === "team"} onCheckedChange={(v) => setVisibility(v ? "team" : "private")} />
+                    <span className="text-xs">
+                      {visibility === "team"
+                        ? "Empresarial — visible para todo el equipo"
+                        : "Personal — solo creador, asignado, compartidos y admin/CEO"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Share2 className="w-3 h-3" />Compartir con miembros del equipo</label>
+                  <div className="flex gap-2 mt-1">
+                    <Select value={shareUserPick || "__none__"} onValueChange={(v) => {
+                      if (v === "__none__") return;
+                      if (sharedUsers.some(s => s.user_id === v)) return;
+                      setSharedUsers([...sharedUsers, { user_id: v, can_edit: false }]);
+                      setShareUserPick("");
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Agregar persona…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Seleccionar —</SelectItem>
+                        {allTeam
+                          .filter(u => u.user_id !== user?.id && u.user_id !== assignedTo && !sharedUsers.some(s => s.user_id === u.user_id))
+                          .map(u => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name ?? u.user_id.slice(0, 8)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {sharedUsers.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {sharedUsers.map((s) => {
+                        const name = allTeam.find(u => u.user_id === s.user_id)?.display_name ?? s.user_id.slice(0, 8);
+                        return (
+                          <li key={s.user_id} className="flex items-center justify-between gap-2 text-xs border rounded-md px-2 py-1.5">
+                            <span className="truncate">{name}</span>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <label className="flex items-center gap-1.5">
+                                <Switch checked={s.can_edit} onCheckedChange={(v) =>
+                                  setSharedUsers(sharedUsers.map(x => x.user_id === s.user_id ? { ...x, can_edit: v } : x))
+                                } />
+                                <span className="text-[11px]">{s.can_edit ? "Puede editar" : "Solo ver"}</span>
+                              </label>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0"
+                                onClick={() => setSharedUsers(sharedUsers.filter(x => x.user_id !== s.user_id))}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Descripción + notas */}
           <div>

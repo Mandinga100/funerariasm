@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Calendar as CalendarIcon, LayoutGrid, RefreshCw, Download, AlertTriangle } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, LayoutGrid, RefreshCw, Download, AlertTriangle, User, Share2, Building2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import KpiCard from "@/components/admin/KpiCard";
 import {
@@ -30,19 +30,32 @@ import { downloadCSV, downloadXLSX, type ExportColumn } from "@/lib/admin-export
 const ACTIVE_STATUSES: AgendaStatus[] = ["programado", "confirmado", "en_curso"];
 
 type DateRange = "today" | "tomorrow" | "week" | "month" | "all";
+/**
+ * Ámbito de visualización de la agenda:
+ *  - mine: eventos creados por mí o asignados a mí (mi agenda personal)
+ *  - shared: eventos que otros me han compartido (vía agenda_event_shares)
+ *  - team: agenda empresarial (eventos marcados visibility='team' visibles a todo el equipo)
+ *  - all: solo CEO/Admin — toda la empresa
+ */
+type AgendaScope = "mine" | "shared" | "team" | "all";
 
 interface UserOpt { user_id: string; display_name: string | null; }
 interface CaseRef { id: string; case_number: string; }
+interface ShareRow { event_id: string; can_edit: boolean; }
 
 export default function AdminAgenda() {
-  const { isCeo } = useAuth();
+  const { isCeo, isAdmin, user } = useAuth();
+  const myUserId = user?.id ?? "";
   const { toast } = useToast();
 
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [cases, setCases] = useState<CaseRef[]>([]);
+  const [shares, setShares] = useState<ShareRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Ámbito por defecto: admins/CEO ven "all", el resto ve "mine".
+  const [scope, setScope] = useState<AgendaScope>(isAdmin ? "all" : "mine");
   const [view, setView] = useState<"kanban" | "calendar">("kanban");
   const [search, setSearch] = useState("");
   const [filterRange, setFilterRange] = useState<DateRange>("week");
@@ -70,16 +83,20 @@ export default function AdminAgenda() {
   // Cargar datos
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: ev }, { data: pf }, { data: cs }] = await Promise.all([
+    const [{ data: ev }, { data: pf }, { data: cs }, { data: sh }] = await Promise.all([
       supabase.from("agenda_events").select("*").order("start_at", { ascending: true }),
       supabase.from("profiles").select("user_id, display_name"),
       supabase.from("service_cases").select("id, case_number").limit(500),
+      myUserId
+        ? supabase.from("agenda_event_shares").select("event_id, can_edit").eq("shared_with_user_id", myUserId)
+        : Promise.resolve({ data: [] as ShareRow[] }),
     ]);
     setEvents((ev as AgendaEvent[]) ?? []);
     setUsers((pf as UserOpt[]) ?? []);
     setCases((cs as CaseRef[]) ?? []);
+    setShares((sh as ShareRow[]) ?? []);
     setLoading(false);
-  }, []);
+  }, [myUserId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -121,6 +138,9 @@ export default function AdminAgenda() {
     return m;
   }, [cases]);
 
+  // Set de IDs de eventos compartidos conmigo (rápido).
+  const sharedSet = useMemo(() => new Set(shares.map(s => s.event_id)), [shares]);
+
   // Filtrado
   const filtered = useMemo(() => {
     const now = new Date();
@@ -131,6 +151,18 @@ export default function AdminAgenda() {
     const endMonth = new Date(startToday); endMonth.setMonth(endMonth.getMonth() + 1);
 
     return events.filter(e => {
+      // Ámbito (visibilidad por pestaña)
+      if (scope === "mine") {
+        if (e.created_by !== myUserId && e.assigned_to !== myUserId) return false;
+      } else if (scope === "shared") {
+        if (!sharedSet.has(e.id)) return false;
+        // Excluir los que igual son míos para no duplicar visualmente
+        if (e.created_by === myUserId || e.assigned_to === myUserId) return false;
+      } else if (scope === "team") {
+        if (e.visibility !== "team") return false;
+      }
+      // scope "all" → admins/CEO; sin filtro adicional de visibilidad
+
       const start = new Date(e.start_at);
       // Rango
       if (filterRange === "today" && (start < startToday || start >= endToday)) return false;
@@ -154,7 +186,8 @@ export default function AdminAgenda() {
       }
       return true;
     });
-  }, [events, filterRange, filterType, filterPriority, filterAssignee, search]);
+  }, [events, scope, myUserId, sharedSet, filterRange, filterType, filterPriority, filterAssignee, search]);
+
 
   const grouped = useMemo(() => {
     const g: Record<AgendaStatus, AgendaEvent[]> = {
@@ -343,6 +376,44 @@ export default function AdminAgenda() {
             <Plus className="w-4 h-4 mr-1" />Nuevo evento
           </Button>
         </div>
+      </div>
+
+      {/* Selector de ámbito de agenda (Personal / Compartidos / Empresarial / Todos) */}
+      <Tabs value={scope} onValueChange={(v) => setScope(v as AgendaScope)}>
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="mine" className="gap-1.5">
+            <User className="w-3.5 h-3.5" /> Mi agenda
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => e.created_by === myUserId || e.assigned_to === myUserId).length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="shared" className="gap-1.5">
+            <Share2 className="w-3.5 h-3.5" /> Compartidos conmigo
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => sharedSet.has(e.id) && e.created_by !== myUserId && e.assigned_to !== myUserId).length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="gap-1.5">
+            <Building2 className="w-3.5 h-3.5" /> Empresarial
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {events.filter(e => e.visibility === "team").length}
+            </Badge>
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="all" className="gap-1.5">
+              <LayoutGrid className="w-3.5 h-3.5" /> Toda la empresa
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{events.length}</Badge>
+            </TabsTrigger>
+          )}
+        </TabsList>
+      </Tabs>
+
+      {/* Aviso contextual del ámbito */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 border rounded-md px-3 py-2">
+        {scope === "mine" && <><Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Estás viendo <strong>tu agenda personal</strong> (eventos que creaste o tienes asignados). Solo CEO y administradores pueden ver toda la empresa.</span></>}
+        {scope === "shared" && <><Share2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Eventos que <strong>otros miembros del equipo te compartieron</strong>. Podrás editar solo aquellos con permiso explícito.</span></>}
+        {scope === "team" && <><Building2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Agenda <strong>empresarial</strong>: eventos publicados a todo el equipo (lectura para todos, edición solo para creador, asignado, admin/CEO).</span></>}
+        {scope === "all" && <><LayoutGrid className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Vista de <strong>toda la empresa</strong> (solo CEO y administradores). Filtra por responsable para ver la agenda de un trabajador específico.</span></>}
       </div>
 
       {/* KPIs */}

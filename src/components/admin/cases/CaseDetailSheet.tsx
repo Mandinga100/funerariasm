@@ -56,7 +56,8 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   const [pipelineStage, setPipelineStage] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
-  const [serviceType, setServiceType] = useState("");
+  const [serviceType, setServiceType] = useState<string>("");
+  const [serviceOption, setServiceOption] = useState<string>("");
   const [ceremonyLocation, setCeremonyLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [internalNotes, setInternalNotes] = useState("");

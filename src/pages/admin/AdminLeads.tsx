@@ -73,6 +73,8 @@ interface Lead {
   message: string | null;
   comuna: string | null;
   selected_plan: string | null;
+  auto_archived_at: string | null;
+  archive_reason: string | null;
 }
 
 function getPriorityScore(lead: Lead): number | null {
@@ -98,13 +100,15 @@ export default function AdminLeads() {
     filterStage: searchParams.get("stage") ?? "all",
     filterOverdue: searchParams.get("filter") === "overdue",
     categoryTab: (searchParams.get("category") ?? "all") as "all" | LeadCategory,
+    showArchived: searchParams.get("archived") === "1",
   });
-  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab } = filters;
+  const { viewMode, filterUrgency, filterStage, filterOverdue, categoryTab, showArchived } = filters;
   const setViewMode = (v: "kanban" | "list") => setFilter("viewMode", v);
   const setFilterUrgency = (v: string) => setFilter("filterUrgency", v);
   const setFilterStage = (v: string) => setFilter("filterStage", v);
   const setFilterOverdue = (v: boolean) => setFilter("filterOverdue", v);
   const setCategoryTab = (v: "all" | LeadCategory) => setFilter("categoryTab", v);
+  const setShowArchived = (v: boolean) => setFilter("showArchived", v);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [classifyingAll, setClassifyingAll] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ nuevo: true, contactado: true });

@@ -43,6 +43,8 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [newNote, setNewNote] = useState("");
   const [noteType, setNoteType] = useState("nota");
   const [estimatedValue, setEstimatedValue] = useState("");
+  const [serviceType, setServiceType] = useState<string>("");
+  const [serviceOption, setServiceOption] = useState<string>("");
   const [classifying, setClassifying] = useState(false);
   const [localClassification, setLocalClassification] = useState<any>(null);
   const [localSummary, setLocalSummary] = useState<string | null>(null);

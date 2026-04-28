@@ -4,7 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, MessageSquare } from "lucide-react";
+import { Search, MessageSquare, Trash2, Info } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ConversationRow {
   id: string;

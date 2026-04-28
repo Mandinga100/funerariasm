@@ -60,8 +60,9 @@ export default function ClientDossierSheet({ personId, onClose }: Props) {
       supabase.from("persons" as any).select("*").eq("id", pid).maybeSingle(),
       supabase.from("client_profiles" as any).select("*").eq("person_id", pid).maybeSingle(),
     ]);
-    setPerson(pData);
-    setProfile(cpData);
+    setPerson(pData as any);
+    const profileData = cpData as AnyRow | null;
+    setProfile(profileData);
 
     // Casos del titular (incluye datos del fallecido)
     const { data: cData } = await supabase
@@ -82,11 +83,11 @@ export default function ClientDossierSheet({ personId, onClose }: Props) {
 
     // Familia
     let memberRows: AnyRow[] = [];
-    if (cpData?.family_group_id) {
+    if (profileData?.family_group_id) {
       const { data: fmData } = await supabase
         .from("family_group_members" as any)
         .select("id, role, relationship, is_primary_contact, person_id, notes")
-        .eq("family_group_id", cpData.family_group_id);
+        .eq("family_group_id", profileData.family_group_id);
       const memberIds = (fmData as any[] ?? []).map((r) => r.person_id).filter(Boolean);
       if (memberIds.length) {
         const { data: peopleData } = await supabase

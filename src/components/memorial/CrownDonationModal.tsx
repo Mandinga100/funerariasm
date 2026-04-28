@@ -148,14 +148,14 @@ const CrownDonationModal = ({ open, onClose, onDonate, memorialName, sending }: 
               disabled={!isValid || sending}
               className="w-full py-3 rounded-full bg-gold text-primary font-medium text-sm hover:bg-gold-light disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_16px_-4px_hsl(var(--gold)/0.4)] hover:shadow-[0_0_24px_-4px_hsl(var(--gold)/0.6)]"
             >
-              {sending ? "Procesando..." : `Donar Corona de Flores — ${selected?.label || ""}`}
+              {sending ? "Procesando..." : `Donar Corona de Flores 🌸 ${selected?.label || ""}`}
             </button>
             <button
               onClick={() => handleSubmit(true)}
               disabled={!isValid || sending}
               className="w-full py-3 rounded-full border border-primary-foreground/15 text-primary-foreground/50 hover:text-primary-foreground/70 hover:border-primary-foreground/25 font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
             >
-              Simular Donación
+              Simular Donación <span className="text-red-500 font-semibold">(Solo Simulación)</span>
             </button>
           </div>
         </div>

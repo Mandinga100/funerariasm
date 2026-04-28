@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MoreVertical, Plus, Pencil, Trash2, Eye, Sparkles, Heart, KeyRound } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSortedRows } from "@/hooks/use-sorted-rows";
+import AdminFamilyAccess from "@/components/admin/AdminFamilyAccess";
 
 type Memorial = Tables<"memorials">;
 

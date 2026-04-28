@@ -183,6 +183,16 @@ export function ConversationList({ selectedId, onSelect }: Props) {
         </div>
       </div>
 
+      {filter === "cerradas" && (
+        <div className="mx-3 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
+          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>
+            Las conversaciones cerradas se conservan <strong>{CLOSED_RETENTION_DAYS} días</strong> y luego se eliminan automáticamente.
+            {canDelete && " Puedes eliminarlas manualmente con el botón 🗑."}
+          </span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="p-4 text-sm text-muted-foreground text-center">Cargando…</div>
@@ -195,49 +205,79 @@ export function ConversationList({ selectedId, onSelect }: Props) {
           filtered.map((c) => {
             const isSelected = c.id === selectedId;
             const slaOverdue = c.sla_due_at && new Date(c.sla_due_at) < new Date() && c.status !== "cerrado";
+            const isClosed = c.status === "cerrado";
             return (
-              <button
+              <div
                 key={c.id}
-                onClick={() => onSelect(c.id)}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 border-b transition-colors hover:bg-muted/50",
+                  "group relative border-b transition-colors hover:bg-muted/50",
                   isSelected && "bg-primary/5 border-l-2 border-l-primary"
                 )}
               >
-                <div className="flex items-start gap-2">
-                  <span className={cn("w-2 h-2 rounded-full mt-1.5 shrink-0", priorityDot[c.priority])} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-sm truncate">
-                        {c.visitor_name ?? c.visitor_phone ?? c.visitor_email ?? "Visitante anónimo"}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {new Date(c.last_message_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0 h-4", statusClass[c.status])}>
-                        {statusLabel[c.status]}
-                      </Badge>
-                      {c.unread_admin > 0 && (
-                        <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">{c.unread_admin}</Badge>
-                      )}
-                      {slaOverdue && (
-                        <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 animate-pulse">SLA</Badge>
-                      )}
-                      {(c.lead_id || c.service_case_id) && (
-                        <span className="text-[9px] text-muted-foreground">
-                          {c.service_case_id ? "🗂 caso" : "👤 lead"}
+                <button
+                  onClick={() => onSelect(c.id)}
+                  className="w-full text-left px-3 py-2.5"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className={cn("w-2 h-2 rounded-full mt-1.5 shrink-0", priorityDot[c.priority])} />
+                    <div className="flex-1 min-w-0 pr-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-sm truncate">
+                          {c.visitor_name ?? c.visitor_phone ?? c.visitor_email ?? "Visitante anónimo"}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {new Date(c.last_message_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                      )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0 h-4", statusClass[c.status])}>
+                          {statusLabel[c.status]}
+                        </Badge>
+                        {c.unread_admin > 0 && (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">{c.unread_admin}</Badge>
+                        )}
+                        {slaOverdue && (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 animate-pulse">SLA</Badge>
+                        )}
+                        {(c.lead_id || c.service_case_id) && (
+                          <span className="text-[9px] text-muted-foreground">
+                            {c.service_case_id ? "🗂 caso" : "👤 lead"}
+                          </span>
+                        )}
+                        {isClosed && c.closed_at && (
+                          <span className="text-[9px] text-muted-foreground">
+                            cerrada {new Date(c.closed_at).toLocaleDateString("es-CL", { day: "2-digit", month: "short" })}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
+                </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
+                    title="Eliminar conversación"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-md p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             );
           })
         )}
       </div>
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Eliminar conversación"
+        description={`Se eliminará permanentemente la conversación con ${deleteTarget?.visitor_name ?? deleteTarget?.visitor_phone ?? "este visitante"} y todos sus mensajes. Esta acción no se puede deshacer.`}
+        confirmLabel="Sí, eliminar"
+      />
     </div>
   );
 }

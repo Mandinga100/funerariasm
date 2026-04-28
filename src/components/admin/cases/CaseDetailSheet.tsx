@@ -21,6 +21,8 @@ import CaseHistoryTab from "./CaseHistoryTab";
 import CaseTrackingWidget from "./CaseTrackingWidget";
 import CaseQuoteTab from "./CaseQuoteTab";
 import CasePaymentsTab from "./CasePaymentsTab";
+import ServiceSelector from "@/components/admin/shared/ServiceSelector";
+import type { ServiceTypeId } from "@/lib/service-catalog";
 import AgendaEventModal, { type AgendaPrefill } from "@/components/admin/agenda/AgendaEventModal";
 import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { useNavigate } from "react-router-dom";
@@ -46,13 +48,7 @@ const PAYMENT_STATUSES = [
   { id: "cancelado", label: "Cancelado" },
 ];
 
-const SERVICE_TYPES = [
-  { id: "servicio_funerario", label: "Servicio Funerario" },
-  { id: "cremacion", label: "Cremación" },
-  { id: "traslado", label: "Traslado" },
-  { id: "prevision", label: "Previsión Funeraria" },
-  { id: "memorial", label: "Memorial / Legado" },
-];
+// Catálogo unificado en src/lib/service-catalog.ts
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
@@ -60,7 +56,8 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   const [pipelineStage, setPipelineStage] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
-  const [serviceType, setServiceType] = useState("");
+  const [serviceType, setServiceType] = useState<string>("");
+  const [serviceOption, setServiceOption] = useState<string>("");
   const [ceremonyLocation, setCeremonyLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
@@ -76,6 +73,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
     setPaymentStatus(serviceCase.payment_status);
     setTotalAmount(serviceCase.total_amount?.toString() ?? "0");
     setServiceType(serviceCase.service_type ?? "servicio_funerario");
+    setServiceOption(serviceCase.selected_plan ?? "");
     setCeremonyLocation(serviceCase.ceremony_location ?? "");
     setNotes(serviceCase.notes ?? "");
     setInternalNotes(serviceCase.internal_notes ?? "");
@@ -90,6 +88,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
       payment_status: paymentStatus,
       total_amount: parseInt(totalAmount) || 0,
       service_type: serviceType,
+      selected_plan: serviceOption || null,
       ceremony_location: ceremonyLocation || null,
       notes: notes || null,
       internal_notes: internalNotes || null,
@@ -219,31 +218,14 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Tipo de Servicio</label>
-                <Select value={serviceType} onValueChange={setServiceType}>
-                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SERVICE_TYPES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Monto Total (CLP)</label>
-                <div className="flex gap-1 mt-1">
-                  <Input type="number" className="h-8 text-xs" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="$0" />
-                </div>
-                {parseInt(totalAmount) > 0 && <p className="text-[10px] text-muted-foreground mt-0.5">{fmt(parseInt(totalAmount))}</p>}
-              </div>
-            </div>
-
-            {serviceCase.selected_plan && (
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Plan Seleccionado</label>
-                <Badge variant="secondary" className="mt-1">{serviceCase.selected_plan}</Badge>
-              </div>
-            )}
+            <ServiceSelector
+              serviceType={serviceType}
+              serviceOption={serviceOption}
+              amount={totalAmount}
+              onServiceTypeChange={(v) => setServiceType(v)}
+              onServiceOptionChange={setServiceOption}
+              onAmountChange={setTotalAmount}
+            />
 
             <Separator />
 

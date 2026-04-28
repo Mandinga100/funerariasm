@@ -20,6 +20,8 @@ import { AIActionTooltip } from "@/components/admin/AIActionTooltip";
 import { validateClPhone, openWhatsAppChat, firstName, prettyClPhone } from "@/lib/whatsapp";
 import { LinkedChatPanel } from "@/components/admin/chat/LinkedChatPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ServiceSelector from "@/components/admin/shared/ServiceSelector";
+import type { ServiceTypeId } from "@/lib/service-catalog";
 
 interface LeadDetailSheetProps {
   lead: any | null;
@@ -41,6 +43,8 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [newNote, setNewNote] = useState("");
   const [noteType, setNoteType] = useState("nota");
   const [estimatedValue, setEstimatedValue] = useState("");
+  const [serviceType, setServiceType] = useState<string>("");
+  const [serviceOption, setServiceOption] = useState<string>("");
   const [classifying, setClassifying] = useState(false);
   const [localClassification, setLocalClassification] = useState<any>(null);
   const [localSummary, setLocalSummary] = useState<string | null>(null);
@@ -52,6 +56,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   useEffect(() => {
     if (!lead) return;
     setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    // Mapear intent del lead → tipo de servicio
+    const intentMap: Record<string, ServiceTypeId> = {
+      servicio_funerario_urgente: "servicio_funerario",
+      cotizacion: "servicio_funerario",
+      cremacion: "cremacion",
+      traslado: "traslado",
+      prevision_funeraria: "prevision",
+      memorial_legado: "memorial",
+    };
+    const meta = (lead.metadata ?? {}) as any;
+    setServiceType(meta.service_type ?? intentMap[lead.intent] ?? "");
+    setServiceOption(meta.service_option ?? lead.selected_plan ?? "");
     setLocalClassification(lead.ai_classification && Object.keys(lead.ai_classification).length > 0 ? lead.ai_classification : null);
     setLocalSummary(lead.ai_summary ?? null);
     loadNotes();
@@ -130,6 +146,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     if (!error) {
       onUpdate();
       toast({ title: "Actualizado" });
+    }
+  };
+
+  const persistService = async (sType: string, sOption: string) => {
+    if (!lead) return;
+    const meta = { ...(lead.metadata ?? {}), service_type: sType || null, service_option: sOption || null };
+    const updates: any = { metadata: meta };
+    if (sOption) updates.selected_plan = sOption;
+    const { error } = await supabase.from("contact_leads").update(updates).eq("id", lead.id);
+    if (!error) {
+      // refrescar lead en el padre para mantener consistencia
+      onUpdate();
     }
   };
 
@@ -386,31 +414,38 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
           )}
 
           <Separator />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Etapa</label>
-              <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => updateField("pipeline_stage", v)}>
-                <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Valor Estimado</label>
-              <div className="flex gap-1 mt-1">
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  value={estimatedValue}
-                  onChange={e => setEstimatedValue(e.target.value)}
-                  placeholder="$0"
-                />
-                <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => updateField("estimated_value", parseInt(estimatedValue) || 0)}>
-                  <DollarSign className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Etapa del Lead</label>
+            <Select value={lead.pipeline_stage || "nuevo"} onValueChange={(v) => updateField("pipeline_stage", v)}>
+              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Servicio + Valor estimado auto-rellenado desde catálogo */}
+          <ServiceSelector
+            serviceType={serviceType}
+            serviceOption={serviceOption}
+            amount={estimatedValue}
+            onServiceTypeChange={(v) => {
+              setServiceType(v);
+              persistService(v, "");
+            }}
+            onServiceOptionChange={(v) => {
+              setServiceOption(v);
+              persistService(serviceType, v);
+            }}
+            onAmountChange={(v) => {
+              setEstimatedValue(v);
+            }}
+            amountLabel="Valor Estimado (CLP)"
+          />
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => updateField("estimated_value", parseInt(estimatedValue) || 0)}>
+              <DollarSign className="w-3 h-3 mr-1" />Guardar valor
+            </Button>
           </div>
 
           {/* Message */}

@@ -48,13 +48,7 @@ const PAYMENT_STATUSES = [
   { id: "cancelado", label: "Cancelado" },
 ];
 
-const SERVICE_TYPES = [
-  { id: "servicio_funerario", label: "Servicio Funerario" },
-  { id: "cremacion", label: "Cremación" },
-  { id: "traslado", label: "Traslado" },
-  { id: "prevision", label: "Previsión Funeraria" },
-  { id: "memorial", label: "Memorial / Legado" },
-];
+// Catálogo unificado en src/lib/service-catalog.ts
 
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 

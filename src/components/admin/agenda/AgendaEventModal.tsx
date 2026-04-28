@@ -62,9 +62,11 @@ const toLocalInput = (iso: string | Date) => {
 };
 
 export default function AgendaEventModal({ open, onOpenChange, event, defaultStatus, defaultStart, prefill, onSaved }: Props) {
-  const { user, isCeo } = useAuth();
+  const { user, isCeo, isAdmin } = useAuth();
   const { toast } = useToast();
   const isEdit = !!event;
+  // Solo el dueño, admin/CEO pueden compartir y cambiar visibilidad.
+  const canManageSharing = !!user && (isAdmin || isCeo || (event ? event.created_by === user.id : true));
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -78,6 +80,7 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
   const [eventType, setEventType] = useState<AgendaEventType>("reunion");
   const [status, setStatus] = useState<AgendaStatus>("programado");
   const [priority, setPriority] = useState<AgendaPriority>("normal");
+  const [visibility, setVisibility] = useState<AgendaVisibility>("private");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [locationName, setLocationName] = useState("");
@@ -92,7 +95,12 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
   const [reminder, setReminder] = useState<number>(60);
   const [internalNotes, setInternalNotes] = useState("");
 
+  // Compartidos: lista de { user_id, can_edit }
+  const [sharedUsers, setSharedUsers] = useState<{ user_id: string; can_edit: boolean }[]>([]);
+  const [shareUserPick, setShareUserPick] = useState<string>("");
+
   const [users, setUsers] = useState<UserOption[]>([]);
+  const [allTeam, setAllTeam] = useState<UserOption[]>([]);
   const [cases, setCases] = useState<CaseOption[]>([]);
   const [leads, setLeads] = useState<LeadOption[]>([]);
 
@@ -101,18 +109,32 @@ export default function AgendaEventModal({ open, onOpenChange, event, defaultSta
     if (!open) return;
     (async () => {
       const [{ data: roles }, { data: pf }, { data: cs }, { data: ld }] = await Promise.all([
-        supabase.from("user_roles").select("user_id").in("role", ["admin", "ceo"]),
+        supabase.from("user_roles").select("user_id").in("role", ["admin", "ceo", "moderator"]),
         supabase.from("profiles").select("user_id, display_name"),
         supabase.from("service_cases").select("id, case_number, client_name").order("created_at", { ascending: false }).limit(100),
         supabase.from("contact_leads").select("id, name, phone").order("created_at", { ascending: false }).limit(100),
       ]);
       const allowedIds = new Set((roles ?? []).map(r => r.user_id));
-      const opts = (pf ?? []).filter(p => allowedIds.has(p.user_id));
-      setUsers(opts);
+      const teamProfiles = (pf ?? []).filter(p => allowedIds.has(p.user_id));
+      // "users" para asignar = miembros con rol; "allTeam" = igual (todo el equipo con rol).
+      setUsers(teamProfiles);
+      setAllTeam(teamProfiles);
       setCases(cs ?? []);
       setLeads(ld ?? []);
     })();
   }, [open]);
+
+  // Cargar compartidos del evento
+  useEffect(() => {
+    if (!open || !event) { setSharedUsers([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("agenda_event_shares")
+        .select("shared_with_user_id, can_edit")
+        .eq("event_id", event.id);
+      setSharedUsers((data ?? []).map(r => ({ user_id: r.shared_with_user_id, can_edit: r.can_edit })));
+    })();
+  }, [open, event]);
 
   // Inicializar formulario
   useEffect(() => {

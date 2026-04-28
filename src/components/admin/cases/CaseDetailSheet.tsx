@@ -73,6 +73,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
     setPaymentStatus(serviceCase.payment_status);
     setTotalAmount(serviceCase.total_amount?.toString() ?? "0");
     setServiceType(serviceCase.service_type ?? "servicio_funerario");
+    setServiceOption(serviceCase.selected_plan ?? "");
     setCeremonyLocation(serviceCase.ceremony_location ?? "");
     setNotes(serviceCase.notes ?? "");
     setInternalNotes(serviceCase.internal_notes ?? "");

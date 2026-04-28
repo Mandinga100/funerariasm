@@ -260,8 +260,15 @@ export default function AdminFamilyAccess() {
           </Button>
         </div>
       ) : (
+      ) : filteredAccesses.length === 0 ? (
+        <div className="text-center py-12 border border-dashed rounded-lg">
+          <Search className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">Ningún acceso coincide con "{search}".</p>
+          <Button variant="ghost" size="sm" className="mt-2" onClick={() => setSearch("")}>Limpiar búsqueda</Button>
+        </div>
+      ) : (
         <div className="space-y-3">
-          {accesses.map((acc) => {
+          {paginatedAccesses.map((acc) => {
             const mem = memorialMap[acc.memorial_id];
             const expired = new Date(acc.expires_at) < new Date();
             const daysLeft = Math.ceil((new Date(acc.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));

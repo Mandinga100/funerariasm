@@ -4,15 +4,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Hand, UserCheck, X, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import type { ConversationRow } from "./ConversationList";
 
 export function HandoffControls({ convo }: { convo: ConversationRow }) {
-  const { user } = useAuth();
+  const { user, isAdmin, isCeo } = useAuth();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [executiveName, setExecutiveName] = useState<string>("");
+  const [confirmClose, setConfirmClose] = useState(false);
+  const canDeleteOnClose = isAdmin || isCeo;
 
-  // Cargar nombre del ejecutivo desde profiles para personalizar el mensaje de bienvenida.
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -39,7 +41,6 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      // Mensaje de sistema visible: nombre real del ejecutivo + nombre del visitante.
       const visitorFirstName = convo.visitor_name?.trim().split(/\s+/)[0];
       const visitorLabel = visitorFirstName ? ` con ${visitorFirstName}` : "";
       await supabase.from("chat_messages").insert({
@@ -61,19 +62,50 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
     setBusy(false);
   }
 
-  async function close() {
+  async function performClose() {
     if (!user || busy) return;
     setBusy(true);
-    await supabase
-      .from("chat_conversations")
-      .update({ status: "cerrado", closed_at: new Date().toISOString() })
-      .eq("id", convo.id);
-    await supabase.from("chat_messages").insert({
-      conversation_id: convo.id,
-      sender_type: "system",
-      content: "Conversación cerrada por el equipo.",
-    });
+    if (canDeleteOnClose) {
+      // CEO/Admin: cerrar y eliminar inmediatamente la conversación + mensajes.
+      const { error: msgErr } = await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("conversation_id", convo.id);
+      if (msgErr) {
+        toast({ title: "Error al eliminar mensajes", description: msgErr.message, variant: "destructive" });
+        setBusy(false);
+        return;
+      }
+      const { error } = await supabase
+        .from("chat_conversations")
+        .delete()
+        .eq("id", convo.id);
+      if (error) {
+        toast({ title: "Error al eliminar conversación", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Conversación cerrada y eliminada" });
+      }
+    } else {
+      await supabase
+        .from("chat_conversations")
+        .update({ status: "cerrado", closed_at: new Date().toISOString() })
+        .eq("id", convo.id);
+      await supabase.from("chat_messages").insert({
+        conversation_id: convo.id,
+        sender_type: "system",
+        content: "Conversación cerrada por el equipo.",
+      });
+    }
     setBusy(false);
+    setConfirmClose(false);
+  }
+
+  function handleCloseClick() {
+    if (canDeleteOnClose) {
+      setConfirmClose(true);
+    } else {
+      void performClose();
+    }
   }
 
   const isMine = convo.assigned_to === user?.id;
@@ -91,8 +123,8 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
           <Button size="sm" variant="outline" onClick={release} disabled={busy} className="gap-1.5">
             <UserCheck className="w-3.5 h-3.5" /> Liberar
           </Button>
-          <Button size="sm" variant="outline" onClick={close} disabled={busy} className="gap-1.5">
-            <X className="w-3.5 h-3.5" /> Cerrar
+          <Button size="sm" variant="outline" onClick={handleCloseClick} disabled={busy} className="gap-1.5">
+            <X className="w-3.5 h-3.5" /> Cerrar{canDeleteOnClose ? " y eliminar" : ""}
           </Button>
         </>
       )}
@@ -101,6 +133,16 @@ export function HandoffControls({ convo }: { convo: ConversationRow }) {
           <Lock className="w-3.5 h-3.5" /> Conversación cerrada
         </span>
       )}
+
+      <ConfirmDeleteDialog
+        open={confirmClose}
+        onOpenChange={(o) => !o && setConfirmClose(false)}
+        onConfirm={performClose}
+        loading={busy}
+        title="Cerrar y eliminar conversación"
+        description={`Como ${isCeo ? "CEO" : "Admin"}, al cerrar esta conversación se eliminará permanentemente junto con todos sus mensajes. Esta acción no se puede deshacer.`}
+        confirmLabel="Sí, cerrar y eliminar"
+      />
     </div>
   );
 }

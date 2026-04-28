@@ -138,6 +138,9 @@ export default function AdminAgenda() {
     return m;
   }, [cases]);
 
+  // Set de IDs de eventos compartidos conmigo (rápido).
+  const sharedSet = useMemo(() => new Set(shares.map(s => s.event_id)), [shares]);
+
   // Filtrado
   const filtered = useMemo(() => {
     const now = new Date();
@@ -148,6 +151,18 @@ export default function AdminAgenda() {
     const endMonth = new Date(startToday); endMonth.setMonth(endMonth.getMonth() + 1);
 
     return events.filter(e => {
+      // Ámbito (visibilidad por pestaña)
+      if (scope === "mine") {
+        if (e.created_by !== myUserId && e.assigned_to !== myUserId) return false;
+      } else if (scope === "shared") {
+        if (!sharedSet.has(e.id)) return false;
+        // Excluir los que igual son míos para no duplicar visualmente
+        if (e.created_by === myUserId || e.assigned_to === myUserId) return false;
+      } else if (scope === "team") {
+        if (e.visibility !== "team") return false;
+      }
+      // scope "all" → admins/CEO; sin filtro adicional de visibilidad
+
       const start = new Date(e.start_at);
       // Rango
       if (filterRange === "today" && (start < startToday || start >= endToday)) return false;
@@ -171,7 +186,8 @@ export default function AdminAgenda() {
       }
       return true;
     });
-  }, [events, filterRange, filterType, filterPriority, filterAssignee, search]);
+  }, [events, scope, myUserId, sharedSet, filterRange, filterType, filterPriority, filterAssignee, search]);
+
 
   const grouped = useMemo(() => {
     const g: Record<AgendaStatus, AgendaEvent[]> = {

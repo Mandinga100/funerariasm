@@ -156,11 +156,25 @@ export default function AdminMemoriales() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Gestión de Legados</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Gestión de Legados Eternos</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{items.length} legados registrados</p>
         </div>
-        <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4 mr-1" />Nuevo</Button>
       </div>
+
+      <Tabs defaultValue="legados" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="legados" className="gap-2">
+            <Heart className="w-4 h-4" /> Legados
+          </TabsTrigger>
+          <TabsTrigger value="accesos" className="gap-2">
+            <KeyRound className="w-4 h-4" /> Accesos familiares
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="legados" className="space-y-4">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4 mr-1" />Nuevo legado</Button>
+          </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import MemorialOfferingsWidget from "@/components/admin/MemorialOfferingsWidget";
+import LiveIndicatorsCard from "@/components/admin/LiveIndicatorsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -453,6 +454,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Tarjeta en vivo: fecha/hora chilena + UF, UTM, Dólar y Cuota Mortuoria.
+          Visible para todos los roles (CEO, admin, moderador). */}
+      <LiveIndicatorsCard />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl sm:text-2xl font-bold">Panel de Analíticas</h1>
         <div className="flex items-center gap-2 self-start sm:self-auto">

@@ -21,6 +21,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { usePersistentFilters } from "@/hooks/use-persistent-filters";
 import { useRowSelection } from "@/hooks/use-row-selection";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleView } from "@/hooks/useRoleView";
 import KpiCard from "@/components/admin/KpiCard";
 import KpiDetailModal, { type KpiDetailColumn } from "@/components/admin/KpiDetailModal";
 import BulkActionsBar from "@/components/admin/BulkActionsBar";

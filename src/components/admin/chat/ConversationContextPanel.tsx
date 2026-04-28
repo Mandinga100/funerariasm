@@ -345,9 +345,13 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
       </div>
 
       <div className="p-3 border-b">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+        <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-1">
           <MessageSquare className="w-3.5 h-3.5" /> SLA
+          <span className="text-[10px] font-normal text-muted-foreground">— tiempo máximo de respuesta</span>
         </h3>
+        <p className="text-[10px] text-muted-foreground mb-2 leading-snug">
+          (Service Level Agreement) plazo comprometido para responderle al visitante según su prioridad.
+        </p>
         {convo.sla_due_at ? (
           <div className="text-xs space-y-1">
             <div className="text-muted-foreground">Vence:</div>

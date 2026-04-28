@@ -355,6 +355,7 @@ function AdminLayoutInner() {
           <Outlet />
         </main>
       </div>
+      <FloatingChatTray />
     </div>
   );
 }

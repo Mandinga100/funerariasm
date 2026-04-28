@@ -580,18 +580,18 @@ export default function AdminSettings() {
   };
 
   /* ── Determine available roles for selects ── */
-  // Solo el CEO puede asignar roles privilegiados (ceo, admin).
-  // Los administradores únicamente pueden invitar moderadores.
-  const availableRoles: AppRole[] = isCeo ? ["ceo", "admin", "moderator"] : ["moderator"];
+  // El rol CEO es único e inamovible (protegido por trigger en DB).
+  // El CEO puede asignar admin o moderador. Los administradores solo moderador.
+  const availableRoles: AppRole[] = isCeo ? ["admin", "moderator"] : ["moderator"];
 
-  // Si el rol seleccionado deja de estar permitido (p. ej. admin sin permisos para "admin"),
-  // lo corregimos automáticamente al primer rol disponible.
+  // Si el rol seleccionado deja de estar permitido, lo corregimos automáticamente.
   useEffect(() => {
     if (!availableRoles.includes(newRole)) {
       setNewRole(availableRoles[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCeo, addDialog, editDialog]);
+
 
   return (
     <div className="space-y-4">

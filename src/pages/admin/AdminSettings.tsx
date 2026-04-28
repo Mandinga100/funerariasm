@@ -1394,6 +1394,13 @@ export default function AdminSettings() {
             </Button>
           </TabsContent>
         )}
+
+        {/* ═══════════════ PERFORMANCE TAB ═══════════════ */}
+        {(isCeo || isAdmin) && (
+          <TabsContent value="performance" className="space-y-4">
+            <TeamPerformancePanel />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* ═══════════════ ADD MEMBER DIALOG ═══════════════ */}

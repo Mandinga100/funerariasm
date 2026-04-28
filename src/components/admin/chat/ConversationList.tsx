@@ -73,7 +73,7 @@ export function ConversationList({ selectedId, onSelect }: Props) {
     (async () => {
       const { data } = await supabase
         .from("chat_conversations")
-        .select("id, conversation_token, visitor_name, visitor_phone, visitor_email, status, priority, assigned_to, unread_admin, sla_due_at, last_message_at, lead_id, service_case_id")
+        .select("id, conversation_token, visitor_name, visitor_phone, visitor_email, status, priority, assigned_to, unread_admin, sla_due_at, last_message_at, closed_at, lead_id, service_case_id")
         .order("last_message_at", { ascending: false })
         .limit(200);
       if (!cancelled) {

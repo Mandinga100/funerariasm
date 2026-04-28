@@ -1643,6 +1643,39 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_presence: {
+        Row: {
+          created_at: string
+          current_session_seconds: number
+          last_seen_at: string
+          session_started_at: string | null
+          status: string
+          total_online_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_session_seconds?: number
+          last_seen_at?: string
+          session_started_at?: string | null
+          status?: string
+          total_online_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_session_seconds?: number
+          last_seen_at?: string
+          session_started_at?: string | null
+          status?: string
+          total_online_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
@@ -1917,6 +1950,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          gender: string | null
           id: string
           updated_at: string
           user_id: string
@@ -1925,6 +1959,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -1933,6 +1968,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           updated_at?: string
           user_id?: string

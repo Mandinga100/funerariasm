@@ -22,6 +22,9 @@ import {
   Eye,
   EyeOff,
   Clock,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { generateSecureToken, generateRecoveryCode } from "@/lib/family-access";
 import type { Tables } from "@/integrations/supabase/types";

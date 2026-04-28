@@ -31,6 +31,8 @@ const Pagos = lazy(() => import("./pages/Pagos.tsx"));
 const FunerariaComuna = lazy(() => import("./pages/FunerariaComuna.tsx"));
 const CoberturaRM = lazy(() => import("./pages/CoberturaRM.tsx"));
 const Diag = lazy(() => import("./pages/Diag.tsx"));
+const FamilyAccess = lazy(() => import("./pages/FamilyAccess.tsx"));
+const FamilyMemorialEdit = lazy(() => import("./pages/FamilyMemorialEdit.tsx"));
 
 // Admin shell + pages — lazy-loaded so the admin bundle never ships to public visitors
 const ProtectedRoute = lazy(() => import("./components/admin/ProtectedRoute.tsx"));
@@ -88,6 +90,8 @@ const App = () => (
             <Route path="/obituarios" element={<Obituarios />} />
             <Route path="/obituarios/:slug" element={<ObituarioDetail />} />
             <Route path="/legados-eternos" element={<Memoriales />} />
+            <Route path="/legados-eternos/acceso" element={<Suspense fallback={<PageFallback />}><FamilyAccess /></Suspense>} />
+            <Route path="/legados-eternos/mi-legado" element={<Suspense fallback={<PageFallback />}><FamilyMemorialEdit /></Suspense>} />
             <Route path="/legados-eternos/:slug" element={<MemorialDetail />} />
             <Route path="/memoriales" element={<Navigate to="/legados-eternos" replace />} />
             <Route path="/memoriales/:slug" element={<Navigate to="/legados-eternos" replace />} />

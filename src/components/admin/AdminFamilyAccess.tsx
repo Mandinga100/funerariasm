@@ -71,6 +71,11 @@ export default function AdminFamilyAccess() {
   const [newCreds, setNewCreds] = useState<NewCredentials | null>(null);
   const [showSecrets, setShowSecrets] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 8;
+
+
   const load = async () => {
     setLoading(true);
     const [memRes, accRes] = await Promise.all([

@@ -116,27 +116,34 @@ export default function LiveIndicatorsCard() {
   const dateStr = format(now, "dd 'de' MMMM 'de' yyyy", { locale: es });
   const timeStr = format(now, "HH:mm:ss");
 
+  const cuotaCLP = data?.uf ? data.uf.value * CUOTA_MORTUORIA_UF : null;
+
   const indicators = [
     {
       key: "uf",
       label: "UF",
-      value: data?.uf ? `$${formatUF(data.uf.value)}` : "—",
-      sub: data?.uf ? `al ${format(new Date(data.uf.fecha), "dd/MM/yyyy")}` : "Cargando…",
+      icon: Landmark,
+      value: data?.uf ? formatCLP(data.uf.value) : "—",
+      sub: data?.uf
+        ? `${formatUF(data.uf.value)} CLP · al ${format(new Date(data.uf.fecha), "dd/MM/yyyy")}`
+        : "Cargando…",
       tone: "text-emerald-600 dark:text-emerald-400",
       bg: "bg-emerald-50 dark:bg-emerald-950/40",
     },
     {
       key: "utm",
       label: "UTM",
-      value: data?.utm ? `$${formatCLP(data.utm.value)}` : "—",
-      sub: data?.utm ? format(new Date(data.utm.fecha), "MMM yyyy", { locale: es }) : "Cargando…",
+      icon: Receipt,
+      value: data?.utm ? formatCLP(data.utm.value) : "—",
+      sub: data?.utm ? format(new Date(data.utm.fecha), "MMMM yyyy", { locale: es }) : "Cargando…",
       tone: "text-blue-600 dark:text-blue-400",
       bg: "bg-blue-50 dark:bg-blue-950/40",
     },
     {
       key: "dolar",
       label: "Dólar USD",
-      value: data?.dolar ? `$${formatUF(data.dolar.value)}` : "—",
+      icon: DollarSign,
+      value: data?.dolar ? formatCLP(data.dolar.value) : "—",
       sub: data?.dolar ? `al ${format(new Date(data.dolar.fecha), "dd/MM/yyyy")}` : "Cargando…",
       tone: "text-amber-600 dark:text-amber-400",
       bg: "bg-amber-50 dark:bg-amber-950/40",
@@ -144,8 +151,9 @@ export default function LiveIndicatorsCard() {
     {
       key: "cuota",
       label: "Cuota Mortuoria",
-      value: data?.cuota_mortuoria ? `$${formatCLP(data.cuota_mortuoria.value)}` : "—",
-      sub: "IPS · vigente 2026",
+      icon: Flower2,
+      value: cuotaCLP ? formatCLP(cuotaCLP) : "—",
+      sub: `${CUOTA_MORTUORIA_UF} UF · estándar funerario CL`,
       tone: "text-rose-600 dark:text-rose-400",
       bg: "bg-rose-50 dark:bg-rose-950/40",
     },

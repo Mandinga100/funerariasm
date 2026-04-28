@@ -242,8 +242,10 @@ export function ConversationContextPanel({ convo, logMaxEntries = 30, logPrivacy
     if (error || !lead) {
       toast({ title: "Error al crear lead", description: error?.message, variant: "destructive" });
     } else {
+      // Vincular convo → lead. El trigger DB `trg_chat_conversation_lead_link`
+      // se encargará de derivar automáticamente el lead a "Contactado".
       await supabase.from("chat_conversations").update({ lead_id: lead.id }).eq("id", convo.id);
-      toast({ title: "Lead creado y vinculado" });
+      toast({ title: "Lead creado y vinculado", description: "Derivado automáticamente a Contactado." });
     }
     setBusy(false);
   }

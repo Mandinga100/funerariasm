@@ -7,14 +7,11 @@ import { cn } from "@/lib/utils";
 
 /**
  * Tarjeta profesional con fecha/hora en vivo + indicadores económicos chilenos
- * (UF, UTM, Dólar) y la Cuota Mortuoria del IPS.
+ * (UF, UTM, Dólar) y la Cuota Mortuoria expresada en 15 UF (estándar funerario CL).
  *
  * Fuentes oficiales (sin API key, gratuitas):
  *  - mindicador.cl  → UF, UTM, Dólar (publicados por el Banco Central de Chile)
- *  - Cuota Mortuoria IPS 2026: monto vigente (se actualiza por reajuste anual del IPC).
- *
- * Si la red falla, se muestra el último valor cacheado en localStorage para no dejar
- * vacío el dashboard, marcado con un sutil indicador "caché".
+ *  - Cuota Mortuoria: 15 UF (convertidas en tiempo real al peso chileno).
  */
 
 type IndicatorValue = {
@@ -27,19 +24,17 @@ type Indicators = {
   uf?: IndicatorValue;
   utm?: IndicatorValue;
   dolar?: IndicatorValue;
-  cuota_mortuoria?: IndicatorValue;
   fetchedAt: string;
   cached?: boolean;
 };
 
-const CACHE_KEY = "fsm_live_indicators_v1";
+const CACHE_KEY = "fsm_live_indicators_v2";
 const REFRESH_MS = 15 * 60 * 1000; // 15 minutos
-
-// Cuota Mortuoria IPS 2026 (Chile). Reajustable; valor base verificable en ips.gob.cl.
-const CUOTA_MORTUORIA_CLP_2026 = 1107839;
+const CUOTA_MORTUORIA_UF = 15;
 
 function formatCLP(n: number) {
-  return n.toLocaleString("es-CL", { maximumFractionDigits: 0 });
+  // Formato peso chileno: $1.234.567 (sin decimales, separador miles con punto)
+  return `$${Math.round(n).toLocaleString("es-CL", { maximumFractionDigits: 0 })}`;
 }
 
 function formatUF(n: number) {
@@ -47,7 +42,6 @@ function formatUF(n: number) {
 }
 
 async function fetchIndicators(): Promise<Indicators> {
-  // mindicador.cl es CORS-friendly y no requiere autenticación.
   const res = await fetch("https://mindicador.cl/api", { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${res.status}`);
   const json = await res.json();
@@ -56,11 +50,6 @@ async function fetchIndicators(): Promise<Indicators> {
     uf: json.uf ? { value: json.uf.valor, unidad_medida: "CLP", fecha: json.uf.fecha } : undefined,
     utm: json.utm ? { value: json.utm.valor, unidad_medida: "CLP", fecha: json.utm.fecha } : undefined,
     dolar: json.dolar ? { value: json.dolar.valor, unidad_medida: "CLP", fecha: json.dolar.fecha } : undefined,
-    cuota_mortuoria: {
-      value: CUOTA_MORTUORIA_CLP_2026,
-      unidad_medida: "CLP",
-      fecha: new Date().toISOString(),
-    },
     fetchedAt: new Date().toISOString(),
   };
 }

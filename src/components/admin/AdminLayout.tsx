@@ -21,6 +21,7 @@ import { signAvatarUrl } from "@/lib/avatar-url";
 import { RoleViewProvider, useRoleView } from "@/hooks/useRoleView";
 import RoleViewSwitcher from "@/components/admin/RoleViewSwitcher";
 import FloatingChatTray from "@/components/admin/chat/FloatingChatTray";
+import PresenceToggle from "@/components/admin/PresenceToggle";
 
 // Aplica el tema almacenado antes del primer render para evitar flash visual.
 bootstrapAdminTheme();
@@ -324,6 +325,9 @@ function AdminLayoutInner() {
           <SidebarHeader />
           {!isMobile && <NotificationCenter />}
         </div>
+        <div className="px-3 py-2 border-b flex items-center justify-between gap-2">
+          <PresenceToggle />
+        </div>
         <SidebarNav />
       </aside>
 
@@ -344,6 +348,7 @@ function AdminLayoutInner() {
           </Sheet>
           <h1 className="font-semibold text-sm truncate">CRM Funeraria</h1>
           <div className="flex items-center gap-2">
+            <PresenceToggle />
             <RoleBadge isCeo={isCeo} isAdmin={isAdmin} compact />
             {isMobile && <NotificationCenter />}
           </div>

@@ -243,7 +243,7 @@ export default function AdminClientes360() {
           </p>
         </div>
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-          Etapa A · Capa de unificación activa
+          Etapa B · Lead → Caso vinculado
         </Badge>
       </div>
 

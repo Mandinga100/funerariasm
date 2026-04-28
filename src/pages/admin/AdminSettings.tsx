@@ -1478,8 +1478,11 @@ export default function AdminSettings() {
               <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {availableRoles.map(r => (
-                    <SelectItem key={r} value={r}>{ROLE_META[r].icon} {ROLE_META[r].label}</SelectItem>
+                  {(["ceo","admin","moderator"] as AppRole[]).map(r => (
+                    <SelectItem key={r} value={r} disabled={!availableRoles.includes(r)}>
+                      {ROLE_META[r].icon} {ROLE_META[r].label}
+                      {!availableRoles.includes(r) && <span className="ml-2 text-[10px] opacity-60">(solo CEO)</span>}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

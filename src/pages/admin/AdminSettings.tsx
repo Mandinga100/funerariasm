@@ -660,6 +660,11 @@ export default function AdminSettings() {
           <TabsTrigger value="appearance" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Moon className="w-3.5 h-3.5 hidden sm:inline" />Tema
           </TabsTrigger>
+          {(isCeo || isAdmin) && (
+            <TabsTrigger value="performance" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
+              <Trophy className="w-3.5 h-3.5 hidden sm:inline" />Rendimiento
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="flex-1 min-w-[80px] text-xs sm:text-sm gap-1">
             <Bell className="w-3.5 h-3.5 hidden sm:inline" />Alertas
           </TabsTrigger>

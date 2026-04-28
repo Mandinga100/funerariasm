@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Phone, User, ArrowLeft, Mic, MicOff } from "lucide-react";
+import { X, Send, Phone, User, ArrowLeft, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { buildWhatsAppUrl, buildWhatsAppUrlDirect, type ContactIntent } from "@/lib/whatsapp";
 import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
@@ -7,6 +7,8 @@ import { getOrCreateChatToken } from "@/lib/chat-token";
 import { supabase } from "@/integrations/supabase/client";
 import { useChatLiveSync, type InboundMessage } from "@/hooks/use-chat-live-sync";
 import assistantAvatar from "@/assets/assistant-avatar.png";
+import { getOperatorAvatarUrl } from "@/lib/operator-avatar";
+import { isChatboxMuted, setChatboxMuted, notifyChatboxInbound } from "@/lib/chatbox-sound";
 
 interface ChatMessage {
   role: "assistant" | "user";

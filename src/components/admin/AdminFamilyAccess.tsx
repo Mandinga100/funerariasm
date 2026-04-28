@@ -73,6 +73,7 @@ export default function AdminFamilyAccess() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "last_used_desc" | "name_asc">("created_desc");
   const PAGE_SIZE = 8;
 
 
@@ -109,11 +110,28 @@ export default function AdminFamilyAccess() {
       })
     : accesses;
 
-  const totalPages = Math.max(1, Math.ceil(filteredAccesses.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const paginatedAccesses = filteredAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const sortedAccesses = [...filteredAccesses].sort((a, b) => {
+    switch (sortBy) {
+      case "created_asc":
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "last_used_desc": {
+        const aT = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
+        const bT = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
+        return bT - aT;
+      }
+      case "name_asc":
+        return a.family_name.localeCompare(b.family_name, "es");
+      case "created_desc":
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
 
-  useEffect(() => { setPage(1); }, [search]);
+  const totalPages = Math.max(1, Math.ceil(sortedAccesses.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedAccesses = sortedAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [search, sortBy]);
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -238,14 +256,27 @@ export default function AdminFamilyAccess() {
       </Card>
 
       {!loading && accesses.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por familiar, email, memorial o slug…"
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por familiar, email, memorial o slug…"
+              className="pl-9"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="sm:w-[220px]">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_desc">Más recientes primero</SelectItem>
+              <SelectItem value="created_asc">Más antiguos primero</SelectItem>
+              <SelectItem value="last_used_desc">Último ingreso reciente</SelectItem>
+              <SelectItem value="name_asc">Nombre (A–Z)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 

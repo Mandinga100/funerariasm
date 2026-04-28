@@ -9,13 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Save, Trash2, Phone, MapPin, Briefcase, Link as LinkIcon } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { AlertTriangle, Save, Trash2, Phone, MapPin, Briefcase, Link as LinkIcon, Building2, Lock, Share2, X } from "lucide-react";
 import { COMUNAS_RM } from "@/lib/comunas-rm";
 import {
   AgendaEvent,
   AgendaEventType,
   AgendaPriority,
   AgendaStatus,
+  AgendaVisibility,
   EVENT_TYPES,
   PRIORITIES,
   STATUS_COLUMNS,

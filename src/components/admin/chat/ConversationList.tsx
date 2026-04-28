@@ -57,11 +57,15 @@ const priorityDot: Record<ConversationRow["priority"], string> = {
 };
 
 export function ConversationList({ selectedId, onSelect }: Props) {
-  const { user } = useAuth();
+  const { user, isAdmin, isCeo } = useAuth();
+  const { toast } = useToast();
+  const canDelete = isAdmin || isCeo;
   const [convos, setConvos] = useState<ConversationRow[]>([]);
   const [filter, setFilter] = useState<Filter>("todas");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<ConversationRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Load + realtime
   useEffect(() => {

@@ -200,6 +200,20 @@ const MemorialDetail = () => {
     }
 
     setSending(true);
+
+    // Templates: solo sesión, no toca la base de datos.
+    if (isTemplate) {
+      addSimulatedCondolence({ authorName: authorName.trim(), message: message.trim() });
+      setSending(false);
+      registerShieldHit(`condolence_${memorial.id}`);
+      toast.success("Condolencia mostrada (solo vista previa)");
+      setAuthorName("");
+      setMessage("");
+      setCondolenceHoneypot("");
+      condolenceStartedAtRef.current = createShieldTimer();
+      return;
+    }
+
     const { error } = await supabase.from("condolences").insert({
       memorial_id: memorial.id,
       author_name: authorName.trim(),

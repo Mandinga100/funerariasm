@@ -36,7 +36,7 @@ export default function AdminChat() {
     (async () => {
       const { data } = await supabase
         .from("chat_conversations")
-        .select("id, conversation_token, visitor_name, visitor_phone, visitor_email, status, priority, assigned_to, unread_admin, sla_due_at, last_message_at, lead_id, service_case_id")
+        .select("id, conversation_token, visitor_name, visitor_phone, visitor_email, status, priority, assigned_to, unread_admin, sla_due_at, last_message_at, closed_at, lead_id, service_case_id")
         .eq("id", selectedId)
         .maybeSingle();
       if (!cancelled) setConvo(data as ConversationRow | null);

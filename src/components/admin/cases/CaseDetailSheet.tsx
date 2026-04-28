@@ -218,31 +218,14 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Tipo de Servicio</label>
-                <Select value={serviceType} onValueChange={setServiceType}>
-                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SERVICE_TYPES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Monto Total (CLP)</label>
-                <div className="flex gap-1 mt-1">
-                  <Input type="number" className="h-8 text-xs" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="$0" />
-                </div>
-                {parseInt(totalAmount) > 0 && <p className="text-[10px] text-muted-foreground mt-0.5">{fmt(parseInt(totalAmount))}</p>}
-              </div>
-            </div>
-
-            {serviceCase.selected_plan && (
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Plan Seleccionado</label>
-                <Badge variant="secondary" className="mt-1">{serviceCase.selected_plan}</Badge>
-              </div>
-            )}
+            <ServiceSelector
+              serviceType={serviceType}
+              serviceOption={serviceOption}
+              amount={totalAmount}
+              onServiceTypeChange={(v) => setServiceType(v)}
+              onServiceOptionChange={setServiceOption}
+              onAmountChange={setTotalAmount}
+            />
 
             <Separator />
 

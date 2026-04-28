@@ -41,6 +41,9 @@ export interface ChatLiveState {
   /** Estado del lado CRM. */
   status: "bot" | "pendiente_humano" | "humano_activo" | "cerrado" | null;
   operatorName: string | null;
+  operatorAvatarUrl: string | null;
+  operatorGender: "male" | "female" | "other" | null;
+  operatorUserId: string | null;
   operatorActive: boolean;
   closed: boolean;
   /** Total de mensajes admin/system no vistos (mientras chat está cerrado). */
@@ -59,6 +62,9 @@ interface Options {
 export function useChatLiveSync({ visible, onInbound }: Options): ChatLiveState {
   const [status, setStatus] = useState<ChatLiveState["status"]>(null);
   const [operatorName, setOperatorName] = useState<string | null>(null);
+  const [operatorAvatarUrl, setOperatorAvatarUrl] = useState<string | null>(null);
+  const [operatorGender, setOperatorGender] = useState<ChatLiveState["operatorGender"]>(null);
+  const [operatorUserId, setOperatorUserId] = useState<string | null>(null);
   const [operatorActive, setOperatorActive] = useState(false);
   const [closed, setClosed] = useState(false);
   const [newMessages, setNewMessages] = useState<InboundMessage[]>([]);
@@ -90,6 +96,9 @@ export function useChatLiveSync({ visible, onInbound }: Options): ChatLiveState 
         exists: boolean;
         status: ChatLiveState["status"];
         operator_name: string | null;
+        operator_avatar_url: string | null;
+        operator_gender: string | null;
+        operator_user_id: string | null;
         operator_active: boolean;
         closed: boolean;
         hydration?: boolean;
@@ -100,6 +109,9 @@ export function useChatLiveSync({ visible, onInbound }: Options): ChatLiveState 
 
       setStatus(payload.status);
       setOperatorName(payload.operator_name);
+      setOperatorAvatarUrl(payload.operator_avatar_url);
+      setOperatorGender((payload.operator_gender as ChatLiveState["operatorGender"]) ?? null);
+      setOperatorUserId(payload.operator_user_id);
       setOperatorActive(payload.operator_active);
       setClosed(payload.closed);
 
@@ -147,6 +159,9 @@ export function useChatLiveSync({ visible, onInbound }: Options): ChatLiveState 
     hydrated,
     status,
     operatorName,
+    operatorAvatarUrl,
+    operatorGender,
+    operatorUserId,
     operatorActive,
     closed,
     unseenCount,

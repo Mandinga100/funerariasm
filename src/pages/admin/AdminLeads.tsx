@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock } from "lucide-react";
+import { Phone, Clock, Eye, LayoutGrid, List, Sparkles, ChevronDown, ChevronUp, Inbox, Flame, CheckCircle2, AlarmClock, Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import { differenceInHours, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -462,6 +462,23 @@ export default function AdminLeads() {
               <span className="sm:hidden">IA</span>
             </Button>
           </AIActionTooltip>
+          {(isAdmin || isCeo) && !showArchived && (
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleAutoArchive} disabled={archiving} title="Archiva leads en 'Nuevo' sin atender según urgencia (urgente >48h, normal >7d, previsión >30d).">
+              <Archive className="w-3.5 h-3.5 mr-1" />
+              <span className="hidden sm:inline">{archiving ? "Archivando..." : "Archivar vencidos"}</span>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant={showArchived ? "default" : "ghost"}
+            className="h-8 text-xs"
+            onClick={() => setShowArchived(!showArchived)}
+            title="Alternar entre bandeja activa y archivados"
+          >
+            {showArchived ? <ArchiveRestore className="w-3.5 h-3.5 mr-1" /> : <Archive className="w-3.5 h-3.5 mr-1" />}
+            <span className="hidden sm:inline">{showArchived ? `Activos` : `Archivados`}</span>
+            {archivedCount > 0 && <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">{archivedCount}</Badge>}
+          </Button>
           {filterOverdue && (
             <Badge variant="destructive" className="h-7 text-xs cursor-pointer" onClick={() => setFilterOverdue(false)}>
               ⚠️ Vencidos ✕

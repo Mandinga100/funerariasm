@@ -12,6 +12,8 @@ import OfferingButtons from "@/components/memorial/OfferingButtons";
 import CrownDonationModal from "@/components/memorial/CrownDonationModal";
 import TributesModal from "@/components/memorial/TributesModal";
 import { useSimulatedCrown } from "@/hooks/use-simulated-crown";
+import { useSimulatedCondolences } from "@/hooks/use-simulated-condolences";
+import { isTemplateMemorial } from "@/lib/template-memorials";
 import {
   checkBotShield,
   createShieldTimer,
@@ -89,8 +91,19 @@ const MemorialDetail = () => {
   // and guarantees a single visible tier across rapid clicks.
   const { simulate: simulateCrown, mergeWithPaid } = useSimulatedCrown(memorial?.id ?? null);
 
+  // Session-only condolences for the 4 template memorials. Never persisted.
+  const isTemplate = isTemplateMemorial(memorial?.id);
+  const { simulated: simulatedCondolences, add: addSimulatedCondolence } =
+    useSimulatedCondolences(isTemplate ? memorial?.id ?? null : null);
+
   // Final list shown in UI: simulated crown (if any) replaces all other crowns.
   const offerings = useMemo(() => mergeWithPaid(baseOfferings), [baseOfferings, mergeWithPaid]);
+
+  // Final condolences = persisted + session-only (templates only).
+  const visibleCondolences = useMemo(
+    () => (isTemplate ? [...simulatedCondolences, ...condolences] : condolences),
+    [isTemplate, simulatedCondolences, condolences],
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -187,6 +200,20 @@ const MemorialDetail = () => {
     }
 
     setSending(true);
+
+    // Templates: solo sesión, no toca la base de datos.
+    if (isTemplate) {
+      addSimulatedCondolence({ authorName: authorName.trim(), message: message.trim() });
+      setSending(false);
+      registerShieldHit(`condolence_${memorial.id}`);
+      toast.success("Condolencia mostrada (solo vista previa)");
+      setAuthorName("");
+      setMessage("");
+      setCondolenceHoneypot("");
+      condolenceStartedAtRef.current = createShieldTimer();
+      return;
+    }
+
     const { error } = await supabase.from("condolences").insert({
       memorial_id: memorial.id,
       author_name: authorName.trim(),
@@ -414,7 +441,7 @@ const MemorialDetail = () => {
             <div className="flex items-center gap-3 mb-6">
               <MessageCircle className="w-5 h-5 text-gold/40" />
               <h2 className="font-playfair text-xl text-primary-foreground">
-                Condolencias ({condolences.length})
+                Condolencias ({visibleCondolences.length})
               </h2>
             </div>
 
@@ -456,13 +483,13 @@ const MemorialDetail = () => {
               </div>
             </form>
 
-            {condolences.length === 0 ? (
+            {visibleCondolences.length === 0 ? (
               <p className="text-primary-foreground/30 text-sm text-center py-8">
                 Sea el primero en dejar un mensaje de condolencia.
               </p>
             ) : (
               <div className="space-y-4">
-                {condolences.map((c) => (
+                {visibleCondolences.map((c) => (
                   <div key={c.id} className="bg-primary-foreground/[0.02] border border-primary-foreground/10 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm text-primary-foreground/80">{c.author_name}</span>

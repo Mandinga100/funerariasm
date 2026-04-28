@@ -478,6 +478,54 @@ export default function AdminSettings() {
     setSelectedAdmin(null);
   };
 
+  /* ── Delete full account (auth + roles + profile) — solo CEO ── */
+  const handleDeleteFullAccount = async () => {
+    if (!selectedAdmin) return;
+    if (!isCeo) {
+      toast({ title: "Acceso denegado", description: "Solo el CEO puede eliminar cuentas completas.", variant: "destructive" });
+      return;
+    }
+    if (selectedAdmin.user_id === user?.id) {
+      toast({ title: "Error", description: "No puede eliminar su propia cuenta.", variant: "destructive" });
+      return;
+    }
+    if (isFounder(selectedAdmin.user_id)) {
+      toast({
+        title: "CEO fundador inamovible",
+        description: "La cuenta del CEO fundador está protegida permanentemente.",
+        variant: "destructive",
+      });
+      setDeleteDialog(false);
+      setSelectedAdmin(null);
+      return;
+    }
+    setSaving(true);
+    const { data, error } = await supabase.functions.invoke("delete-team-member", {
+      body: { user_id: selectedAdmin.user_id },
+    });
+    setSaving(false);
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "No se pudo eliminar la cuenta.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Cuenta eliminada",
+      description: `${selectedAdmin.display_name ?? "El miembro"} fue removido por completo del sistema.`,
+    });
+    logAudit({
+      action: "delete_account",
+      module: "equipo",
+      description: `Eliminó cuenta completa de ${selectedAdmin.display_name ?? selectedAdmin.user_id.slice(0, 12)}`,
+      entity_type: "user_account",
+      entity_id: selectedAdmin.user_id,
+      old_data: { role: selectedAdmin.role, user_id: selectedAdmin.user_id },
+    });
+    loadAdmins();
+    setDeleteDialog(false);
+    setSelectedAdmin(null);
+  };
+
   /* ── Change password ── */
   const handleChangePassword = async () => {
     if (newPass.length < 8) {

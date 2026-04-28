@@ -20,9 +20,13 @@ export interface ConversationRow {
   unread_admin: number;
   sla_due_at: string | null;
   last_message_at: string;
+  closed_at: string | null;
   lead_id: string | null;
   service_case_id: string | null;
 }
+
+const CLOSED_RETENTION_DAYS = 7;
+const CLOSED_RETENTION_MS = CLOSED_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 type Filter = "todas" | "sin_asignar" | "mias" | "urgentes" | "cerradas";
 

@@ -88,6 +88,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
       payment_status: paymentStatus,
       total_amount: parseInt(totalAmount) || 0,
       service_type: serviceType,
+      selected_plan: serviceOption || null,
       ceremony_location: ceremonyLocation || null,
       notes: notes || null,
       internal_notes: internalNotes || null,

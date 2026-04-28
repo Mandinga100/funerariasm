@@ -2021,6 +2021,7 @@ export type Database = {
         Args: { _case_id: string; _event_priority?: string }
         Returns: boolean
       }
+      cleanup_old_closed_chats: { Args: never; Returns: number }
       detect_agenda_conflicts: {
         Args: {
           _end: string

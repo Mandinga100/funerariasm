@@ -94,6 +94,28 @@ export default function AdminFamilyAccess() {
 
   const memorialMap = Object.fromEntries(memorials.map((m) => [m.id, m]));
 
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredAccesses = normalizedSearch
+    ? accesses.filter((acc) => {
+        const mem = memorialMap[acc.memorial_id];
+        const haystack = [
+          acc.family_name,
+          acc.family_email,
+          acc.notes ?? "",
+          mem?.full_name ?? "",
+          mem?.slug ?? "",
+        ].join(" ").toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : accesses;
+
+  const totalPages = Math.max(1, Math.ceil(filteredAccesses.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedAccesses = filteredAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [search]);
+
+
   const handleCreate = async () => {
     if (!memorialId || !familyEmail || !familyName) {
       toast({ title: "Completa todos los campos requeridos", variant: "destructive" });

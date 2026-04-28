@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  define: {
+    __BUILD_TIMESTAMP__: JSON.stringify(Date.now()),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

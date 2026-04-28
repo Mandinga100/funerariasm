@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, BarChart3, Brain, Calendar, MessageCircle } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, BarChart3, Brain, Calendar, MessageCircle, IdCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,7 @@ const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/leads", label: "Leads Entrantes", icon: MessageSquare, end: false, badgeKey: "leads" },
   { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
+  { to: "/admin/clientes-360", label: "Clientes 360", icon: IdCard, end: false },
   { to: "/admin/agenda", label: "Agenda", icon: Calendar, end: false },
   { to: "/admin/chat", label: "Bandeja Chat", icon: MessageCircle, end: false, badgeKey: "chat" },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },

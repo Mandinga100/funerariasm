@@ -52,6 +52,7 @@ const AdminAnalyticsGenerales = lazy(() => import("./pages/admin/AdminAnalyticsG
 const AdminAjustesIA = lazy(() => import("./pages/admin/AdminAjustesIA.tsx"));
 const AdminAgenda = lazy(() => import("./pages/admin/AdminAgenda.tsx"));
 const AdminChat = lazy(() => import("./pages/admin/AdminChat.tsx"));
+const AdminClientes360 = lazy(() => import("./pages/admin/AdminClientes360.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,7 @@ const App = () => (
               <Route path="ajustes/ia" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminAjustesIA /></CeoOnlyRoute></Suspense>} />
               <Route path="agenda" element={<Suspense fallback={<AdminFallback />}><AdminAgenda /></Suspense>} />
               <Route path="chat" element={<Suspense fallback={<AdminFallback />}><AdminChat /></Suspense>} />
+              <Route path="clientes-360" element={<Suspense fallback={<AdminFallback />}><AdminClientes360 /></Suspense>} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

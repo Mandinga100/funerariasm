@@ -181,6 +181,34 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
     }
   }, [inboundBatch, live.operatorActive, live.status, mode]);
 
+  /**
+   * Detección de "liberación" de la conversación: si el operador estaba
+   * activo y luego deja de atender (status pasa a `pendiente_humano`,
+   * `bot` o `cerrado`), restauramos las opciones principales en badges
+   * para que el visitante pueda continuar autoservicio sin esperar.
+   */
+  const wasOperatorActiveRef = useRef(false);
+  useEffect(() => {
+    const wasActive = wasOperatorActiveRef.current;
+    wasOperatorActiveRef.current = live.operatorActive;
+    if (!wasActive) return;
+    if (live.operatorActive) return;
+    // Operador acaba de liberar / cerrar: volver al menú con opciones.
+    setMode("tree");
+    setShowMainOptions(true);
+    setContactStep("idle");
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content:
+          live.status === "cerrado"
+            ? "El asesor finalizó esta conversación. Puede iniciar una nueva consulta cuando lo desee."
+            : "El asesor liberó la conversación. Puede continuar conmigo o elegir una nueva opción:",
+      },
+    ]);
+  }, [live.operatorActive, live.status]);
+
 
   // Nota: NO bloqueamos el scroll del body. El chat es flotante y debe convivir
   // con la página; bloquear el scroll rompe el click-outside y la sensación de

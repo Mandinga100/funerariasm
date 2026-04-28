@@ -205,25 +205,31 @@ export default function LiveIndicatorsCard() {
               </button>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-              {indicators.map((it) => (
-                <div
-                  key={it.key}
-                  className={cn(
-                    "rounded-lg border border-border/60 p-2.5 sm:p-3 transition-shadow hover:shadow-sm",
-                    it.bg
-                  )}
-                >
-                  <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {it.label}
-                  </p>
-                  <p className={cn("text-base sm:text-lg font-bold tabular-nums leading-tight mt-0.5", it.tone)}>
-                    {it.value}
-                  </p>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">
-                    {it.sub}
-                  </p>
-                </div>
-              ))}
+              {indicators.map((it) => {
+                const Icon = it.icon;
+                return (
+                  <div
+                    key={it.key}
+                    className={cn(
+                      "rounded-lg border border-border/60 p-2.5 sm:p-3 transition-shadow hover:shadow-sm",
+                      it.bg
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Icon className={cn("w-3.5 h-3.5", it.tone)} />
+                      <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {it.label}
+                      </p>
+                    </div>
+                    <p className={cn("text-base sm:text-lg font-bold tabular-nums leading-tight mt-1", it.tone)}>
+                      {it.value}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">
+                      {it.sub}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -110,9 +110,26 @@ export default function AdminFamilyAccess() {
       })
     : accesses;
 
-  const totalPages = Math.max(1, Math.ceil(filteredAccesses.length / PAGE_SIZE));
+  const sortedAccesses = [...filteredAccesses].sort((a, b) => {
+    switch (sortBy) {
+      case "created_asc":
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "last_used_desc": {
+        const aT = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
+        const bT = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
+        return bT - aT;
+      }
+      case "name_asc":
+        return a.family_name.localeCompare(b.family_name, "es");
+      case "created_desc":
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sortedAccesses.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const paginatedAccesses = filteredAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedAccesses = sortedAccesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   useEffect(() => { setPage(1); }, [search]);
   useEffect(() => {

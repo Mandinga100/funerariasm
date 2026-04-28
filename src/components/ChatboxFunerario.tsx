@@ -693,18 +693,43 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
         }}
       >
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-3 sm:p-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/40 shrink-0">
-              <img src={assistantAvatar} alt="Asistente virtual" className="w-full h-full object-cover" loading="lazy" width={40} height={40} />
+        <div className="bg-primary text-primary-foreground p-3 sm:p-4 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/40 shrink-0 bg-background">
+              {live.operatorActive ? (
+                <img
+                  src={
+                    live.operatorAvatarUrl ||
+                    getOperatorAvatarUrl({
+                      userId: live.operatorUserId,
+                      gender: live.operatorGender,
+                      displayName: live.operatorName,
+                    })
+                  }
+                  alt={live.operatorName ?? "Asesor"}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                <img
+                  src={assistantAvatar}
+                  alt="Asistente virtual"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={40}
+                  height={40}
+                />
+              )}
             </div>
-            <div>
-              <p className="font-playfair text-sm font-semibold leading-tight">
+            <div className="min-w-0">
+              <p className="font-playfair text-sm font-semibold leading-tight truncate">
                 {live.operatorActive && live.operatorName ? live.operatorName : "Santa Margarita"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`w-2 h-2 rounded-full animate-pulse ${live.operatorActive ? "bg-emerald-300" : "bg-green-400"}`} />
-                <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase">
+                <p className="text-[10px] text-primary-foreground/70 tracking-wider uppercase truncate">
                   {live.operatorActive
                     ? "Asesor en línea"
                     : live.status === "pendiente_humano"
@@ -714,23 +739,46 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
               </div>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="group relative p-1.5 rounded-full text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors duration-300"
-            aria-label="Cerrar chat"
-          >
-            <span
-              className={`absolute inset-0 rounded-full border border-primary-foreground/20 transition-all duration-500 ${
-                isClosing ? "scale-125 opacity-0" : "scale-100 opacity-100"
+          {/* Acciones header: mute + cerrar. Mute queda separado de la X
+              con un divider sutil para no confundir y conserva su zona de tap. */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setChatboxMuted(next);
+              }}
+              aria-label={muted ? "Activar sonido de la conversación" : "Silenciar conversación"}
+              aria-pressed={muted}
+              title={muted ? "Activar sonido" : "Silenciar"}
+              className={`p-1.5 rounded-full transition-colors duration-200 ${
+                muted
+                  ? "bg-primary-foreground/15 text-primary-foreground"
+                  : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10"
               }`}
-              aria-hidden="true"
-            />
-            <X
-              className={`relative w-5 h-5 transition-transform duration-500 ease-in-out group-hover:rotate-90 group-hover:scale-110 ${
-                isClosing ? "rotate-[180deg] scale-90" : "rotate-0 scale-100"
-              }`}
-            />
-          </button>
+            >
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <span className="w-px h-4 bg-primary-foreground/15 mx-0.5" aria-hidden="true" />
+            <button
+              onClick={handleClose}
+              className="group relative p-1.5 rounded-full text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors duration-300"
+              aria-label="Cerrar chat"
+            >
+              <span
+                className={`absolute inset-0 rounded-full border border-primary-foreground/20 transition-all duration-500 ${
+                  isClosing ? "scale-125 opacity-0" : "scale-100 opacity-100"
+                }`}
+                aria-hidden="true"
+              />
+              <X
+                className={`relative w-5 h-5 transition-transform duration-500 ease-in-out group-hover:rotate-90 group-hover:scale-110 ${
+                  isClosing ? "rotate-[180deg] scale-90" : "rotate-0 scale-100"
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}

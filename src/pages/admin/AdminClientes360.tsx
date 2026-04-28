@@ -114,6 +114,7 @@ export default function AdminClientes360() {
     })();
   }, [openPersonId]);
 
+  const loadPersons = async () => {
     setLoadingPersons(true);
     const { data, error } = await supabase
       .from("persons" as any)

@@ -102,6 +102,7 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
   const [contactStep, setContactStep] = useState<ContactStep>("idle");
   const [contactData, setContactData] = useState<ContactFormData>({ name: "", phone: "", email: "" });
   const [isListening, setIsListening] = useState(false);
+  const [muted, setMuted] = useState<boolean>(() => isChatboxMuted());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -169,6 +170,10 @@ const ChatboxFunerario = ({ isOpen, onMinimize, onHardClose, live, inboundBatch 
       }));
       return [...prev, ...additions];
     });
+    // Notificación sonora + vibración al visitante (respeta el mute persistido).
+    // Aplica solo a mensajes humanos (admin) o de sistema; ignoramos bot.
+    const hasHumanReply = fresh.some((m) => m.sender_type === "admin" || m.sender_type === "system");
+    if (hasHumanReply) notifyChatboxInbound();
     if (live.operatorActive && mode === "tree") {
       // El operador está activo: salimos del menú-árbol y mostramos el input.
       setMode("ai");

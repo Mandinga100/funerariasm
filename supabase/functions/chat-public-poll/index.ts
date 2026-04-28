@@ -47,13 +47,32 @@ Deno.serve(async (req) => {
     }
 
     let operatorName: string | null = null;
+    let operatorAvatarPath: string | null = null;
+    let operatorGender: string | null = null;
+    let operatorAvatarSigned: string | null = null;
     if (convo.assigned_to) {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, avatar_url, gender")
         .eq("user_id", convo.assigned_to)
         .maybeSingle();
       operatorName = prof?.display_name?.toString().trim() || "Asesor";
+      operatorAvatarPath = (prof?.avatar_url as string | null) || null;
+      operatorGender = (prof?.gender as string | null) || null;
+      // Firmar la URL del avatar (bucket privado) si existe.
+      if (operatorAvatarPath) {
+        const marker = "/avatars/";
+        const idx = operatorAvatarPath.indexOf(marker);
+        const path = idx !== -1
+          ? operatorAvatarPath.substring(idx + marker.length).split("?")[0]
+          : operatorAvatarPath;
+        try {
+          const { data: signed } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(path, 3600);
+          if (signed?.signedUrl) operatorAvatarSigned = signed.signedUrl;
+        } catch { /* noop */ }
+      }
     }
 
     // Hidratación inicial (sin `since`): devolvemos TODO el historial visible
@@ -104,6 +123,9 @@ Deno.serve(async (req) => {
         status: convo.status,
         priority: convo.priority,
         operator_name: operatorName,
+        operator_avatar_url: operatorAvatarSigned,
+        operator_gender: operatorGender,
+        operator_user_id: convo.assigned_to ?? null,
         operator_active: !!convo.assigned_to && convo.status === "humano_activo",
         closed: convo.status === "cerrado" || !!convo.closed_at,
         hydration: isHydration,

@@ -56,7 +56,7 @@ const ROLE_META: Record<AppRole, { label: string; color: string; desc: string; i
 
 
 export default function AdminSettings() {
-  const { user, isCeo } = useAuth();
+  const { user, isCeo, isAdmin } = useAuth();
   const { toast } = useToast();
 
   /* ── Admins State ── */

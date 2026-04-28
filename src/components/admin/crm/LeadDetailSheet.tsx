@@ -149,6 +149,18 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     }
   };
 
+  const persistService = async (sType: string, sOption: string) => {
+    if (!lead) return;
+    const meta = { ...(lead.metadata ?? {}), service_type: sType || null, service_option: sOption || null };
+    const updates: any = { metadata: meta };
+    if (sOption) updates.selected_plan = sOption;
+    const { error } = await supabase.from("contact_leads").update(updates).eq("id", lead.id);
+    if (!error) {
+      // refrescar lead en el padre para mantener consistencia
+      onUpdate();
+    }
+  };
+
   const classifyWithAI = async () => {
     if (!lead) return;
     setClassifying(true);

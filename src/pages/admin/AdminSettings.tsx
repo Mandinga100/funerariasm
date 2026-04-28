@@ -271,7 +271,7 @@ export default function AdminSettings() {
     resetAddForm();
   };
 
-  /* ── Invite via email (magic link, no password) ── */
+  /* ── Invite via email (registra invitación pendiente; el usuario crea su contraseña al registrarse) ── */
   const handleInviteByEmail = async () => {
     if (!inviteEmail.trim()) return;
     if (!isCeo && (newRole === "ceo" || newRole === "admin")) {
@@ -296,33 +296,21 @@ export default function AdminSettings() {
       return;
     }
 
-    const magicLink = (data as any)?.magic_link as string | null;
-    if (magicLink) {
-      try {
-        await navigator.clipboard.writeText(magicLink);
-        toast({
-          title: "Invitación creada",
-          description: `Link mágico copiado al portapapeles. Compártelo con ${inviteEmail} (válido por tiempo limitado).`,
-        });
-      } catch {
-        toast({
-          title: "Invitación creada",
-          description: `Link mágico generado. Cópialo manualmente desde la consola.`,
-        });
-        console.info("Magic link:", magicLink);
-      }
-    } else {
-      toast({
-        title: "Usuario invitado",
-        description: `Se asignó el rol a ${inviteEmail}. Pídele que revise su correo para acceder.`,
-      });
-    }
+    const alreadyExisted = (data as any)?.already_existed === true;
+    toast({
+      title: alreadyExisted ? "Rol asignado" : "Invitación registrada",
+      description: alreadyExisted
+        ? `${inviteEmail} ya tenía cuenta. Se le asignó el rol ${ROLE_META[newRole].label}.`
+        : `Avisa a ${inviteEmail} que ingrese al login del CRM (/login) y cree su cuenta con ese correo. Al registrarse recibirá automáticamente el rol ${ROLE_META[newRole].label}.`,
+    });
+
     logAudit({ action: "invite_member", module: "equipo", description: `Invitó a ${inviteEmail} como ${ROLE_META[newRole].label}`, entity_type: "user_role", new_data: { email: inviteEmail, role: newRole } });
     loadAdmins();
     setSaving(false);
     setAddDialog(false);
     resetAddForm();
   };
+
 
   /* ── Create manual user (with password, via edge function) ── */
   const handleCreateManual = async () => {

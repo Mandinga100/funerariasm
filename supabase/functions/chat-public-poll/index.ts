@@ -56,16 +56,26 @@ Deno.serve(async (req) => {
       operatorName = prof?.display_name?.toString().trim() || "Asesor";
     }
 
+    // Hidratación inicial (sin `since`): devolvemos TODO el historial visible
+    // al visitante (incluyendo sus propios mensajes) para que al reabrir el
+    // chat tras un cierre/recarga vea la conversación completa, no solo el
+    // greeting + último lote.
+    // Polling incremental (`since`): solo mensajes inbound nuevos (admin/system/
+    // bot), porque los del visitante ya están reflejados en la UI.
+    const isHydration = !body.since;
     let query = supabase
       .from("chat_messages")
       .select("id, sender_type, content, created_at, is_internal_note")
       .eq("conversation_id", convo.id)
       .eq("is_internal_note", false)
-      .in("sender_type", ["admin", "system", "bot"]) // only inbound to visitor
       .order("created_at", { ascending: true })
-      .limit(50);
+      .limit(isHydration ? 200 : 50);
 
-    if (body.since) query = query.gt("created_at", body.since);
+    if (isHydration) {
+      query = query.in("sender_type", ["visitor", "admin", "system", "bot"]);
+    } else {
+      query = query.in("sender_type", ["admin", "system", "bot"]).gt("created_at", body.since!);
+    }
 
     const { data: messages } = await query;
 

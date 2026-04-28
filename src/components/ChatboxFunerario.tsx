@@ -5,6 +5,7 @@ import { submitContact } from "@/lib/contacts";
 import { validateFullName, validateChileanPhone, validateEmail } from "@/lib/lead-validation";
 import { getOrCreateChatToken } from "@/lib/chat-token";
 import { supabase } from "@/integrations/supabase/client";
+import { useChatLiveSync, type InboundMessage } from "@/hooks/use-chat-live-sync";
 import assistantAvatar from "@/assets/assistant-avatar.png";
 
 interface ChatMessage {

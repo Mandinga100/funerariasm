@@ -48,8 +48,7 @@ const AdminLeads = lazy(() => import("./pages/admin/AdminLeads.tsx"));
 const AdminCasos = lazy(() => import("./pages/admin/AdminCasos.tsx"));
 const AdminPagos = lazy(() => import("./pages/admin/AdminPagos.tsx"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.tsx"));
-const AdminAnalyticsComunas = lazy(() => import("./pages/admin/AdminAnalyticsComunas.tsx"));
-const AdminRevenueComunas = lazy(() => import("./pages/admin/AdminRevenueComunas.tsx"));
+const AdminAnalyticsGenerales = lazy(() => import("./pages/admin/AdminAnalyticsGenerales.tsx"));
 const AdminAjustesIA = lazy(() => import("./pages/admin/AdminAjustesIA.tsx"));
 const AdminAgenda = lazy(() => import("./pages/admin/AdminAgenda.tsx"));
 const AdminChat = lazy(() => import("./pages/admin/AdminChat.tsx"));
@@ -124,8 +123,9 @@ const App = () => (
               <Route path="casos" element={<Suspense fallback={<AdminFallback />}><AdminCasos /></Suspense>} />
               <Route path="pagos" element={<Suspense fallback={<AdminFallback />}><AdminPagos /></Suspense>} />
               <Route path="configuracion" element={<Suspense fallback={<AdminFallback />}><AdminSettings /></Suspense>} />
-              <Route path="analytics-comunas" element={<Suspense fallback={<AdminFallback />}><AdminAnalyticsComunas /></Suspense>} />
-              <Route path="roi-comunas" element={<Suspense fallback={<AdminFallback />}><AdminRevenueComunas /></Suspense>} />
+              <Route path="analiticas" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminAnalyticsGenerales /></CeoOnlyRoute></Suspense>} />
+              <Route path="analytics-comunas" element={<Navigate to="/admin/analiticas?tab=trafico" replace />} />
+              <Route path="roi-comunas" element={<Navigate to="/admin/analiticas?tab=roi" replace />} />
               <Route path="ajustes/ia" element={<Suspense fallback={<AdminFallback />}><CeoOnlyRoute><AdminAjustesIA /></CeoOnlyRoute></Suspense>} />
               <Route path="agenda" element={<Suspense fallback={<AdminFallback />}><AdminAgenda /></Suspense>} />
               <Route path="chat" element={<Suspense fallback={<AdminFallback />}><AdminChat /></Suspense>} />

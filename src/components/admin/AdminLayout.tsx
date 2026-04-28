@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, MapPin, Trophy, Brain, Calendar, MessageCircle } from "lucide-react";
+import { LayoutDashboard, BookOpen, Heart, Users, LogOut, FileText, MessageSquare, CreditCard, Menu, Settings, Briefcase, Mail, BarChart3, Brain, Calendar, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,18 +36,17 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/leads", label: "Leads", icon: MessageSquare, end: false, badgeKey: "leads" },
-  { to: "/admin/chat", label: "Bandeja Chat", icon: MessageCircle, end: false, badgeKey: "chat" },
+  { to: "/admin/leads", label: "Leads Entrantes", icon: MessageSquare, end: false, badgeKey: "leads" },
   { to: "/admin/casos", label: "Casos y Servicios", icon: Briefcase, end: false },
   { to: "/admin/agenda", label: "Agenda", icon: Calendar, end: false },
-  { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false, ceoOnly: true },
-  { to: "/admin/memoriales", label: "Legados", icon: Heart, end: false, ceoOnly: true },
-  { to: "/admin/blog", label: "Blog", icon: FileText, end: false, ceoOnly: true },
-  { to: "/admin/suscriptores", label: "Suscriptores", icon: Mail, end: false, ceoOnly: true },
+  { to: "/admin/chat", label: "Bandeja Chat", icon: MessageCircle, end: false, badgeKey: "chat" },
   { to: "/admin/tracking", label: "Tracking", icon: Users, end: false },
-  { to: "/admin/analytics-comunas", label: "Analítica Comunas", icon: MapPin, end: false, ceoOnly: true },
-  { to: "/admin/roi-comunas", label: "ROI por Comuna", icon: Trophy, end: false, ceoOnly: true },
+  { to: "/admin/obituarios", label: "Obituarios", icon: BookOpen, end: false, ceoOnly: true },
+  { to: "/admin/memoriales", label: "Legados Eternos", icon: Heart, end: false, ceoOnly: true },
+  { to: "/admin/blog", label: "Blogs", icon: FileText, end: false, ceoOnly: true },
+  { to: "/admin/suscriptores", label: "Suscriptores", icon: Mail, end: false, ceoOnly: true },
   { to: "/admin/pagos", label: "Pagos", icon: CreditCard, end: false, badgeKey: "pagos" },
+  { to: "/admin/analiticas", label: "Analíticas Generales", icon: BarChart3, end: false, ceoOnly: true },
   { to: "/admin/ajustes/ia", label: "Ajustes IA", icon: Brain, end: false, ceoOnly: true },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings, end: false },
 ];

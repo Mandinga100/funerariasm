@@ -196,10 +196,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           motion-reduce:md:group-hover:translate-y-0
         "
       >
-        {/* Degradado superior — alto y suave */}
+        {/* Línea divisoria superior — corte limpio sin blur por encima del precio */}
         <div
           aria-hidden="true"
-          className="h-32 bg-gradient-to-t from-black/70 via-black/40 to-transparent backdrop-blur-[2px]"
+          className="h-px w-full bg-gradient-to-r from-transparent via-[#e9c176]/40 to-transparent"
         />
         {/* Cuerpo translúcido — blur para fundirse en imágenes claras u oscuras */}
         <div className="bg-gradient-to-b from-black/55 via-black/65 to-black/55 px-5 pb-6 pt-3 text-center backdrop-blur-[8px]">

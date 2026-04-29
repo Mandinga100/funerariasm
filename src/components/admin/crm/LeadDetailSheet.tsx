@@ -224,6 +224,8 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
           : undefined,
       });
       await syncLead();
+      loadActivities();
+      loadClassificationHistory();
     } catch {
       toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }

@@ -131,8 +131,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
             [text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
             transition-[color,text-shadow] duration-700 ease-out
+            motion-reduce:transition-none
             md:group-hover:text-[#f6ecd0]
             md:group-hover:[text-shadow:0_0_22px_rgba(233,193,118,0.55),0_0_44px_rgba(233,193,118,0.25),0_2px_18px_rgba(0,0,0,0.65)]
+            motion-reduce:md:group-hover:[text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
           "
         >
           {plan.name}

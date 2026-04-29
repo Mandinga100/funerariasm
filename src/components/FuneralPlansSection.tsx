@@ -513,28 +513,72 @@ const MobilePlansCarousel = () => {
     window.setTimeout(() => setPaused(false), 300);
   };
 
+  // Navegación por teclado (←/→, Home, End)
+  const onKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    let next: number | null = null;
+    switch (e.key) {
+      case "ArrowLeft":
+        next = (active - 1 + PLANS.length) % PLANS.length;
+        break;
+      case "ArrowRight":
+        next = (active + 1) % PLANS.length;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = PLANS.length - 1;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    setPaused(true);
+    setActive(next);
+    scrollToIndex(next);
+    window.setTimeout(() => setPaused(false), 600);
+  };
+
+  const activePlan = PLANS[active];
+
   return (
-    <div className="md:hidden -mx-6">
+    <div
+      className="md:hidden -mx-6"
+      role="region"
+      aria-roledescription="carrusel"
+      aria-label="Planes funerarios"
+    >
       <ul
         ref={trackRef}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => window.setTimeout(() => setPaused(false), 300)}
+        aria-label="Use las flechas izquierda y derecha para navegar entre planes"
         className="
           flex overflow-x-auto snap-x snap-mandatory
           px-6 pb-2 cursor-grab active:cursor-grabbing select-none
           [scrollbar-width:none] [-ms-overflow-style:none]
           [&::-webkit-scrollbar]:hidden
-          touch-pan-x
+          touch-pan-x outline-none
+          focus-visible:ring-1 focus-visible:ring-[#e9c176]/60 focus-visible:rounded-sm
         "
         style={{ overscrollBehaviorX: "contain" }}
       >
         {PLANS.map((plan, index) => (
           <li
             key={plan.id}
+            role="group"
+            aria-roledescription="diapositiva"
+            aria-label={`Plan ${plan.name} — ${index + 1} de ${PLANS.length}`}
+            aria-current={index === active ? "true" : undefined}
+            aria-hidden={index === active ? undefined : "true"}
             className="shrink-0 snap-center basis-full w-full"
           >
             <FuneralPlanCard plan={plan} priority={index === 0} />
@@ -542,11 +586,16 @@ const MobilePlansCarousel = () => {
         ))}
       </ul>
 
+      {/* Anuncio para lectores de pantalla */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        Plan {activePlan.name}, {active + 1} de {PLANS.length}
+      </div>
+
       {/* Indicadores */}
       <div
         className="mt-5 flex items-center justify-center gap-2 px-6"
         role="tablist"
-        aria-label="Planes funerarios"
+        aria-label="Seleccionar plan funerario"
       >
         {PLANS.map((plan, i) => (
           <button
@@ -554,12 +603,13 @@ const MobilePlansCarousel = () => {
             type="button"
             role="tab"
             aria-selected={i === active}
-            aria-label={`Ir al Plan ${plan.name}`}
+            aria-label={`Plan ${plan.name}, ${i + 1} de ${PLANS.length}`}
+            tabIndex={i === active ? 0 : -1}
             onClick={() => {
               setActive(i);
               scrollToIndex(i);
             }}
-            className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
+            className={`h-1.5 rounded-full transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#e9c176] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
               i === active
                 ? "w-6 bg-[#e9c176]"
                 : "w-1.5 bg-[rgba(232,226,216,0.35)] hover:bg-[rgba(232,226,216,0.6)]"

@@ -95,12 +95,12 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         onError={() => setLoaded(true)}
         className={`
           absolute inset-0 h-full w-full object-cover
-          transition-[opacity,filter] duration-700 ease-out
+          transition-[opacity,filter,transform] duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           motion-reduce:transition-none
           ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
-          md:group-hover:opacity-100
+          md:group-hover:opacity-100 md:group-hover:scale-[1.03]
           md:group-hover:[filter:contrast(1.08)_saturate(1.12)_brightness(1.08)]
-          motion-reduce:md:group-hover:[filter:none]
+          motion-reduce:md:group-hover:[filter:none] motion-reduce:md:group-hover:scale-100
         `}
       />
 
@@ -123,22 +123,60 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         "
       />
 
-      {/* Nombre del plan — con aura dorada al hover */}
+      {/* Nombre del plan — con aura dorada y destellos al hover */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
-        <h3
-          className="
-            font-playfair text-[#e8e2d8] text-center
-            text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
-            [text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
-            transition-[color,text-shadow] duration-700 ease-out
-            motion-reduce:transition-none
-            md:group-hover:text-[#f6ecd0]
-            md:group-hover:[text-shadow:0_0_22px_rgba(233,193,118,0.55),0_0_44px_rgba(233,193,118,0.25),0_2px_18px_rgba(0,0,0,0.65)]
-            motion-reduce:md:group-hover:[text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
-          "
-        >
-          {plan.name}
-        </h3>
+        <div className="relative">
+          {/* Destellos dorados — visibles solo en hover, ocultos para reduce-motion */}
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none absolute inset-0 -m-10
+              opacity-0 transition-opacity duration-700 ease-out
+              md:group-hover:opacity-100
+              motion-reduce:hidden
+            "
+          >
+            {[
+              { top: "10%",  left: "8%",   sx: "-14px", sy: "-10px", delay: "0ms",   size: "5px" },
+              { top: "20%",  left: "92%",  sx: "16px",  sy: "-8px",  delay: "300ms", size: "4px" },
+              { top: "55%",  left: "0%",   sx: "-18px", sy: "6px",   delay: "600ms", size: "3px" },
+              { top: "70%",  left: "96%",  sx: "14px",  sy: "10px",  delay: "150ms", size: "4px" },
+              { top: "85%",  left: "30%",  sx: "-6px",  sy: "14px",  delay: "900ms", size: "3px" },
+              { top: "90%",  left: "70%",  sx: "8px",   sy: "16px",  delay: "450ms", size: "5px" },
+            ].map((p, i) => (
+              <span
+                key={i}
+                className="absolute rounded-full bg-[#f0cf92] animate-sparkle"
+                style={{
+                  top: p.top,
+                  left: p.left,
+                  width: p.size,
+                  height: p.size,
+                  // @ts-expect-error CSS custom props
+                  "--sx": p.sx,
+                  "--sy": p.sy,
+                  animationDelay: p.delay,
+                  boxShadow: "0 0 8px 1px rgba(240,207,146,0.85), 0 0 16px 2px rgba(233,193,118,0.45)",
+                }}
+              />
+            ))}
+          </div>
+
+          <h3
+            className="
+              font-playfair text-[#e8e2d8] text-center
+              text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
+              [text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
+              transition-[color,text-shadow] duration-700 ease-out
+              motion-reduce:transition-none
+              md:group-hover:text-[#f6ecd0]
+              md:group-hover:[text-shadow:0_0_22px_rgba(233,193,118,0.55),0_0_44px_rgba(233,193,118,0.25),0_2px_18px_rgba(0,0,0,0.65)]
+              motion-reduce:md:group-hover:[text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
+            "
+          >
+            {plan.name}
+          </h3>
+        </div>
       </div>
 
       {/*

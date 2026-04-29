@@ -4,6 +4,11 @@
  * Cards verticales editoriales con nombre del plan centrado verticalmente,
  * precio + CTA al pie y animaciones premium al hover.
  */
+import { useState } from "react";
+
+/** LQIP base64 (24x36 ~700B) del primer plan — evita salto visual durante el LCP */
+const MARGARITA_BLUR =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACIQAAICAgEDBQAAAAAAAAAAAAECAxEABDESIYEFE1Fxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIDERMxUf/aAAwDAQACEQMRAD8Ay8VEsWPbn8yxoumurGF2WWq6i1Dvk3WkSSVvlr4Fdqx8rq66t7tySGiVVaA85mslg6WLRvq009NlYyM85BKkm/vDIkm3asvQqrwFA4884YY1tdlOVeH/2Q==";
 
 type FuneralPlan = {
   id: string;
@@ -11,10 +16,11 @@ type FuneralPlan = {
   price: string;
   image: string;
   href: string;
+  blurDataURL?: string;
 };
 
 const PLANS: readonly FuneralPlan[] = [
-  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita" },
+  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita", blurDataURL: MARGARITA_BLUR },
   { id: "azucena",   name: "Azucena",   price: "$1.390.000", image: "/assets/images/planes/plan-azucena.jpg",   href: "/planes#azucena" },
   { id: "acacia",    name: "Acacia",    price: "$1.990.000", image: "/assets/images/planes/plan-acacia.jpg",    href: "/planes#acacia" },
   { id: "orquidea",  name: "Orquídea",  price: "$1.990.000", image: "/assets/images/planes/plan-orquidea.jpg",  href: "/planes#orquidea" },
@@ -29,10 +35,22 @@ interface FuneralPlanCardProps {
 }
 
 const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
+  const [loaded, setLoaded] = useState(false);
+  const hasBlur = Boolean(plan.blurDataURL);
+
   return (
     <a
       href={plan.href}
       aria-label={`Ver detalle del Plan ${plan.name}`}
+      style={
+        hasBlur
+          ? {
+              backgroundImage: `url(${plan.blurDataURL})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
       className="
         group relative block overflow-hidden rounded-sm isolate
         bg-black border border-[rgba(142,145,146,0.18)]
@@ -43,6 +61,19 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         md:hover:border-[#e9c176]/50
       "
     >
+      {/* Capa blur con saturación reducida — visible solo hasta que la imagen real cargue */}
+      {hasBlur && !loaded && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 scale-110 blur-xl opacity-90"
+          style={{
+            backgroundImage: `url(${plan.blurDataURL})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+      )}
+
       {/* Imagen — LCP candidate en la primera card (priority) */}
       <img
         src={plan.image}
@@ -53,12 +84,13 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         fetchpriority={priority ? "high" : "auto"}
         width={480}
         height={720}
-        className="
+        onLoad={() => setLoaded(true)}
+        className={`
           absolute inset-0 h-full w-full object-cover
-          opacity-80
           transition-opacity duration-700 ease-out
+          ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
           md:group-hover:opacity-100
-        "
+        `}
       />
 
       {/* Velo base oscuro para profundidad (sin transición costosa) */}

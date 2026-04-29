@@ -25,9 +25,10 @@ const PLANS: readonly FuneralPlan[] = [
 
 interface FuneralPlanCardProps {
   plan: FuneralPlan;
+  priority?: boolean;
 }
 
-const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
+const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
   return (
     <a
       href={plan.href}
@@ -42,12 +43,14 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         md:hover:border-[#e9c176]/50
       "
     >
-      {/* Imagen — sutil iluminación al hover (solo opacity, sin filter) */}
+      {/* Imagen — LCP candidate en la primera card (priority) */}
       <img
         src={plan.image}
         alt={`Imagen del Plan ${plan.name}`}
-        loading="lazy"
-        decoding="async"
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        // @ts-expect-error fetchpriority es atributo HTML válido (Chrome/Edge/Safari 17+)
+        fetchpriority={priority ? "high" : "auto"}
         width={480}
         height={720}
         className="
@@ -193,7 +196,7 @@ const FuneralPlansSection = () => {
             xl:grid-cols-7 xl:gap-2
           "
         >
-          {PLANS.map((plan) => (
+          {PLANS.map((plan, index) => (
             <li
               key={plan.id}
               className="
@@ -201,7 +204,7 @@ const FuneralPlansSection = () => {
                 md:basis-auto md:shrink md:snap-align-none
               "
             >
-              <FuneralPlanCard plan={plan} />
+              <FuneralPlanCard plan={plan} priority={index === 0} />
             </li>
           ))}
         </ul>

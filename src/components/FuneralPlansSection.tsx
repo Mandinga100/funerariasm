@@ -97,9 +97,7 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
 
       {/*
         CORTINA — Precio + CTA
-        En reposo: anclada al fondo (translate-y-0).
-        En hover: sube hasta justo debajo del nombre del plan, sin tapar imagen ni título.
-        Tope superior con degradado negro→transparente para fundirse de forma elegante.
+        Sube hasta justo bajo el nombre del plan, con difuminado superior e inferior.
       */}
       <div
         className="
@@ -107,16 +105,16 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
           translate-y-0
           transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           will-change-transform
-          md:group-hover:-translate-y-[42%]
+          md:group-hover:-translate-y-[58%]
         "
       >
-        {/* Degradado superior de la cortina */}
+        {/* Degradado superior */}
         <div
           aria-hidden="true"
-          className="h-20 bg-gradient-to-t from-black via-black/80 to-transparent"
+          className="h-24 bg-gradient-to-t from-black via-black/85 to-transparent"
         />
-        {/* Cuerpo sólido negro */}
-        <div className="bg-black px-5 pb-7 pt-2 text-center">
+        {/* Cuerpo difuminado (sin bloque sólido) */}
+        <div className="bg-gradient-to-b from-black/95 via-black/90 to-black/95 px-5 pb-6 pt-2 text-center backdrop-blur-[2px]">
           <p
             className="
               font-inter text-[15px] text-[#c4c7c7] tracking-tight
@@ -151,6 +149,11 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
             Ver detalle
           </span>
         </div>
+        {/* Degradado inferior para fundir con el fondo negro de la sección */}
+        <div
+          aria-hidden="true"
+          className="h-10 bg-gradient-to-b from-black/95 to-black"
+        />
       </div>
     </a>
   );

@@ -6,9 +6,16 @@
  */
 import { useState } from "react";
 
-/** LQIP base64 (24x36 ~700B) del primer plan — evita salto visual durante el LCP */
-const MARGARITA_BLUR =
-  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACIQAAICAgEDBQAAAAAAAAAAAAECAxEABDESIYEFE1Fxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIDERMxUf/aAAwDAQACEQMRAD8Ay8VEsWPbn8yxoumurGF2WWq6i1Dvk3WkSSVvlr4Fdqx8rq66t7tySGiVVaA85mslg6WLRvq009NlYyM85BKkm/vDIkm3asvQqrwFA4884YY1tdlOVeH/2Q==";
+/** LQIPs base64 (24x36, ~700B c/u) — suavizan la carga de cada imagen sin afectar LCP/CLS */
+const BLUR = {
+  margarita: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACIQAAICAgEDBQAAAAAAAAAAAAECAxEABDESIYEFE1Fxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIDERMxUf/aAAwDAQACEQMRAD8Ay8VEsWPbn8yxoumurGF2WWq6i1Dvk3WkSSVvlr4Fdqx8rq66t7tySGiVVaA85mslg6WLRvq009NlYyM85BKkm/vDIkm3asvQqrwFA4884YY1tdlOVeH/2Q==",
+  azucena:   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFAv/EACQQAAICAQMEAgMAAAAAAAAAAAECAxEABDESIVFhMSMyUdHw/8QAFwEAAwEAAAAAAAAAAAAAAAAAAAECA//EABoRAAICAwAAAAAAAAAAAAAAAAABAhESIUH/2gAMAwEAAhEDEQA/AI2lmkimj6HkV4wACD6P6yxu8k2qljLdRZUX4z9Sauxz+Mi6XcZtPIZI5irVRIRTx/DGDur6i3mXuOvPUTV5mrctlOktCkmjfyemXxMnK1xeGbm3XUyLXcpQrIBQ4U+xhjjl0Hjw/9k=",
+  acacia:    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAQBAgb/xAAjEAABBAIBAwUAAAAAAAAAAAABAAIDEQQhEhMxUQUyQWFi/8QAFgEBAQEAAAAAAAAAAAAAAAAABAID/8QAGhEAAwADAQAAAAAAAAAAAAAAAAECAxETQf/aAAwDAQACEQMRAD8AiOVs1hzpBf57K0+I7fRc559zq1x+6WWblTN7SOTEfquWzYlJNVsXpCeCk9pje0tDMscpld1nB4O+fkeUJAZuQ26kIs/CFspsjpHp/9k=",
+  orquidea:  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUBAwQG/8QAJxAAAgEDAQcFAQAAAAAAAAAAAQIDAAQREhMUITFRYXEFFSJBobH/xAAWAQEBAQAAAAAAAAAAAAAAAAACAwT/xAAZEQACAwEAAAAAAAAAAAAAAAAAAQISIRH/2gAMAwEAAhEDEQA/AMe8JPbGOJVVw4ClnJYDseXmmsVhbRnZyu8mzAZGzjnnOOtcrEW16BwbOcD+0z9waOA2wQfFdOT+1mrFMdnzSPVrRbNg0ZZ45DqVSeXXJ+6KouLvfLeOPDCUHJIPBu/miqYDT//Z",
+  jazmin:    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEBf/EACUQAAIBAgQGAwAAAAAAAAAAAAECAwAEERIhUQUTIjFBcRShsf/EABYBAQEBAAAAAAAAAAAAAAAAAAABA//EABcRAQEBAQAAAAAAAAAAAAAAAAABEhH/2gAMAwEAAhEDEQA/AJ+GwQrDnvER8xxVT2A0/adfQ20ZjuWjDYELlRek7aeqwpLtuyFgMQQCcfunzXY+NJBnYuxBO3qs6Re9+2PIWJY4gTmHgbHTsaKyYLggctmKq56iB42opldcf//Z",
+  castano:   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAMFAgT/xAAjEAACAQQBAwUAAAAAAAAAAAABAgMABBEhEgUTMRRhgZHw/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwT/xAAbEQACAQUAAAAAAAAAAAAAAAAAARECEiHR8P/aAAwDAQACEQMRAD8An95mjKle8cclkXAZKVHOrFwx7ILBj7Efs1lEuFiIeFNeMkH7pMq+onVooRHrD4Omqe6SmIKFvatIXZlHMnIUbdfjwKK67bqN/AFAhTgDpRjAooXX2NiJM//Z",
+  rauli:     "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAIBAwb/xAAjEAABAwQCAQUAAAAAAAAAAAABAAIRAxITMSEiMkFRYXGR/8QAFgEBAQEAAAAAAAAAAAAAAAAAAwEC/8QAFxEBAQEBAAAAAAAAAAAAAAAAAQARIf/aAAwDAQACEQMRAD8AzTBdTt2PYbHyowiMl/X65SisyAMQJHrJVwpOLL4FseM8/qLpKYyOFrLR1G4O3ISGsyCMUEiJkoWgaKX/2Q==",
+} as const;
 
 type FuneralPlan = {
   id: string;
@@ -20,13 +27,13 @@ type FuneralPlan = {
 };
 
 const PLANS: readonly FuneralPlan[] = [
-  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita", blurDataURL: MARGARITA_BLUR },
-  { id: "azucena",   name: "Azucena",   price: "$1.390.000", image: "/assets/images/planes/plan-azucena.jpg",   href: "/planes#azucena" },
-  { id: "acacia",    name: "Acacia",    price: "$1.990.000", image: "/assets/images/planes/plan-acacia.jpg",    href: "/planes#acacia" },
-  { id: "orquidea",  name: "Orquídea",  price: "$1.990.000", image: "/assets/images/planes/plan-orquidea.jpg",  href: "/planes#orquidea" },
-  { id: "jazmin",    name: "Jazmín",    price: "$2.790.000", image: "/assets/images/planes/plan-jazmin.jpg",    href: "/planes#jazmin" },
-  { id: "castano",   name: "Castaño",   price: "$3.990.000", image: "/assets/images/planes/plan-castano.jpg",   href: "/planes#castano" },
-  { id: "rauli",     name: "Raulí",     price: "$3.990.000", image: "/assets/images/planes/plan-rauli.jpg",     href: "/planes#rauli" },
+  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita", blurDataURL: BLUR.margarita },
+  { id: "azucena",   name: "Azucena",   price: "$1.390.000", image: "/assets/images/planes/plan-azucena.jpg",   href: "/planes#azucena",   blurDataURL: BLUR.azucena   },
+  { id: "acacia",    name: "Acacia",    price: "$1.990.000", image: "/assets/images/planes/plan-acacia.jpg",    href: "/planes#acacia",    blurDataURL: BLUR.acacia    },
+  { id: "orquidea",  name: "Orquídea",  price: "$1.990.000", image: "/assets/images/planes/plan-orquidea.jpg",  href: "/planes#orquidea",  blurDataURL: BLUR.orquidea  },
+  { id: "jazmin",    name: "Jazmín",    price: "$2.790.000", image: "/assets/images/planes/plan-jazmin.jpg",    href: "/planes#jazmin",    blurDataURL: BLUR.jazmin    },
+  { id: "castano",   name: "Castaño",   price: "$3.990.000", image: "/assets/images/planes/plan-castano.jpg",   href: "/planes#castano",   blurDataURL: BLUR.castano   },
+  { id: "rauli",     name: "Raulí",     price: "$3.990.000", image: "/assets/images/planes/plan-rauli.jpg",     href: "/planes#rauli",     blurDataURL: BLUR.rauli     },
 ] as const;
 
 interface FuneralPlanCardProps {

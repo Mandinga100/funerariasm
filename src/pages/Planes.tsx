@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ContactForm from "@/components/ContactForm";
-import { Check, Star, Phone, MessageCircle } from "lucide-react";
+import FuneralPlansSection from "@/components/FuneralPlansSection";
+import { Phone, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { useScrollReveal, useStaggerReveal } from "@/hooks/use-scroll-reveal";
 import FaqAccordion from "@/components/faq/FaqAccordion";
 import type { FaqItem } from "@/lib/faq-data";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-schemas";
@@ -147,78 +147,8 @@ const Planes = () => {
         </div>
       </section>
 
-      {/* Plans grid */}
-      <section className="py-20 bg-background">
-        <div className="container">
-          <div ref={headerRef} className="text-center mb-16">
-            <h2 className="text-2xl font-playfair italic text-foreground mb-3">
-              Compare nuestros planes
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              Todos incluyen coordinación de trámites, contención emocional y asesoría profesional.
-            </p>
-          </div>
-
-          <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                id={plan.id}
-                className={`group rounded-xl overflow-hidden transition-brand scroll-mt-28 ${
-                  plan.highlighted
-                    ? "bg-primary text-primary-foreground border-2 border-gold relative shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.3)]"
-                    : "bg-card border border-border hover:border-gold/30 hover:shadow-[0_12px_40px_-12px_hsl(var(--gold)/0.1)]"
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
-                )}
-                <div className="p-8">
-                  {plan.highlighted && (
-                    <div className="flex items-center gap-1.5 text-gold text-[10px] tracking-wide-brand uppercase font-semibold mb-4">
-                      <Star className="w-3.5 h-3.5" /> Más elegido
-                    </div>
-                  )}
-                  <h3 className="font-playfair text-xl mb-1">{plan.name}</h3>
-                  <p className="text-gold text-3xl font-semibold font-inter mb-3">{plan.price}</p>
-                  <p className={`text-sm leading-relaxed mb-6 ${
-                    plan.highlighted ? "text-primary-foreground/60" : "text-muted-foreground"
-                  }`}>
-                    {plan.description}
-                  </p>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((f) => (
-                      <li key={f} className={`flex items-start gap-2.5 text-sm ${
-                        plan.highlighted ? "text-primary-foreground/80" : "text-foreground/80"
-                      }`}>
-                        <Check className="w-4 h-4 text-gold mt-0.5 shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className={`text-xs leading-relaxed italic mb-6 ${
-                    plan.highlighted ? "text-primary-foreground/55" : "text-muted-foreground"
-                  }`}>
-                    <span className="font-semibold not-italic text-gold">PD:</span> El monto a cancelar puede ser menor en función del beneficio <span className="not-italic font-medium">"Cuota Mortuoria"</span> entregado por su AFP o IPS.
-                  </p>
-                  <a
-                    href={buildWhatsAppUrl({ intent: "cotizacion", selectedPlan: plan.name })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`block text-center py-3.5 rounded-full text-sm tracking-wide-brand uppercase font-medium transition-brand ${
-                      plan.highlighted
-                        ? "bg-gold text-primary-foreground hover:bg-gold-dark hover:shadow-[0_6px_20px_-4px_hsl(var(--gold)/0.4)]"
-                        : "border border-gold/40 text-gold hover:bg-gold hover:text-primary-foreground hover:shadow-[0_6px_20px_-4px_hsl(var(--gold)/0.3)]"
-                    }`}
-                  >
-                    Cotizar {plan.name.replace("Plan ", "")}
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Plans grid — sección editorial premium */}
+      <FuneralPlansSection />
 
       {/* Inline FAQ */}
       <section className="py-20 bg-card border-t border-border/30">

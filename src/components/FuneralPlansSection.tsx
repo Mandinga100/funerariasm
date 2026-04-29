@@ -4,7 +4,7 @@
  * Cards verticales editoriales con nombre del plan centrado verticalmente,
  * precio + CTA al pie y animaciones premium al hover.
  */
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** LQIPs base64 (24x36, ~700B c/u) — suavizan la carga de cada imagen sin afectar LCP/CLS */
 const BLUR = {
@@ -347,33 +347,227 @@ const FuneralPlansSection = () => {
           </p>
         </header>
 
-        {/* Lista — mobile: scroll snap | md+: grid 7 columnas */}
+        {/* Mobile: carrusel de un plan a la vez (Margarita por defecto) */}
+        <MobilePlansCarousel />
+
+        {/* Desktop / tablet: grid editorial */}
         <ul
           className="
-            flex gap-3 overflow-x-auto snap-x snap-mandatory
-            -mx-6 px-6 pb-2
-            [scrollbar-width:none] [-ms-overflow-style:none]
-            [&::-webkit-scrollbar]:hidden
-            md:mx-0 md:px-0 md:pb-0 md:overflow-visible md:snap-none
+            hidden
             md:grid md:grid-cols-3 md:gap-3
             lg:grid-cols-4
             xl:grid-cols-7 xl:gap-2
           "
         >
           {PLANS.map((plan, index) => (
-            <li
-              key={plan.id}
-              className="
-                shrink-0 snap-start basis-[78vw] sm:basis-[55vw]
-                md:basis-auto md:shrink md:snap-align-none
-              "
-            >
+            <li key={plan.id}>
               <FuneralPlanCard plan={plan} priority={index === 0} />
             </li>
           ))}
         </ul>
       </div>
     </section>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────────
+ * MobilePlansCarousel
+ * Visible solo en mobile (<md). Muestra un plan a la vez, comenzando
+ * por "Margarita". Soporta:
+ *   • Drag con mouse presionado (pointer events)
+ *   • Swipe táctil nativo (scroll-snap)
+ *   • Autoplay cada 8s, avanzando al siguiente plan en loop
+ *   • Pausa al interactuar / cambio de pestaña / reduce-motion
+ *   • Indicadores (dots) clickeables
+ * ──────────────────────────────────────────────────────────────────*/
+const AUTOPLAY_MS = 8000;
+
+const MobilePlansCarousel = () => {
+  const trackRef = useRef<HTMLUListElement>(null);
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+  } | null>(null);
+
+  const scrollToIndex = useCallback((idx: number, behavior: ScrollBehavior = "smooth") => {
+    const el = trackRef.current;
+    if (!el) return;
+    const child = el.children[idx] as HTMLElement | undefined;
+    if (!child) return;
+    el.scrollTo({ left: child.offsetLeft - el.offsetLeft, behavior });
+  }, []);
+
+  // Detecta el slide más cercano al hacer scroll
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const center = el.scrollLeft + el.clientWidth / 2;
+        let closest = 0;
+        let minDist = Infinity;
+        Array.from(el.children).forEach((c, i) => {
+          const child = c as HTMLElement;
+          const childCenter = child.offsetLeft - el.offsetLeft + child.clientWidth / 2;
+          const d = Math.abs(childCenter - center);
+          if (d < minDist) {
+            minDist = d;
+            closest = i;
+          }
+        });
+        setActive(closest);
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // Autoplay cada 8s
+  useEffect(() => {
+    if (paused) return;
+    if (typeof window === "undefined") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    const id = window.setInterval(() => {
+      setActive((prev) => {
+        const next = (prev + 1) % PLANS.length;
+        scrollToIndex(next);
+        return next;
+      });
+    }, AUTOPLAY_MS);
+    return () => window.clearInterval(id);
+  }, [paused, scrollToIndex]);
+
+  // Pausa cuando la pestaña no está visible
+  useEffect(() => {
+    const onVis = () => setPaused(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // Drag con mouse presionado (touch usa scroll nativo)
+  const onPointerDown = (e: React.PointerEvent<HTMLUListElement>) => {
+    if (e.pointerType === "touch") return;
+    const el = trackRef.current;
+    if (!el) return;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+    };
+    el.setPointerCapture(e.pointerId);
+    setPaused(true);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLUListElement>) => {
+    const drag = dragRef.current;
+    const el = trackRef.current;
+    if (!drag || !el) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 4) drag.moved = true;
+    el.scrollLeft = drag.startScroll - dx;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLUListElement>) => {
+    const drag = dragRef.current;
+    const el = trackRef.current;
+    if (!drag || !el) return;
+    try {
+      el.releasePointerCapture(drag.pointerId);
+    } catch {
+      /* noop */
+    }
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let closest = 0;
+    let minDist = Infinity;
+    Array.from(el.children).forEach((c, i) => {
+      const child = c as HTMLElement;
+      const cc = child.offsetLeft - el.offsetLeft + child.clientWidth / 2;
+      const d = Math.abs(cc - center);
+      if (d < minDist) {
+        minDist = d;
+        closest = i;
+      }
+    });
+    scrollToIndex(closest);
+    if (drag.moved) {
+      // Evita que el drag dispare el click del enlace
+      const prevent = (ev: Event) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+      };
+      el.addEventListener("click", prevent, { capture: true, once: true });
+    }
+    dragRef.current = null;
+    window.setTimeout(() => setPaused(false), 300);
+  };
+
+  return (
+    <div className="md:hidden -mx-6">
+      <ul
+        ref={trackRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onTouchStart={() => setPaused(true)}
+        onTouchEnd={() => window.setTimeout(() => setPaused(false), 300)}
+        className="
+          flex overflow-x-auto snap-x snap-mandatory
+          px-6 pb-2 cursor-grab active:cursor-grabbing select-none
+          [scrollbar-width:none] [-ms-overflow-style:none]
+          [&::-webkit-scrollbar]:hidden
+          touch-pan-x
+        "
+        style={{ overscrollBehaviorX: "contain" }}
+      >
+        {PLANS.map((plan, index) => (
+          <li
+            key={plan.id}
+            className="shrink-0 snap-center basis-full w-full"
+          >
+            <FuneralPlanCard plan={plan} priority={index === 0} />
+          </li>
+        ))}
+      </ul>
+
+      {/* Indicadores */}
+      <div
+        className="mt-5 flex items-center justify-center gap-2 px-6"
+        role="tablist"
+        aria-label="Planes funerarios"
+      >
+        {PLANS.map((plan, i) => (
+          <button
+            key={plan.id}
+            type="button"
+            role="tab"
+            aria-selected={i === active}
+            aria-label={`Ir al Plan ${plan.name}`}
+            onClick={() => {
+              setActive(i);
+              scrollToIndex(i);
+            }}
+            className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
+              i === active
+                ? "w-6 bg-[#e9c176]"
+                : "w-1.5 bg-[rgba(232,226,216,0.35)] hover:bg-[rgba(232,226,216,0.6)]"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

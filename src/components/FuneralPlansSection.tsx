@@ -164,11 +164,11 @@ const FuneralPlansSection = () => {
     <section
       id="planes-funerarios"
       aria-labelledby="planes-funerarios-title"
-      className="bg-black pt-12 pb-20 md:pt-16 md:pb-24"
+      className="bg-black pt-20 pb-20 md:pt-24 md:pb-24"
     >
       <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10 xl:px-14">
         {/* Header editorial */}
-        <header className="text-center mb-8 md:mb-12">
+        <header className="text-center mb-12 md:mb-16">
           <h2
             id="planes-funerarios-title"
             className="font-playfair text-[#e8e2d8] text-3xl md:text-4xl lg:text-[2.6rem] font-normal tracking-tight"

@@ -161,13 +161,28 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   const COUNT = 16;
                   const RADIUS = 92;
                   const SIZES = ["2.5px", "3px", "3.5px", "4px"];
+                  // Glow proporcional al tamaño — misma paleta dorada premium,
+                  // intensidad escalada para que las partículas grandes brillen
+                  // más sin perder coherencia visual con las pequeñas.
+                  const GLOWS = [
+                    // 2.5px — destello discreto
+                    "0 0 3px 0.25px rgba(252,236,196,0.85), 0 0 7px 0.75px rgba(243,220,168,0.45), 0 0 14px 1px rgba(233,193,118,0.22)",
+                    // 3px — brillo equilibrado
+                    "0 0 4px 0.5px rgba(252,236,196,0.92), 0 0 10px 1.25px rgba(243,220,168,0.55), 0 0 18px 1.5px rgba(233,193,118,0.30)",
+                    // 3.5px — más presencia
+                    "0 0 5px 0.75px rgba(252,236,196,0.97), 0 0 13px 1.75px rgba(243,220,168,0.65), 0 0 24px 2px rgba(233,193,118,0.38)",
+                    // 4px — chispa principal, máximo brillo manteniendo elegancia
+                    "0 0 6px 1px rgba(252,236,196,1), 0 0 16px 2.25px rgba(243,220,168,0.75), 0 0 30px 2.5px rgba(233,193,118,0.45)",
+                  ];
                   const DELAY_ORDER = [0, 9, 2, 11, 4, 13, 6, 15, 1, 8, 3, 10, 5, 12, 7, 14];
                   return Array.from({ length: COUNT }).map((_, i) => {
                     const angle = (i / COUNT) * Math.PI * 2 - Math.PI / 2;
                     const r = RADIUS - (i % 2) * 10;
                     const sx = `${(Math.cos(angle) * r).toFixed(1)}px`;
                     const sy = `${(Math.sin(angle) * r).toFixed(1)}px`;
-                    const size = SIZES[i % SIZES.length];
+                    const sizeIdx = i % SIZES.length;
+                    const size = SIZES[sizeIdx];
+                    const glow = GLOWS[sizeIdx];
                     const delay = `${DELAY_ORDER[i] * 55}ms`;
                     return (
                       <span
@@ -185,8 +200,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                           transform: "translateZ(0)",
                           backfaceVisibility: "hidden",
                           contain: "layout paint",
-                          boxShadow:
-                            "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
+                          boxShadow: glow,
                         }}
                       />
                     );

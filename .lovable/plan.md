@@ -1,163 +1,96 @@
+# Plan — Componente `FuneralPlansSection`
 
+## Objetivo
+Crear un único componente nuevo, reutilizable, premium y editorial que renderice los 7 planes funerarios siguiendo la referencia visual (cards verticales altas, full-bleed, overlay oscuro, CTA "Ver detalle" al pie). **No** se modifica navbar, footer, layout, rutas ni backend. **No** se reemplaza el actual `PlansSection.tsx`.
 
-# Auditoría forense + Bloque #1: Bandeja de Chat con Handoff Humano
+## Archivos a crear (mínimo necesario)
+1. `src/components/FuneralPlansSection.tsx` — sección principal + subcomponente `FuneralPlanCard` en el mismo archivo (mejor cohesión, sin sobre-fragmentar).
 
-## Matriz de hallazgos prioritarios
+No se crean otros archivos. No se instalan librerías. No se tocan tokens globales (la paleta solicitada se aplica vía clases arbitrarias de Tailwind dentro del componente para no contaminar `index.css`).
 
-| # | Módulo | Estado | Acción | Justificación |
-|---|--------|--------|--------|---------------|
-| 1 | **Caso maestro** (`service_cases` + 7 tabs) | ✅ Implementado completo | **Mantener** | Cubre datos fallecido, estados 4 áreas, checklist, docs, historial, cotización, pagos |
-| 2 | **Lead → Cotización → Caso** | ✅ Trigger `auto_create_service_case` + `lead_id` FK + sync pipeline | **Mantener** | Flujo end-to-end ya operativo |
-| 3 | **Estados comercial/operativo/documental/financiero** | ✅ 4 columnas + `case_status_log` + trigger | **Mantener** | Bitácora automática funcional |
-| 4 | **Expediente documental** (`case_documents` + bucket `payment-proofs`) | ✅ CRUD + RLS | **Complementar leve** | Falta bucket dedicado `case-documents` (usa `payment-proofs` reciclado) |
-| 5 | **Checklist operativo** (`case_milestones`) | ✅ Implementado | **Mantener** | |
-| 6 | **Pagos / cuotas / cobranza** (`payment_transactions` + `recalc_case_payments`) | ✅ Implementado con auto-recálculo | **Mantener** | |
-| 7 | **Timeline + auditoría** (`audit_logs`, `case_status_log`, `lead_activities`, `agenda_event_history`) | ✅ 4 fuentes | **Refactorizar visual** (consolidar lectura en `CaseHistoryTab`) |
-| 8 | **Dashboard 360** | ✅ 674 líneas con KPIs | **Mantener** |
-| 9 | **Chat tipo WhatsApp + handoff humano** | ❌ **Solo bot público sin persistencia ni bandeja** | **IMPLEMENTAR (crítico)** | Único módulo faltante |
+## Datos
+Array local tipado dentro del componente:
 
-**Decisión**: ejecutar solo el **Bloque #9 (Chat con handoff)** ahora. Resto queda en cola de refinamiento (#7 luego, #4 al final).
-
----
-
-## Bloque ejecutado ahora: Chat conversacional con bandeja interna estilo WhatsApp Web
-
-### Punto de restauración
-Se reutilizará el botón Revertir de Lovable sobre este mensaje. Toda la lógica nueva queda aislada en archivos nuevos; cero modificación destructiva sobre componentes existentes (excepto un import en `AdminLayout`).
-
-### Arquitectura (reutiliza infraestructura existente)
-
-```text
-┌─ Visitante público ─┐
-│ ChatboxFunerario ───┼─► chat-funerario (bot existente, se mantiene)
-└──────────┬──────────┘
-           │ Si pide "hablar con asesor" o usuario registra contacto
-           ▼
-┌─────────────────────────────────────────────────────────┐
-│  NUEVO: chat_conversations + chat_messages              │
-│  - vincula a contact_leads / service_cases existentes   │
-│  - assigned_to (ejecutivo) + status (bot/humano)        │
-│  - prioridad + SLA hereda de lead.urgency               │
-└──────────┬──────────────────────────────────────────────┘
-           │ Realtime (postgres_changes) → bandeja admin
-           ▼
-┌─ /admin/chat (NUEVO) ───────────────────────────────────┐
-│ Lista conversaciones | Hilo de mensajes | Panel lead   │
-│ + Notas internas + Tomar/Asignar + Vincular a Caso     │
-└─────────────────────────────────────────────────────────┘
+```ts
+type FuneralPlan = {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  href: string;
+};
 ```
 
-### Cambios de base de datos (1 migración nueva)
+7 entradas exactas: Margarita $1.290.000 · Azucena $1.390.000 · Acacia $1.990.000 · Orquídea $1.990.000 · Jazmín $2.790.000 · Castaño $3.990.000 · Raulí $3.990.000. Las imágenes reutilizan las rutas existentes `/assets/images/planes/plan-{id}.jpg` (ya presentes en el proyecto y en `catalogo.json`). `href` apunta a `/planes#{id}` reutilizando la ruta existente.
 
-**Tablas nuevas:**
-- `chat_conversations`: `id`, `lead_id` (FK lógica a `contact_leads`), `service_case_id` (FK lógica a `service_cases`), `visitor_name`, `visitor_phone`, `visitor_email`, `channel` (web/whatsapp_export), `status` (`bot` | `pendiente_humano` | `humano_activo` | `cerrado`), `priority` (`baja|normal|alta|urgente`), `assigned_to` (uuid), `last_message_at`, `unread_admin`, `unread_visitor`, `sla_due_at`, `metadata jsonb`, timestamps.
-- `chat_messages`: `id`, `conversation_id`, `sender_type` (`visitor|bot|admin|system`), `sender_user_id`, `content`, `is_internal_note` (bool — visible solo a admin), `attachment_url`, `voice_url` (futuro), `read_by_admin_at`, `created_at`.
+## Identidad visual
+- Paleta aplicada con clases arbitrarias Tailwind (bg `#15130e`, card `#1e1b16`, hover `#2c2a24`, texto `#e8e2d8` / `#c4c7c7`, borde `rgba(142,145,146,0.22)`, acento `#e9c176` con hover `#f0cf92`).
+- Tipografía: reutilizar `font-playfair` (serif del proyecto, equivalente editorial a Noto Serif) para heading y nombre del plan; `font-inter` (equivalente a Manrope) para precio, CTA y micro-tipografía. **No se cargan nuevas fuentes.**
+- Sin gradientes fuertes, sin glassmorphism, sin sombras pesadas, sin badges, sin íconos decorativos, sin colores brillantes. Bordes sutiles de 1px y radios pequeños (`rounded-sm`).
 
-**RLS:**
-- Admin/CEO: full read/write a ambas tablas.
-- Visitante (anon): INSERT en `chat_messages` solo donde `conversation_id` exista y `sender_type='visitor'` (validado por edge function vía service role para no exponer la tabla).
-- Visitante NO lee directamente — la conversación se entrega vía edge function autenticada por `conversation_token` en `localStorage`.
+## Estructura visual
 
-**Triggers:**
-- `chat_message_after_insert`: actualiza `last_message_at`, incrementa `unread_admin/unread_visitor`, dispara `admin_notifications` cuando llega visitor msg en convo asignada o sin asignar.
-- `chat_conversation_handoff`: cuando `status` cambia a `pendiente_humano`, fanout notificación urgente a admins disponibles.
+```text
+<section id="planes-funerarios" bg #15130e py-24/32>
+  <div container max-w-[1280px]>
+    <header center>
+       h2 "Planes Funerarios"  (font-playfair, claro)
+       <hr w-12 border-[#e9c176]/70>
+    </header>
 
-**Realtime:** publicar `chat_conversations` y `chat_messages` en `supabase_realtime` (RLS de `realtime.messages` ya está reforzada — heredan controles).
+    <ul desktop:grid mobile:scroll-snap-x>
+      [ FuneralPlanCard x7 ]
+    </ul>
+  </div>
+</section>
+```
 
-### Edge functions nuevas (2)
+### `FuneralPlanCard`
+Estructura por card (alta y estrecha, ratio ~3/5):
 
-1. **`chat-public-send`** (`verify_jwt = false`): valida bot-shield (honeypot/timing/throttle ya existentes), upserta conversación por `conversation_token`, inserta mensaje visitor, decide si seguir bot o marcar `pendiente_humano` (palabras clave: "asesor", "humano", "persona", "urgente" + intent fallecimiento). Si sigue bot, llama internamente al `chat-funerario` existente y persiste respuesta.
-2. **`chat-public-poll`** (opcional, fallback si Realtime no disponible): devuelve mensajes nuevos por `conversation_token`.
+```text
+<a href=plan.href class="group relative aspect-[3/5] overflow-hidden bg-[#1e1b16] border border-[rgba(142,145,146,0.22)]">
+  <img full-bleed object-cover loading=lazy alt=plan.name />
+  <div absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/15 />  <!-- overlay constante -->
+  <div absolute inset-x-0 bottom-0 p-6 text-center>
+     <h3 font-playfair text-[#e8e2d8] text-xl>{name}</h3>
+     <p font-inter text-[#c4c7c7] text-sm mt-1>{price}</p>
+     <span font-inter text-[10px] tracking-[0.25em] uppercase text-[#e9c176] group-hover:text-[#f0cf92] mt-4 inline-block>
+        Ver detalle
+     </span>
+  </div>
+</a>
+```
 
-### Frontend nuevo
+## Responsive (mobile-first, breakpoints Tailwind)
 
-**Público** (`src/components/ChatboxFunerario.tsx` — refactor mínimo, no rewrite):
-- Cuando usuario escribe libre o pide asesor → en lugar de POST directo a `chat-funerario`, llama a `chat-public-send` que persiste.
-- Genera `conversation_token` (uuid) en `localStorage`.
-- Suscribe via Realtime al canal `chat-convo-${token}` para recibir respuestas humanas en tiempo real.
-- Indicador "🟢 Asesor en línea" cuando `status='humano_activo'`.
+- **Mobile (default)**: contenedor `flex overflow-x-auto snap-x snap-mandatory` con `gap-4`, scroll horizontal con scrollbar oculto. Cada card `basis-[82vw] shrink-0 snap-start`.
+- **`md` (≥768px)**: `grid grid-cols-3 gap-5`, scroll desactivado. Las 7 cards fluyen en 3 columnas (3+3+1) con la última centrada — alternativa: dejar `md:grid-cols-3 lg:grid-cols-4` para una transición intermedia limpia.
+- **`xl` (≥1280px)**: `grid-cols-7 gap-4` editorial — 7 cards verticales estrechas en una sola fila como en la referencia. Aspect ratio fijo `3/5` mantiene cards altas y legibles.
 
-**Admin** (rutas + componentes nuevos):
-- `/admin/chat` → `AdminChat.tsx` (nueva página).
-- Layout 3 columnas (responsive: stack en mobile):
-  ```text
-  ┌─ Lista convos ─┬─ Hilo mensajes ──────┬─ Panel contexto ─┐
-  │ filtros:       │ burbujas WhatsApp     │ lead/caso link    │
-  │ - todos        │ input + adjuntar      │ notas internas    │
-  │ - sin asignar  │ toggle "nota interna" │ asignar ejecutivo │
-  │ - míos         │ botón "Tomar control" │ prioridad + SLA   │
-  │ - urgentes     │ → status=humano_activo│ crear caso        │
-  └────────────────┴──────────────────────┴───────────────────┘
-  ```
-- Componentes:
-  - `src/components/admin/chat/ConversationList.tsx`
-  - `src/components/admin/chat/MessageThread.tsx`
-  - `src/components/admin/chat/MessageBubble.tsx`
-  - `src/components/admin/chat/ConversationContextPanel.tsx`
-  - `src/components/admin/chat/HandoffControls.tsx`
-- Sidebar: nuevo item **"Bandeja Chat"** con badge de no leídos. Visible para `admin` y `ceo`.
-- Hook `src/hooks/use-chat-realtime.tsx` para subscribe global a `chat_conversations` y disparar sonido + toast en handoff.
+Sin layout shift (aspect-ratio fijo), sin comprimir las cards por debajo del ancho útil.
 
-### Vinculación CRM (sin duplicar)
-- `chat_conversations.lead_id` y `service_case_id` → botones "Crear lead", "Vincular a lead existente", "Crear caso", "Abrir caso" en `ConversationContextPanel`.
-- En `LeadDetailSheet` y `CaseDetailSheet`: tab nuevo **"Chat"** que renderiza `MessageThread` filtrado por `lead_id`/`service_case_id`. Cero duplicación de UI.
+## Interacción
+- Hover **solo desktop** (`md:`): borde pasa a `#e9c176/40`, overlay aclara levemente (`from-black/75`), CTA cambia a `#f0cf92`. Sin escala, sin flip, sin zoom fuerte.
+- Transiciones `duration-500 ease-out` sobrias.
+- `focus-visible:ring-1 ring-[#e9c176] ring-offset-2 ring-offset-[#15130e]` accesible.
+- Touch limpio: `active:` ligero en mobile.
 
-### Voz y llamada (alcance acotado)
-- **Voz**: input audio del navegador (`MediaRecorder`) → upload a bucket `chat-attachments` (nuevo) → `voice_url` en `chat_messages`. Reproductor `<audio>` en burbuja.
-- **Llamada**: botón "Llamar" abre `tel:` directo + registra mensaje system "Llamada iniciada por {admin}". Integración Twilio queda fuera de alcance este bloque (requiere conector — se propondría al CEO si lo solicita).
+## Accesibilidad
+- `<section aria-labelledby="planes-funerarios-title">`, `<h2 id="planes-funerarios-title">`.
+- `<ul>` / `<li>` para la lista, cada card es un `<a>` con `aria-label="Ver detalle del Plan {name}"`.
+- `alt` descriptivo en cada `<img>`.
+- Contraste verificado (texto claro sobre overlay oscuro denso).
+- Scrollbar oculto pero scroll por touch/teclado funcional.
 
-### SLA + prioridad
-- `priority` se inicializa heredando de lead vinculado o por keywords detectados.
-- `sla_due_at` calculado: urgente=15min, alta=1h, normal=4h, baja=24h.
-- Badge rojo parpadeante cuando vencido.
-- Cron `check-stale-cases` existente → extender para chequear convos vencidas y reabsignar/escalar.
+## Entrega
+El componente queda listo para importar (`import FuneralPlansSection from "@/components/FuneralPlansSection"`) e insertar en cualquier página existente sin modificar piezas globales. **No** se inserta automáticamente en ninguna página — eso queda a tu criterio en una iteración posterior.
 
-### Detalles técnicos consolidados
-
-| Aspecto | Decisión |
-|---------|----------|
-| Persistencia bot-msgs | Sí, todas las respuestas del bot se persisten (auditoría) |
-| Token visitante | UUID en `localStorage` clave `fsm_chat_token` |
-| Streaming bot | Mantenemos streaming SSE de `chat-funerario` solo para UX inmediata; persistimos al cierre del stream |
-| Handoff trigger | Keywords + click explícito "Hablar con persona" + intent=fallecimiento |
-| Notificación admin | Reutiliza `admin_notifications` + `useNotificationSound` + `useModuleRealtimeAlerts` |
-| Adjuntos | Bucket nuevo `chat-attachments` (privado, signed URLs, max 5MB) |
-| Auditoría | Cada handoff/asignación/cierre → `audit_logs` módulo `chat` |
-| Mobile | Bandeja stack vertical con tab-switcher (Lista / Hilo / Contexto) |
-
-### Archivos creados/modificados
-
-**Migración nueva**: 1 archivo SQL con tablas, RLS, triggers, realtime publication, bucket.
-
-**Edge functions nuevas**: `chat-public-send/index.ts`, `chat-public-poll/index.ts`.
-
-**Frontend nuevo**:
-- `src/pages/admin/AdminChat.tsx`
-- `src/components/admin/chat/` (5 componentes listados arriba)
-- `src/hooks/use-chat-realtime.tsx`
-- `src/lib/chat-token.ts` (gestión token visitante)
-
-**Frontend modificado (mínimo y reversible)**:
-- `src/components/ChatboxFunerario.tsx`: agregar persistencia + Realtime subscribe (sin alterar UI)
-- `src/components/admin/AdminLayout.tsx`: agregar nav item "Bandeja Chat"
-- `src/App.tsx`: agregar ruta `/admin/chat`
-- `src/components/admin/cases/CaseDetailSheet.tsx`: agregar tab "Chat"
-- `src/components/admin/crm/LeadDetailSheet.tsx`: agregar tab "Chat"
-
-### Impacto
-- Cierra la **única brecha crítica** del CRM funerario.
-- Cero duplicación: chat queda integrado a leads y casos como una vista más, no como sistema paralelo.
-- Bot público sigue funcionando exactamente igual — solo gana persistencia y posibilidad de takeover.
-- Habilita SLA real sobre conversaciones (hoy invisible).
-- Notificaciones ya funcionan (reutiliza pipeline existente).
-
-### Siguiente paso tras aprobación
-1. Crear migración (tablas + RLS + triggers + bucket + realtime).
-2. Crear edge function `chat-public-send`.
-3. Refactor mínimo de `ChatboxFunerario` para persistir.
-4. Construir página `/admin/chat` con 3 columnas + Realtime.
-5. Agregar tabs Chat en `LeadDetailSheet` y `CaseDetailSheet`.
-6. QA manual: simular convo visitante → ver llegada en bandeja → tomar control → responder → vincular a lead → crear caso.
-
-Tras este bloque, los siguientes en cola serían: refinamiento timeline unificado (#7) y bucket dedicado para documentos de caso (#4).
-
+## Checklist final
+- [x] Solo se crea `FuneralPlansSection.tsx`
+- [x] Respeta la composición de la referencia (7 cards verticales, overlay, CTA al pie)
+- [x] Mobile: scroll horizontal con snap
+- [x] Desktop: grid editorial de 7 columnas en `xl`
+- [x] No toca navbar/footer/layout/rutas/backend
+- [x] Sin nuevas dependencias ni nuevas fuentes
+- [x] TS estricto, sin `any`

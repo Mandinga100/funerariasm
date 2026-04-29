@@ -138,12 +138,13 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             "
           >
             {[
-              { top: "10%",  left: "8%",   sx: "-14px", sy: "-10px", delay: "0ms",   size: "5px" },
-              { top: "20%",  left: "92%",  sx: "16px",  sy: "-8px",  delay: "300ms", size: "4px" },
-              { top: "55%",  left: "0%",   sx: "-18px", sy: "6px",   delay: "600ms", size: "3px" },
-              { top: "70%",  left: "96%",  sx: "14px",  sy: "10px",  delay: "150ms", size: "4px" },
-              { top: "85%",  left: "30%",  sx: "-6px",  sy: "14px",  delay: "900ms", size: "3px" },
-              { top: "90%",  left: "70%",  sx: "8px",   sy: "16px",  delay: "450ms", size: "5px" },
+              { top: "-20%", left: "12%",  sx: "-18px", sy: "-22px", delay: "0ms",    size: "5px" },
+              { top: "-32%", left: "48%",  sx: "-4px",  sy: "-30px", delay: "350ms",  size: "4px" },
+              { top: "-22%", left: "84%",  sx: "20px",  sy: "-24px", delay: "700ms",  size: "5px" },
+              { top: "10%",  left: "-6%",  sx: "-26px", sy: "-6px",  delay: "1050ms", size: "3px" },
+              { top: "12%",  left: "104%", sx: "26px",  sy: "-4px",  delay: "200ms",  size: "4px" },
+              { top: "40%",  left: "-2%",  sx: "-22px", sy: "8px",   delay: "1400ms", size: "3px" },
+              { top: "42%",  left: "100%", sx: "22px",  sy: "10px",  delay: "550ms",  size: "3px" },
             ].map((p, i) => (
               <span
                 key={i}

@@ -91,8 +91,6 @@ const PLANS_FAQ: FaqItem[] = [
 
 const Planes = () => {
   const location = useLocation();
-  const headerRef = useScrollReveal();
-  const gridRef = useStaggerReveal(80);
 
   useEffect(() => {
     if (location.hash) {

@@ -35,10 +35,22 @@ interface FuneralPlanCardProps {
 }
 
 const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
+  const [loaded, setLoaded] = useState(false);
+  const hasBlur = Boolean(plan.blurDataURL);
+
   return (
     <a
       href={plan.href}
       aria-label={`Ver detalle del Plan ${plan.name}`}
+      style={
+        hasBlur
+          ? {
+              backgroundImage: `url(${plan.blurDataURL})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
       className="
         group relative block overflow-hidden rounded-sm isolate
         bg-black border border-[rgba(142,145,146,0.18)]
@@ -49,6 +61,19 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         md:hover:border-[#e9c176]/50
       "
     >
+      {/* Capa blur con saturación reducida — visible solo hasta que la imagen real cargue */}
+      {hasBlur && !loaded && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 scale-110 blur-xl opacity-90"
+          style={{
+            backgroundImage: `url(${plan.blurDataURL})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+      )}
+
       {/* Imagen — LCP candidate en la primera card (priority) */}
       <img
         src={plan.image}
@@ -59,12 +84,13 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         fetchpriority={priority ? "high" : "auto"}
         width={480}
         height={720}
-        className="
+        onLoad={() => setLoaded(true)}
+        className={`
           absolute inset-0 h-full w-full object-cover
-          opacity-80
           transition-opacity duration-700 ease-out
+          ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
           md:group-hover:opacity-100
-        "
+        `}
       />
 
       {/* Velo base oscuro para profundidad (sin transición costosa) */}

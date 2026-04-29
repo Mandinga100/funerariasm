@@ -148,35 +148,42 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           >
             {burstKey > 0 && (
               <div key={burstKey} className="absolute inset-0">
-                {[
-                  { sx: "-72px",  sy: "-58px", delay: "0ms",   size: "4px" },
-                  { sx: "-30px",  sy: "-78px", delay: "120ms", size: "3.5px" },
-                  { sx: "10px",   sy: "-86px", delay: "60ms",  size: "4px" },
-                  { sx: "48px",   sy: "-72px", delay: "200ms", size: "3.5px" },
-                  { sx: "82px",   sy: "-46px", delay: "150ms", size: "4px" },
-                  { sx: "-96px",  sy: "-18px", delay: "260ms", size: "3px" },
-                  { sx: "100px",  sy: "-12px", delay: "320ms", size: "3.5px" },
-                  { sx: "-88px",  sy: "26px",  delay: "380ms", size: "3px" },
-                  { sx: "92px",   sy: "30px",  delay: "440ms", size: "3.5px" },
-                  { sx: "-50px",  sy: "60px",  delay: "500ms", size: "3px" },
-                  { sx: "-14px",  sy: "78px",  delay: "560ms", size: "3.5px" },
-                  { sx: "26px",   sy: "82px",  delay: "620ms", size: "3px" },
-                  { sx: "62px",   sy: "64px",  delay: "680ms", size: "4px" },
-                ].map((p, i) => (
-                  <span
-                    key={i}
-                    className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#fcecc4] animate-sparkle-burst opacity-0"
-                    style={{
-                      width: p.size,
-                      height: p.size,
-                      // @ts-expect-error CSS custom props
-                      "--sx": p.sx,
-                      "--sy": p.sy,
-                      animationDelay: p.delay,
-                      boxShadow: "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
-                    }}
-                  />
-                ))}
+                {(() => {
+                  // Patrón radial uniforme: 16 partículas distribuidas a 22.5°
+                  // Direcciones idénticas en todas las tarjetas, tamaños variados
+                  // pero distribuidos uniformemente, y delays desincronizados
+                  // para que el movimiento no sea simultáneo.
+                  const COUNT = 16;
+                  const RADIUS = 92; // px máximo dentro del contenedor 240x200
+                  const SIZES = ["2.5px", "3px", "3.5px", "4px"];
+                  // Secuencia de delays barajada de forma determinista
+                  const DELAY_ORDER = [0, 9, 2, 11, 4, 13, 6, 15, 1, 8, 3, 10, 5, 12, 7, 14];
+                  return Array.from({ length: COUNT }).map((_, i) => {
+                    const angle = (i / COUNT) * Math.PI * 2 - Math.PI / 2; // empieza arriba
+                    // Radio leve variación uniforme por índice (sin aleatorio)
+                    const r = RADIUS - (i % 2) * 10;
+                    const sx = `${(Math.cos(angle) * r).toFixed(1)}px`;
+                    const sy = `${(Math.sin(angle) * r).toFixed(1)}px`;
+                    const size = SIZES[i % SIZES.length];
+                    const delay = `${DELAY_ORDER[i] * 55}ms`;
+                    return (
+                      <span
+                        key={i}
+                        className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#fcecc4] animate-sparkle-burst opacity-0"
+                        style={{
+                          width: size,
+                          height: size,
+                          // @ts-expect-error CSS custom props
+                          "--sx": sx,
+                          "--sy": sy,
+                          animationDelay: delay,
+                          boxShadow:
+                            "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
+                        }}
+                      />
+                    );
+                  });
+                })()}
               </div>
             )}
           </div>

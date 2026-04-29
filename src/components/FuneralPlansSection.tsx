@@ -103,22 +103,22 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         className="
           absolute inset-x-0 bottom-0
           translate-y-0
-          transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           will-change-transform
-          md:group-hover:-translate-y-[58%]
+          md:group-hover:-translate-y-[48%]
         "
       >
-        {/* Degradado superior */}
+        {/* Degradado superior — más alto y suave */}
         <div
           aria-hidden="true"
-          className="h-24 bg-gradient-to-t from-black via-black/85 to-transparent"
+          className="h-32 bg-gradient-to-t from-black/90 via-black/60 to-transparent"
         />
-        {/* Cuerpo difuminado (sin bloque sólido) */}
-        <div className="bg-gradient-to-b from-black/95 via-black/90 to-black/95 px-5 pb-6 pt-2 text-center backdrop-blur-[2px]">
+        {/* Cuerpo translúcido con difuminado fluido */}
+        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[6px]">
           <p
             className="
               font-inter text-[15px] text-[#c4c7c7] tracking-tight
-              transition-colors duration-500
+              transition-colors duration-700 ease-out
               md:group-hover:text-[#e8e2d8]
             "
           >
@@ -130,7 +130,7 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
             aria-hidden="true"
             className="
               block mx-auto mt-4 h-px w-8 bg-[rgba(142,145,146,0.3)]
-              transition-[width,background-color] duration-700 ease-out
+              transition-[width,background-color] duration-1000 ease-out
               md:group-hover:w-16 md:group-hover:bg-[#e9c176]/70
             "
           />
@@ -141,7 +141,7 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
               font-inter inline-block mt-4
               text-[10px] uppercase tracking-[0.28em]
               text-[#e9c176]
-              transition-[color,letter-spacing] duration-500 ease-out
+              transition-[color,letter-spacing] duration-700 ease-out
               md:group-hover:text-[#f0cf92]
               md:group-hover:tracking-[0.32em]
             "
@@ -149,10 +149,10 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
             Ver detalle
           </span>
         </div>
-        {/* Degradado inferior para fundir con el fondo negro de la sección */}
+        {/* Degradado inferior — funde con el fondo */}
         <div
           aria-hidden="true"
-          className="h-10 bg-gradient-to-b from-black/95 to-black"
+          className="h-16 bg-gradient-to-b from-black/70 via-black/85 to-black"
         />
       </div>
     </a>

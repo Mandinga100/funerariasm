@@ -188,8 +188,9 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   font-inter text-[15px] text-[#e8e2d8] tracking-tight
                   drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
                   transition-colors duration-500 ease-out
+                  motion-reduce:transition-none
                   md:group-hover:text-[#f4ead2]
-                  animate-fade-in
+                  animate-fade-in motion-reduce:animate-none
                 "
               >
                 {plan.price}
@@ -202,6 +203,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   block mx-auto mt-4 h-px w-16 bg-[rgba(232,226,216,0.35)]
                   origin-center scale-x-50
                   transition-[transform,background-color] duration-700 ease-out
+                  motion-reduce:transition-none motion-reduce:scale-x-100
                   md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/80
                 "
               />
@@ -214,8 +216,9 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   text-[#e9c176]
                   drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
                   transition-colors duration-500 ease-out
+                  motion-reduce:transition-none
                   md:group-hover:text-[#f0cf92]
-                  animate-fade-in
+                  animate-fade-in motion-reduce:animate-none
                 "
               >
                 Ver detalle

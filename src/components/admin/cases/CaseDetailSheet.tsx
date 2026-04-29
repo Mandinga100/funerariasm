@@ -54,6 +54,10 @@ const PAYMENT_STATUSES = [
 const fmt = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
 export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: CaseDetailSheetProps) {
+  // Caso "vivo": se refresca tras cualquier guardado y vía Realtime entre operadores.
+  const { record: liveCase, refresh } = useLiveRecord<any>("service_cases", serviceCase);
+  const current = liveCase ?? serviceCase;
+
   const [pipelineStage, setPipelineStage] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
@@ -65,24 +69,41 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("resumen");
   const [agendaOpen, setAgendaOpen] = useState(false);
+  const dirtyRef = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Hidratar inputs cuando cambia el caso o llegan datos frescos (Realtime / refresh).
+  // Solo sobrescribe el form local si el usuario NO tiene cambios sin guardar (dirtyRef = false).
   useEffect(() => {
-    if (!serviceCase) return;
-    setPipelineStage(serviceCase.pipeline_stage);
-    setPaymentStatus(serviceCase.payment_status);
-    setTotalAmount(serviceCase.total_amount?.toString() ?? "0");
-    setServiceType(serviceCase.service_type ?? "servicio_funerario");
-    setServiceOption(serviceCase.selected_plan ?? "");
-    setCeremonyLocation(serviceCase.ceremony_location ?? "");
-    setNotes(serviceCase.notes ?? "");
-    setInternalNotes(serviceCase.internal_notes ?? "");
+    if (!current) return;
+    if (dirtyRef.current) return;
+    setPipelineStage(current.pipeline_stage ?? "");
+    setPaymentStatus(current.payment_status ?? "");
+    setTotalAmount(current.total_amount?.toString() ?? "0");
+    setServiceType(current.service_type ?? "servicio_funerario");
+    setServiceOption(current.selected_plan ?? "");
+    setCeremonyLocation(current.ceremony_location ?? "");
+    setNotes(current.notes ?? "");
+    setInternalNotes(current.internal_notes ?? "");
+  }, [current?.id, current?.updated_at]);
+
+  // Reset al cambiar de caso
+  useEffect(() => {
+    dirtyRef.current = false;
     setTab("resumen");
   }, [serviceCase?.id]);
 
-  const save = async () => {
-    if (!serviceCase) return;
+  const markDirty = () => { dirtyRef.current = true; };
+
+  // Refresh + propagar al padre (lista) tras cualquier save de cualquier pestaña
+  const onTabSaved = useCallback(async () => {
+    await refresh();
+    onUpdate();
+  }, [refresh, onUpdate]);
+
+  const save = useCallback(async (silent = false) => {
+    if (!current) return;
     setSaving(true);
     const updates: any = {
       pipeline_stage: pipelineStage,
@@ -94,24 +115,35 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
       notes: notes || null,
       internal_notes: internalNotes || null,
     };
-    if (pipelineStage === "cerrado" && !serviceCase.closed_at) {
+    if (pipelineStage === "cerrado" && !current.closed_at) {
       updates.closed_at = new Date().toISOString();
     }
-    const { error } = await supabase.from("service_cases").update(updates).eq("id", serviceCase.id);
+    const { error } = await supabase.from("service_cases").update(updates).eq("id", current.id);
     if (error) {
-      toast({ title: "Error", description: "No se pudo guardar", variant: "destructive" });
+      if (!silent) toast({ title: "Error", description: "No se pudo guardar", variant: "destructive" });
     } else {
-      if (serviceCase.lead_id && pipelineStage !== serviceCase.pipeline_stage) {
-        await supabase.from("contact_leads").update({ pipeline_stage: pipelineStage } as any).eq("id", serviceCase.lead_id);
+      if (current.lead_id && pipelineStage !== current.pipeline_stage) {
+        await supabase.from("contact_leads").update({ pipeline_stage: pipelineStage } as any).eq("id", current.lead_id);
       }
-      toast({ title: "✅ Caso actualizado" });
+      dirtyRef.current = false;
+      if (!silent) toast({ title: "✅ Caso actualizado" });
+      await refresh();
       onUpdate();
     }
     setSaving(false);
-  };
+  }, [current, pipelineStage, paymentStatus, totalAmount, serviceType, serviceOption, ceremonyLocation, notes, internalNotes, refresh, onUpdate, toast]);
+
+  // Auto-save al cambiar de pestaña si hay cambios pendientes en Resumen
+  const handleTabChange = useCallback(async (next: string) => {
+    if (tab === "resumen" && dirtyRef.current && next !== "resumen") {
+      await save(true);
+      toast({ title: "💾 Cambios guardados", description: "Resumen sincronizado antes de cambiar de pestaña.", duration: 2000 });
+    }
+    setTab(next);
+  }, [tab, save, toast]);
 
   const openWhatsApp = () => {
-    const v = validateClPhone(serviceCase?.client_phone);
+    const v = validateClPhone(current?.client_phone);
     if (v.ok !== true) {
       toast({
         title: "No se puede abrir WhatsApp",
@@ -120,9 +152,9 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
       });
       return;
     }
-    const nombre = firstName(serviceCase?.client_name);
+    const nombre = firstName(current?.client_name);
     const saludo = nombre ? `Hola ${nombre}` : "Hola, buenos días";
-    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos en relación a su caso ${serviceCase.case_number}. Estamos a su disposición para acompañarle con respeto en este momento.\n\n¿En qué podemos ayudarle?`;
+    const mensaje = `${saludo}, le saluda Funeraria Santa Margarita 🙏.\n\nNos comunicamos en relación a su caso ${current.case_number}. Estamos a su disposición para acompañarle con respeto en este momento.\n\n¿En qué podemos ayudarle?`;
     const ok = openWhatsAppChat(v.number, mensaje);
     if (!ok) {
       navigator.clipboard.writeText(mensaje).catch(() => {});

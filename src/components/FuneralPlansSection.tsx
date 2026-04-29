@@ -96,9 +96,11 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         className={`
           absolute inset-0 h-full w-full object-cover
           transition-[opacity,filter] duration-700 ease-out
+          motion-reduce:transition-none
           ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
           md:group-hover:opacity-100
           md:group-hover:[filter:contrast(1.08)_saturate(1.12)_brightness(1.08)]
+          motion-reduce:md:group-hover:[filter:none]
         `}
       />
 

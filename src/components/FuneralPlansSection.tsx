@@ -43,6 +43,7 @@ interface FuneralPlanCardProps {
 
 const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
   const [loaded, setLoaded] = useState(false);
+  const [burstKey, setBurstKey] = useState(0);
   const hasBlur = Boolean(plan.blurDataURL);
 
   return (

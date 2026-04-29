@@ -148,10 +148,8 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             ].map((p, i) => (
               <span
                 key={i}
-                className="absolute rounded-full bg-[#f0cf92] animate-sparkle"
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f0cf92] animate-sparkle"
                 style={{
-                  top: p.top,
-                  left: p.left,
                   width: p.size,
                   height: p.size,
                   // @ts-expect-error CSS custom props

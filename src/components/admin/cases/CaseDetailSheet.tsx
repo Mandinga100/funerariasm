@@ -174,11 +174,11 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0 flex-1">
               <SheetTitle className="flex items-center gap-2">
-                <span className="font-mono text-sm text-muted-foreground">{serviceCase.case_number}</span>
+                <span className="font-mono text-sm text-muted-foreground">{current.case_number}</span>
               </SheetTitle>
-              <p className="text-lg font-semibold truncate">{serviceCase.client_name ?? "Sin nombre"}</p>
-              {serviceCase.deceased_name && (
-                <p className="text-xs text-muted-foreground">Fallecido/a: <span className="font-medium text-foreground">{serviceCase.deceased_name}</span></p>
+              <p className="text-lg font-semibold truncate">{current.client_name ?? "Sin nombre"}</p>
+              {current.deceased_name && (
+                <p className="text-xs text-muted-foreground">Fallecido/a: <span className="font-medium text-foreground">{current.deceased_name}</span></p>
               )}
             </div>
             <Button
@@ -194,7 +194,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           </div>
         </SheetHeader>
 
-        <Tabs value={tab} onValueChange={setTab} className="mt-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="mt-4">
           <TabsList className="w-full grid grid-cols-3 sm:grid-cols-9 h-auto gap-0.5">
             <TabsTrigger value="resumen" className="text-[11px] sm:text-xs px-1.5 py-1.5">Resumen</TabsTrigger>
             <TabsTrigger value="fallecido" className="text-[11px] sm:text-xs px-1.5 py-1.5">Fallecido</TabsTrigger>
@@ -211,21 +211,21 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
           <TabsContent value="resumen" className="space-y-5 mt-4">
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">Información del Cliente</label>
-              {serviceCase.client_phone && (
+              {current.client_phone && (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm"><Phone className="w-4 h-4 text-muted-foreground" />{serviceCase.client_phone}</div>
+                  <div className="flex items-center gap-2 text-sm"><Phone className="w-4 h-4 text-muted-foreground" />{current.client_phone}</div>
                   <Button size="sm" variant="outline" className="h-7 text-xs" onClick={openWhatsApp}>
                     <ExternalLink className="w-3 h-3 mr-1" />WhatsApp
                   </Button>
                 </div>
               )}
-              {serviceCase.client_email && (
-                <div className="flex items-center gap-2 text-sm"><Mail className="w-4 h-4 text-muted-foreground" />{serviceCase.client_email}</div>
+              {current.client_email && (
+                <div className="flex items-center gap-2 text-sm"><Mail className="w-4 h-4 text-muted-foreground" />{current.client_email}</div>
               )}
-              {serviceCase.comuna && (
-                <div className="flex items-center gap-2 text-sm"><MapPin className="w-4 h-4 text-muted-foreground" />{serviceCase.comuna}</div>
+              {current.comuna && (
+                <div className="flex items-center gap-2 text-sm"><MapPin className="w-4 h-4 text-muted-foreground" />{current.comuna}</div>
               )}
-              <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-muted-foreground" />{format(new Date(serviceCase.created_at), "dd MMM yyyy HH:mm", { locale: es })}</div>
+              <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-muted-foreground" />{format(new Date(current.created_at), "dd MMM yyyy HH:mm", { locale: es })}</div>
             </div>
 
             <Separator />
@@ -233,7 +233,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Etapa del Caso</label>
-                <Select value={pipelineStage} onValueChange={setPipelineStage}>
+                <Select value={pipelineStage} onValueChange={(v) => { markDirty(); setPipelineStage(v); }}>
                   <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PIPELINE_STAGES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
@@ -242,7 +242,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Estado de Pago</label>
-                <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                <Select value={paymentStatus} onValueChange={(v) => { markDirty(); setPaymentStatus(v); }}>
                   <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PAYMENT_STATUSES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
@@ -255,33 +255,33 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
               serviceType={serviceType}
               serviceOption={serviceOption}
               amount={totalAmount}
-              onServiceTypeChange={(v) => setServiceType(v)}
-              onServiceOptionChange={setServiceOption}
-              onAmountChange={setTotalAmount}
+              onServiceTypeChange={(v) => { markDirty(); setServiceType(v); }}
+              onServiceOptionChange={(v) => { markDirty(); setServiceOption(v); }}
+              onAmountChange={(v) => { markDirty(); setTotalAmount(v); }}
             />
 
             <Separator />
 
-            <CaseTrackingWidget caseId={serviceCase.id} />
+            <CaseTrackingWidget caseId={current.id} />
 
             <Separator />
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><User className="w-3 h-3" />Lugar de ceremonia</label>
-              <Input className="h-8 text-sm" placeholder="Lugar de ceremonia" value={ceremonyLocation} onChange={e => setCeremonyLocation(e.target.value)} />
+              <Input className="h-8 text-sm" placeholder="Lugar de ceremonia" value={ceremonyLocation} onChange={e => { markDirty(); setCeremonyLocation(e.target.value); }} />
             </div>
 
-            {serviceCase.original_message && (
+            {current.original_message && (
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Mensaje original del Lead</label>
-                <div className="mt-1 p-3 rounded-md bg-muted/50 text-sm">{serviceCase.original_message}</div>
+                <div className="mt-1 p-3 rounded-md bg-muted/50 text-sm">{current.original_message}</div>
               </div>
             )}
 
-            {serviceCase.ai_summary && (
+            {current.ai_summary && (
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Resumen IA</label>
-                <div className="mt-1 p-3 rounded-md bg-primary/5 text-sm">{serviceCase.ai_summary}</div>
+                <div className="mt-1 p-3 rounded-md bg-primary/5 text-sm">{current.ai_summary}</div>
               </div>
             )}
 
@@ -289,61 +289,61 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" />Notas del Caso</label>
-              <Textarea className="text-sm min-h-[60px]" placeholder="Notas visibles..." value={notes} onChange={e => setNotes(e.target.value)} />
+              <Textarea className="text-sm min-h-[60px]" placeholder="Notas visibles..." value={notes} onChange={e => { markDirty(); setNotes(e.target.value); }} />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">Notas Internas (privadas)</label>
-              <Textarea className="text-sm min-h-[60px]" placeholder="Notas internas del equipo..." value={internalNotes} onChange={e => setInternalNotes(e.target.value)} />
+              <Textarea className="text-sm min-h-[60px]" placeholder="Notas internas del equipo..." value={internalNotes} onChange={e => { markDirty(); setInternalNotes(e.target.value); }} />
             </div>
 
-            <Button className="w-full" onClick={save} disabled={saving}>
+            <Button className="w-full" onClick={() => save(false)} disabled={saving}>
               <Save className="w-4 h-4 mr-2" />{saving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </TabsContent>
 
           {/* ----- FALLECIDO ----- */}
           <TabsContent value="fallecido" className="mt-4">
-            <CaseDeceasedTab caseId={serviceCase.id} initial={serviceCase} onSaved={onUpdate} />
+            <CaseDeceasedTab caseId={current.id} initial={current} onSaved={onTabSaved} />
           </TabsContent>
 
           {/* ----- COTIZACIÓN ----- */}
           <TabsContent value="cotizacion" className="mt-4">
-            <CaseQuoteTab caseId={serviceCase.id} onSaved={onUpdate} />
+            <CaseQuoteTab caseId={current.id} onSaved={onTabSaved} />
           </TabsContent>
 
           {/* ----- PAGOS ----- */}
           <TabsContent value="pagos" className="mt-4">
             <CasePaymentsTab
-              caseId={serviceCase.id}
-              caseNumber={serviceCase.case_number}
-              totalAmount={serviceCase.total_amount ?? 0}
-              onSaved={onUpdate}
+              caseId={current.id}
+              caseNumber={current.case_number}
+              totalAmount={current.total_amount ?? 0}
+              onSaved={onTabSaved}
             />
           </TabsContent>
 
           {/* ----- ESTADOS MÚLTIPLES ----- */}
           <TabsContent value="estados" className="mt-4">
-            <CaseStatusTab caseId={serviceCase.id} initial={serviceCase} onSaved={onUpdate} />
+            <CaseStatusTab caseId={current.id} initial={current} onSaved={onTabSaved} />
           </TabsContent>
 
           {/* ----- CHECKLIST OPERATIVO ----- */}
           <TabsContent value="checklist" className="mt-4">
-            <CaseChecklistTab caseId={serviceCase.id} onChanged={onUpdate} />
+            <CaseChecklistTab caseId={current.id} onChanged={onTabSaved} />
           </TabsContent>
 
           {/* ----- EXPEDIENTE DOCUMENTAL ----- */}
           <TabsContent value="docs" className="mt-4">
-            <CaseDocumentsTab caseId={serviceCase.id} />
+            <CaseDocumentsTab caseId={current.id} />
           </TabsContent>
 
           {/* ----- CHAT VINCULADO ----- */}
           <TabsContent value="chat" className="mt-4">
-            <LinkedChatPanel serviceCaseId={serviceCase.id} compact />
+            <LinkedChatPanel serviceCaseId={current.id} compact />
           </TabsContent>
 
           {/* ----- BITÁCORA ----- */}
           <TabsContent value="historial" className="mt-4">
-            <CaseHistoryTab caseId={serviceCase.id} />
+            <CaseHistoryTab caseId={current.id} />
           </TabsContent>
         </Tabs>
       </SheetContent>
@@ -353,16 +353,16 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
         onOpenChange={setAgendaOpen}
         event={null}
         prefill={{
-          title: `Caso ${serviceCase.case_number}${serviceCase.deceased_name ? ` — ${serviceCase.deceased_name}` : ""}`,
-          description: serviceCase.service_description ?? serviceCase.notes ?? undefined,
+          title: `Caso ${current.case_number}${current.deceased_name ? ` — ${current.deceased_name}` : ""}`,
+          description: current.service_description ?? current.notes ?? undefined,
           eventType: "reunion",
-          priority: serviceCase.urgency === "inmediata" || serviceCase.urgency === "urgente" ? "alta" : "normal",
-          serviceCaseId: serviceCase.id,
-          leadId: serviceCase.lead_id ?? undefined,
-          contactName: serviceCase.client_name ?? undefined,
-          contactPhone: serviceCase.client_phone ?? undefined,
-          contactEmail: serviceCase.client_email ?? undefined,
-          comuna: serviceCase.comuna ?? undefined,
+          priority: current.urgency === "inmediata" || current.urgency === "urgente" ? "alta" : "normal",
+          serviceCaseId: current.id,
+          leadId: current.lead_id ?? undefined,
+          contactName: current.client_name ?? undefined,
+          contactPhone: current.client_phone ?? undefined,
+          contactEmail: current.client_email ?? undefined,
+          comuna: current.comuna ?? undefined,
         } satisfies AgendaPrefill}
         onSaved={(createdEventId) => {
           setAgendaOpen(false);
@@ -370,7 +370,7 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
             title: "📅 Evento agendado",
             description: "El evento quedó vinculado a este caso.",
           });
-          onUpdate();
+          onTabSaved();
           if (createdEventId) {
             navigate(`/admin/agenda?event=${createdEventId}`);
           }
@@ -378,4 +378,5 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
       />
     </Sheet>
   );
+}
 }

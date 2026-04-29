@@ -34,17 +34,17 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
       aria-label={`Ver detalle del Plan ${plan.name}`}
       className="
         group relative block overflow-hidden rounded-sm isolate
-        bg-[#1e1b16] border border-[rgba(142,145,146,0.18)]
+        bg-black border border-[rgba(142,145,146,0.18)]
         h-[460px] sm:h-[520px] md:h-[640px] lg:h-[680px] xl:h-[720px]
         transition-[border-color,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
         focus:outline-none focus-visible:ring-1 focus-visible:ring-[#e9c176]
-        focus-visible:ring-offset-2 focus-visible:ring-offset-[#15130e]
+        focus-visible:ring-offset-2 focus-visible:ring-offset-black
         md:hover:border-[#e9c176]/50
         md:hover:-translate-y-1
         md:hover:shadow-[0_30px_60px_-30px_rgba(233,193,118,0.35)]
       "
     >
-      {/* Imagen — se ilumina y hace zoom sutil al hover */}
+      {/* Imagen — solo se ilumina sutilmente al hover (sin zoom) */}
       <img
         src={plan.image}
         alt={`Imagen del Plan ${plan.name}`}
@@ -53,10 +53,8 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         className="
           absolute inset-0 h-full w-full object-cover
           opacity-80 saturate-[0.85] brightness-90
-          transition-[transform,filter,opacity] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
-          will-change-transform
+          transition-[filter,opacity] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           md:group-hover:opacity-100 md:group-hover:saturate-100 md:group-hover:brightness-110
-          md:group-hover:scale-[1.06]
         "
       />
 
@@ -65,24 +63,13 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         aria-hidden="true"
         className="
           absolute inset-0
-          bg-gradient-to-b from-[#15130e]/60 via-[#15130e]/20 to-[#15130e]/85
+          bg-gradient-to-b from-black/60 via-black/20 to-black/85
           transition-opacity duration-700 ease-out
           md:group-hover:opacity-70
         "
       />
 
-      {/* Sweep dorado de abajo hacia arriba (revela en hover) */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute inset-x-0 bottom-0 h-0
-          bg-gradient-to-t from-[#e9c176]/22 via-[#e9c176]/8 to-transparent
-          transition-[height] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]
-          md:group-hover:h-full
-        "
-      />
-
-      {/* Línea dorada que sube por el borde inferior */}
+      {/* Línea dorada inferior que se revela al hover */}
       <span
         aria-hidden="true"
         className="
@@ -94,65 +81,78 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         "
       />
 
-      {/* Bloque inferior sólido para asentar precio + CTA */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-[#1e1b16] via-[#1e1b16]/95 to-transparent"
-      />
-
       {/* Nombre del plan — centrado verticalmente */}
-      <div className="absolute inset-0 flex items-center justify-center px-4">
+      <div className="absolute inset-0 flex items-center justify-center px-4 pointer-events-none">
         <h3
           className="
             font-playfair text-[#e8e2d8] text-center
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
-            drop-shadow-[0_2px_18px_rgba(0,0,0,0.55)]
-            transition-[transform,color,letter-spacing] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+            drop-shadow-[0_2px_18px_rgba(0,0,0,0.65)]
+            transition-[color,letter-spacing] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
             md:group-hover:text-[#f4ead2]
             md:group-hover:tracking-[0.02em]
-            md:group-hover:-translate-y-1
           "
         >
           {plan.name}
         </h3>
       </div>
 
-      {/* Precio + CTA al pie */}
-      <div className="absolute inset-x-0 bottom-0 px-5 pb-7 pt-6 text-center">
-        <p
-          className="
-            font-inter text-[15px] text-[#c4c7c7] tracking-tight
-            transition-colors duration-500
-            md:group-hover:text-[#e8e2d8]
-          "
-        >
-          {plan.price}
-        </p>
-
-        {/* Divisor que se expande al hover */}
-        <span
+      {/*
+        CORTINA — Precio + CTA
+        En reposo: anclada al fondo (translate-y-0).
+        En hover: sube hasta justo debajo del nombre del plan, sin tapar imagen ni título.
+        Tope superior con degradado negro→transparente para fundirse de forma elegante.
+      */}
+      <div
+        className="
+          absolute inset-x-0 bottom-0
+          translate-y-0
+          transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          will-change-transform
+          md:group-hover:-translate-y-[42%]
+        "
+      >
+        {/* Degradado superior de la cortina */}
+        <div
           aria-hidden="true"
-          className="
-            block mx-auto mt-4 h-px w-8 bg-[rgba(142,145,146,0.3)]
-            transition-[width,background-color] duration-700 ease-out
-            md:group-hover:w-16 md:group-hover:bg-[#e9c176]/70
-          "
+          className="h-20 bg-gradient-to-t from-black via-black/80 to-transparent"
         />
+        {/* Cuerpo sólido negro */}
+        <div className="bg-black px-5 pb-7 pt-2 text-center">
+          <p
+            className="
+              font-inter text-[15px] text-[#c4c7c7] tracking-tight
+              transition-colors duration-500
+              md:group-hover:text-[#e8e2d8]
+            "
+          >
+            {plan.price}
+          </p>
 
-        {/* CTA — sube ligeramente y dora al hover */}
-        <span
-          className="
-            font-inter inline-block mt-4
-            text-[10px] uppercase tracking-[0.28em]
-            text-[#e9c176]
-            transition-[color,transform,letter-spacing] duration-500 ease-out
-            md:group-hover:text-[#f0cf92]
-            md:group-hover:tracking-[0.32em]
-            md:group-hover:-translate-y-0.5
-          "
-        >
-          Ver detalle
-        </span>
+          {/* Divisor que se expande al hover */}
+          <span
+            aria-hidden="true"
+            className="
+              block mx-auto mt-4 h-px w-8 bg-[rgba(142,145,146,0.3)]
+              transition-[width,background-color] duration-700 ease-out
+              md:group-hover:w-16 md:group-hover:bg-[#e9c176]/70
+            "
+          />
+
+          {/* CTA */}
+          <span
+            className="
+              font-inter inline-block mt-4
+              text-[10px] uppercase tracking-[0.28em]
+              text-[#e9c176]
+              transition-[color,letter-spacing] duration-500 ease-out
+              md:group-hover:text-[#f0cf92]
+              md:group-hover:tracking-[0.32em]
+            "
+          >
+            Ver detalle
+          </span>
+        </div>
       </div>
     </a>
   );
@@ -163,7 +163,7 @@ const FuneralPlansSection = () => {
     <section
       id="planes-funerarios"
       aria-labelledby="planes-funerarios-title"
-      className="bg-[#15130e] pt-28 pb-20 md:pt-36 md:pb-28"
+      className="bg-black pt-28 pb-20 md:pt-36 md:pb-28"
     >
       <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10 xl:px-14">
         {/* Header editorial */}

@@ -119,15 +119,16 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         "
       />
 
-      {/* Nombre del plan */}
+      {/* Nombre del plan — con aura dorada al hover */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <h3
           className="
             font-playfair text-[#e8e2d8] text-center
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
-            drop-shadow-[0_2px_18px_rgba(0,0,0,0.65)]
-            transition-colors duration-500 ease-out
-            md:group-hover:text-[#f4ead2]
+            [text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
+            transition-[color,text-shadow] duration-700 ease-out
+            md:group-hover:text-[#f6ecd0]
+            md:group-hover:[text-shadow:0_0_22px_rgba(233,193,118,0.55),0_0_44px_rgba(233,193,118,0.25),0_2px_18px_rgba(0,0,0,0.65)]
           "
         >
           {plan.name}
@@ -136,7 +137,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
 
       {/*
         CORTINA — Precio + CTA
-        Sube hasta justo bajo el nombre del plan, con difuminado superior e inferior.
+        Sube de forma controlada para no llegar al título del plan.
       */}
       <div
         className="
@@ -144,7 +145,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           translate-y-0
           transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           will-change-transform
-          md:group-hover:-translate-y-[48%]
+          md:group-hover:-translate-y-[32%]
         "
       >
         {/* Degradado superior — alto y suave */}

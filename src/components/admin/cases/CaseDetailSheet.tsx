@@ -379,4 +379,3 @@ export default function CaseDetailSheet({ serviceCase, onClose, onUpdate }: Case
     </Sheet>
   );
 }
-}

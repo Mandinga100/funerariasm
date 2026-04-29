@@ -141,7 +141,7 @@ export default {
         "crown-halo": "crown-halo 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "candle-light": "candle-light 0.8s cubic-bezier(0.22, 1, 0.36, 1) both",
         "flower-bloom": "flower-bloom 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "sparkle": "sparkle 2.2s ease-out infinite",
+        "sparkle": "sparkle 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite",
       },
     },
   },

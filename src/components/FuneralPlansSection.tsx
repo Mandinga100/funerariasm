@@ -109,37 +109,37 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
           aria-hidden="true"
           className="h-32 bg-gradient-to-t from-black/90 via-black/60 to-transparent"
         />
-        {/* Cuerpo translúcido con difuminado fluido */}
-        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[6px]">
+        {/* Cuerpo translúcido — blur ligero para mejor rendimiento */}
+        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[3px]">
           <p
             className="
               font-inter text-[15px] text-[#c4c7c7] tracking-tight
-              transition-colors duration-700 ease-out
+              transition-colors duration-500 ease-out
               md:group-hover:text-[#e8e2d8]
             "
           >
             {plan.price}
           </p>
 
-          {/* Divisor que se expande al hover */}
+          {/* Divisor — animado por transform (GPU) en lugar de width */}
           <span
             aria-hidden="true"
             className="
-              block mx-auto mt-4 h-px w-8 bg-[rgba(142,145,146,0.3)]
-              transition-[width,background-color] duration-1000 ease-out
-              md:group-hover:w-16 md:group-hover:bg-[#e9c176]/70
+              block mx-auto mt-4 h-px w-16 bg-[rgba(142,145,146,0.3)]
+              origin-center scale-x-50
+              transition-[transform,background-color] duration-700 ease-out
+              md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/70
             "
           />
 
-          {/* CTA */}
+          {/* CTA — solo color (evita reflow por letter-spacing) */}
           <span
             className="
               font-inter inline-block mt-4
-              text-[10px] uppercase tracking-[0.28em]
+              text-[10px] uppercase tracking-[0.3em]
               text-[#e9c176]
-              transition-[color,letter-spacing] duration-700 ease-out
+              transition-colors duration-500 ease-out
               md:group-hover:text-[#f0cf92]
-              md:group-hover:tracking-[0.32em]
             "
           >
             Ver detalle

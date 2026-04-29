@@ -42,53 +42,49 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         md:hover:border-[#e9c176]/50
       "
     >
-      {/* Imagen — solo se ilumina sutilmente al hover (sin zoom) */}
+      {/* Imagen — sutil iluminación al hover (solo opacity, sin filter) */}
       <img
         src={plan.image}
         alt={`Imagen del Plan ${plan.name}`}
         loading="lazy"
         decoding="async"
+        width={480}
+        height={720}
         className="
           absolute inset-0 h-full w-full object-cover
-          opacity-80 saturate-[0.85] brightness-90
-          transition-[filter,opacity] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
-          md:group-hover:opacity-100 md:group-hover:saturate-100 md:group-hover:brightness-110
+          opacity-80
+          transition-opacity duration-700 ease-out
+          md:group-hover:opacity-100
         "
       />
 
-      {/* Velo base oscuro para profundidad */}
+      {/* Velo base oscuro para profundidad (sin transición costosa) */}
       <div
         aria-hidden="true"
-        className="
-          absolute inset-0
-          bg-gradient-to-b from-black/60 via-black/20 to-black/85
-          transition-opacity duration-700 ease-out
-          md:group-hover:opacity-70
-        "
+        className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/85"
       />
 
-      {/* Línea dorada inferior que se revela al hover */}
+      {/* Línea dorada inferior — solo opacity (compositada por GPU) */}
       <span
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-x-6 bottom-0 h-px
           bg-gradient-to-r from-transparent via-[#e9c176] to-transparent
-          origin-center scale-x-0 opacity-0
-          transition-[transform,opacity] duration-700 ease-out
-          md:group-hover:scale-x-100 md:group-hover:opacity-90
+          opacity-0
+          transition-opacity duration-500 ease-out
+          md:group-hover:opacity-90
         "
       />
 
-      {/* Nombre del plan — centrado verticalmente */}
+      {/* Nombre del plan */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <h3
           className="
             font-playfair text-[#e8e2d8] text-center
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
             drop-shadow-[0_2px_18px_rgba(0,0,0,0.65)]
-            transition-[color,letter-spacing] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+            transition-colors duration-500 ease-out
             md:group-hover:text-[#f4ead2]
-            md:group-hover:tracking-[0.02em]
           "
         >
           {plan.name}
@@ -113,37 +109,37 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
           aria-hidden="true"
           className="h-32 bg-gradient-to-t from-black/90 via-black/60 to-transparent"
         />
-        {/* Cuerpo translúcido con difuminado fluido */}
-        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[6px]">
+        {/* Cuerpo translúcido — blur ligero para mejor rendimiento */}
+        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[3px]">
           <p
             className="
               font-inter text-[15px] text-[#c4c7c7] tracking-tight
-              transition-colors duration-700 ease-out
+              transition-colors duration-500 ease-out
               md:group-hover:text-[#e8e2d8]
             "
           >
             {plan.price}
           </p>
 
-          {/* Divisor que se expande al hover */}
+          {/* Divisor — animado por transform (GPU) en lugar de width */}
           <span
             aria-hidden="true"
             className="
-              block mx-auto mt-4 h-px w-8 bg-[rgba(142,145,146,0.3)]
-              transition-[width,background-color] duration-1000 ease-out
-              md:group-hover:w-16 md:group-hover:bg-[#e9c176]/70
+              block mx-auto mt-4 h-px w-16 bg-[rgba(142,145,146,0.3)]
+              origin-center scale-x-50
+              transition-[transform,background-color] duration-700 ease-out
+              md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/70
             "
           />
 
-          {/* CTA */}
+          {/* CTA — solo color (evita reflow por letter-spacing) */}
           <span
             className="
               font-inter inline-block mt-4
-              text-[10px] uppercase tracking-[0.28em]
+              text-[10px] uppercase tracking-[0.3em]
               text-[#e9c176]
-              transition-[color,letter-spacing] duration-700 ease-out
+              transition-colors duration-500 ease-out
               md:group-hover:text-[#f0cf92]
-              md:group-hover:tracking-[0.32em]
             "
           >
             Ver detalle

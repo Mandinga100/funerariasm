@@ -163,7 +163,7 @@ const FuneralPlansSection = () => {
     <section
       id="planes-funerarios"
       aria-labelledby="planes-funerarios-title"
-      className="bg-[#15130e] pt-28 pb-20 md:pt-36 md:pb-28"
+      className="bg-black pt-28 pb-20 md:pt-36 md:pb-28"
     >
       <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10 xl:px-14">
         {/* Header editorial */}

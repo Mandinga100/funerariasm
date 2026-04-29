@@ -31,8 +31,8 @@ export function useLiveRecord<T extends { id: string }>(
       .eq("id", id)
       .maybeSingle();
     if (!error && data) {
-      setRecord(data as T);
-      return data as T;
+      setRecord(data as unknown as T);
+      return data as unknown as T;
     }
     return null;
   }, [table]);

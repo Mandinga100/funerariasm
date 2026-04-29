@@ -125,10 +125,10 @@ export default {
           "100%": { opacity: "0",    transform: "translate(-50%, -50%) scale(1.35)" },
         },
         "sparkle": {
-          "0%":   { opacity: "0", transform: "translate(0,0) scale(0.4)" },
-          "30%":  { opacity: "1", transform: "translate(var(--sx,0), calc(var(--sy,0) * 0.4)) scale(1)" },
-          "70%":  { opacity: "0.85", transform: "translate(calc(var(--sx,0) * 1.4), calc(var(--sy,0) * 0.9)) scale(0.85)" },
-          "100%": { opacity: "0", transform: "translate(calc(var(--sx,0) * 1.8), var(--sy,0)) scale(0.3)" },
+          "0%":   { opacity: "0", transform: "translate(0, -28px) scale(0.3)" },
+          "25%":  { opacity: "1", transform: "translate(calc(var(--sx,0) * 0.5), calc(var(--sy,0) * 0.4 - 14px)) scale(1)" },
+          "65%":  { opacity: "0.9", transform: "translate(var(--sx,0), var(--sy,0)) scale(0.9)" },
+          "100%": { opacity: "0", transform: "translate(calc(var(--sx,0) * 1.4), calc(var(--sy,0) + 6px)) scale(0.35)" },
         },
       },
       animation: {
@@ -141,7 +141,7 @@ export default {
         "crown-halo": "crown-halo 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "candle-light": "candle-light 0.8s cubic-bezier(0.22, 1, 0.36, 1) both",
         "flower-bloom": "flower-bloom 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "sparkle": "sparkle 2.2s ease-out infinite",
+        "sparkle": "sparkle 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite",
       },
     },
   },

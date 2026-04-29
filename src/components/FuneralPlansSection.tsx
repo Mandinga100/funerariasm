@@ -95,10 +95,11 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         onError={() => setLoaded(true)}
         className={`
           absolute inset-0 h-full w-full object-cover
-          transition-[opacity,filter,transform] duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          transition-[opacity,filter] duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          transition-transform duration-[6000ms] ease-[cubic-bezier(0.16,0.84,0.3,1)]
           motion-reduce:transition-none
           ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
-          md:group-hover:opacity-100 md:group-hover:scale-[1.03]
+          md:group-hover:opacity-100 md:group-hover:scale-[1.025]
           md:group-hover:[filter:contrast(1.08)_saturate(1.12)_brightness(1.08)]
           motion-reduce:md:group-hover:[filter:none] motion-reduce:md:group-hover:scale-100
         `}
@@ -137,12 +138,13 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             "
           >
             {[
-              { top: "10%",  left: "8%",   sx: "-14px", sy: "-10px", delay: "0ms",   size: "5px" },
-              { top: "20%",  left: "92%",  sx: "16px",  sy: "-8px",  delay: "300ms", size: "4px" },
-              { top: "55%",  left: "0%",   sx: "-18px", sy: "6px",   delay: "600ms", size: "3px" },
-              { top: "70%",  left: "96%",  sx: "14px",  sy: "10px",  delay: "150ms", size: "4px" },
-              { top: "85%",  left: "30%",  sx: "-6px",  sy: "14px",  delay: "900ms", size: "3px" },
-              { top: "90%",  left: "70%",  sx: "8px",   sy: "16px",  delay: "450ms", size: "5px" },
+              { top: "-20%", left: "12%",  sx: "-18px", sy: "-22px", delay: "0ms",    size: "5px" },
+              { top: "-32%", left: "48%",  sx: "-4px",  sy: "-30px", delay: "350ms",  size: "4px" },
+              { top: "-22%", left: "84%",  sx: "20px",  sy: "-24px", delay: "700ms",  size: "5px" },
+              { top: "10%",  left: "-6%",  sx: "-26px", sy: "-6px",  delay: "1050ms", size: "3px" },
+              { top: "12%",  left: "104%", sx: "26px",  sy: "-4px",  delay: "200ms",  size: "4px" },
+              { top: "40%",  left: "-2%",  sx: "-22px", sy: "8px",   delay: "1400ms", size: "3px" },
+              { top: "42%",  left: "100%", sx: "22px",  sy: "10px",  delay: "550ms",  size: "3px" },
             ].map((p, i) => (
               <span
                 key={i}
@@ -194,10 +196,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           motion-reduce:md:group-hover:translate-y-0
         "
       >
-        {/* Degradado superior — alto y suave */}
+        {/* Línea divisoria superior — corte limpio sin blur por encima del precio */}
         <div
           aria-hidden="true"
-          className="h-32 bg-gradient-to-t from-black/70 via-black/40 to-transparent backdrop-blur-[2px]"
+          className="h-px w-full bg-gradient-to-r from-transparent via-[#e9c176]/40 to-transparent"
         />
         {/* Cuerpo translúcido — blur para fundirse en imágenes claras u oscuras */}
         <div className="bg-gradient-to-b from-black/55 via-black/65 to-black/55 px-5 pb-6 pt-3 text-center backdrop-blur-[8px]">

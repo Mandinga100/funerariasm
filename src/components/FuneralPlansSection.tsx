@@ -92,6 +92,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         width={480}
         height={720}
         onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
         className={`
           absolute inset-0 h-full w-full object-cover
           transition-[opacity,filter] duration-700 ease-out

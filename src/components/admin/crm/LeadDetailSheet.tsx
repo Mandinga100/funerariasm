@@ -223,9 +223,7 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
           ? "IA no disponible — usamos clasificación inteligente basada en reglas y datos históricos."
           : undefined,
       });
-      onUpdate();
-      loadActivities();
-      loadClassificationHistory();
+      await syncLead();
     } catch {
       toast({ title: "Error", description: "No se pudo clasificar el lead", variant: "destructive" });
     }
@@ -316,7 +314,7 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
       performed_by: user.id,
     });
     toast({ title: "📅 Reunión marcada para programar", description: "Lead movido a 'Contactado' y nota creada." });
-    onUpdate();
+    await syncLead();
     loadNotes();
     loadActivities();
   };

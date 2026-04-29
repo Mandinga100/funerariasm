@@ -196,7 +196,7 @@ const FuneralPlansSection = () => {
             xl:grid-cols-7 xl:gap-2
           "
         >
-          {PLANS.map((plan) => (
+          {PLANS.map((plan, index) => (
             <li
               key={plan.id}
               className="
@@ -204,7 +204,7 @@ const FuneralPlansSection = () => {
                 md:basis-auto md:shrink md:snap-align-none
               "
             >
-              <FuneralPlanCard plan={plan} />
+              <FuneralPlanCard plan={plan} priority={index === 0} />
             </li>
           ))}
         </ul>

@@ -145,6 +145,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               overflow-hidden
               motion-reduce:hidden
             "
+            style={{ contain: "layout paint size", transform: "translate(-50%, -50%) translateZ(0)" }}
           >
             {burstKey > 0 && (
               <div

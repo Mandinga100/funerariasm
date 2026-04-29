@@ -42,53 +42,49 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         md:hover:border-[#e9c176]/50
       "
     >
-      {/* Imagen — solo se ilumina sutilmente al hover (sin zoom) */}
+      {/* Imagen — sutil iluminación al hover (solo opacity, sin filter) */}
       <img
         src={plan.image}
         alt={`Imagen del Plan ${plan.name}`}
         loading="lazy"
         decoding="async"
+        width={480}
+        height={720}
         className="
           absolute inset-0 h-full w-full object-cover
-          opacity-80 saturate-[0.85] brightness-90
-          transition-[filter,opacity] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]
-          md:group-hover:opacity-100 md:group-hover:saturate-100 md:group-hover:brightness-110
+          opacity-80
+          transition-opacity duration-700 ease-out
+          md:group-hover:opacity-100
         "
       />
 
-      {/* Velo base oscuro para profundidad */}
+      {/* Velo base oscuro para profundidad (sin transición costosa) */}
       <div
         aria-hidden="true"
-        className="
-          absolute inset-0
-          bg-gradient-to-b from-black/60 via-black/20 to-black/85
-          transition-opacity duration-700 ease-out
-          md:group-hover:opacity-70
-        "
+        className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/85"
       />
 
-      {/* Línea dorada inferior que se revela al hover */}
+      {/* Línea dorada inferior — solo opacity (compositada por GPU) */}
       <span
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-x-6 bottom-0 h-px
           bg-gradient-to-r from-transparent via-[#e9c176] to-transparent
-          origin-center scale-x-0 opacity-0
-          transition-[transform,opacity] duration-700 ease-out
-          md:group-hover:scale-x-100 md:group-hover:opacity-90
+          opacity-0
+          transition-opacity duration-500 ease-out
+          md:group-hover:opacity-90
         "
       />
 
-      {/* Nombre del plan — centrado verticalmente */}
+      {/* Nombre del plan */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <h3
           className="
             font-playfair text-[#e8e2d8] text-center
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
             drop-shadow-[0_2px_18px_rgba(0,0,0,0.65)]
-            transition-[color,letter-spacing] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+            transition-colors duration-500 ease-out
             md:group-hover:text-[#f4ead2]
-            md:group-hover:tracking-[0.02em]
           "
         >
           {plan.name}

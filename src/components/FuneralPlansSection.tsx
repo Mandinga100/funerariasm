@@ -36,12 +36,10 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         group relative block overflow-hidden rounded-sm isolate
         bg-black border border-[rgba(142,145,146,0.18)]
         h-[460px] sm:h-[520px] md:h-[640px] lg:h-[680px] xl:h-[720px]
-        transition-[border-color,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+        transition-[border-color,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
         focus:outline-none focus-visible:ring-1 focus-visible:ring-[#e9c176]
         focus-visible:ring-offset-2 focus-visible:ring-offset-black
         md:hover:border-[#e9c176]/50
-        md:hover:-translate-y-1
-        md:hover:shadow-[0_30px_60px_-30px_rgba(233,193,118,0.35)]
       "
     >
       {/* Imagen — solo se ilumina sutilmente al hover (sin zoom) */}
@@ -99,9 +97,7 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
 
       {/*
         CORTINA — Precio + CTA
-        En reposo: anclada al fondo (translate-y-0).
-        En hover: sube hasta justo debajo del nombre del plan, sin tapar imagen ni título.
-        Tope superior con degradado negro→transparente para fundirse de forma elegante.
+        Sube hasta justo bajo el nombre del plan, con difuminado superior e inferior.
       */}
       <div
         className="
@@ -109,16 +105,16 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
           translate-y-0
           transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]
           will-change-transform
-          md:group-hover:-translate-y-[42%]
+          md:group-hover:-translate-y-[58%]
         "
       >
-        {/* Degradado superior de la cortina */}
+        {/* Degradado superior */}
         <div
           aria-hidden="true"
-          className="h-20 bg-gradient-to-t from-black via-black/80 to-transparent"
+          className="h-24 bg-gradient-to-t from-black via-black/85 to-transparent"
         />
-        {/* Cuerpo sólido negro */}
-        <div className="bg-black px-5 pb-7 pt-2 text-center">
+        {/* Cuerpo difuminado (sin bloque sólido) */}
+        <div className="bg-gradient-to-b from-black/95 via-black/90 to-black/95 px-5 pb-6 pt-2 text-center backdrop-blur-[2px]">
           <p
             className="
               font-inter text-[15px] text-[#c4c7c7] tracking-tight
@@ -153,6 +149,11 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
             Ver detalle
           </span>
         </div>
+        {/* Degradado inferior para fundir con el fondo negro de la sección */}
+        <div
+          aria-hidden="true"
+          className="h-10 bg-gradient-to-b from-black/95 to-black"
+        />
       </div>
     </a>
   );
@@ -163,11 +164,11 @@ const FuneralPlansSection = () => {
     <section
       id="planes-funerarios"
       aria-labelledby="planes-funerarios-title"
-      className="bg-black pt-28 pb-20 md:pt-36 md:pb-28"
+      className="bg-black pt-12 pb-20 md:pt-16 md:pb-24"
     >
       <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10 xl:px-14">
         {/* Header editorial */}
-        <header className="text-center mb-14 md:mb-20">
+        <header className="text-center mb-8 md:mb-12">
           <h2
             id="planes-funerarios-title"
             className="font-playfair text-[#e8e2d8] text-3xl md:text-4xl lg:text-[2.6rem] font-normal tracking-tight"
@@ -176,8 +177,11 @@ const FuneralPlansSection = () => {
           </h2>
           <span
             aria-hidden="true"
-            className="mt-6 inline-block h-px w-12 bg-[#e9c176]/70"
+            className="mt-5 inline-block h-px w-12 bg-[#e9c176]/70"
           />
+          <p className="mx-auto mt-6 max-w-2xl font-inter text-[15px] md:text-[15.5px] leading-relaxed text-[#c4c7c7]">
+            Acompañamos a cada familia con dignidad, cercanía y respeto. Conozca nuestras alternativas de servicio funerario, diseñadas para entregar tranquilidad y un cuidado humano en cada detalle.
+          </p>
         </header>
 
         {/* Lista — mobile: scroll snap | md+: grid 7 columnas */}

@@ -16,6 +16,7 @@ type FuneralPlan = {
   price: string;
   image: string;
   href: string;
+  blurDataURL?: string;
 };
 
 const PLANS: readonly FuneralPlan[] = [

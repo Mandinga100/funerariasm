@@ -4,7 +4,7 @@
  * Cards verticales editoriales con nombre del plan centrado verticalmente,
  * precio + CTA al pie y animaciones premium al hover.
  */
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** LQIPs base64 (24x36, ~700B c/u) — suavizan la carga de cada imagen sin afectar LCP/CLS */
 const BLUR = {

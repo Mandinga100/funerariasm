@@ -6,9 +6,16 @@
  */
 import { useState } from "react";
 
-/** LQIP base64 (24x36 ~700B) del primer plan — evita salto visual durante el LCP */
-const MARGARITA_BLUR =
-  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACIQAAICAgEDBQAAAAAAAAAAAAECAxEABDESIYEFE1Fxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIDERMxUf/aAAwDAQACEQMRAD8Ay8VEsWPbn8yxoumurGF2WWq6i1Dvk3WkSSVvlr4Fdqx8rq66t7tySGiVVaA85mslg6WLRvq009NlYyM85BKkm/vDIkm3asvQqrwFA4884YY1tdlOVeH/2Q==";
+/** LQIPs base64 (24x36, ~700B c/u) — suavizan la carga de cada imagen sin afectar LCP/CLS */
+const BLUR = {
+  margarita: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACIQAAICAgEDBQAAAAAAAAAAAAECAxEABDESIYEFE1Fxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIDERMxUf/aAAwDAQACEQMRAD8Ay8VEsWPbn8yxoumurGF2WWq6i1Dvk3WkSSVvlr4Fdqx8rq66t7tySGiVVaA85mslg6WLRvq009NlYyM85BKkm/vDIkm3asvQqrwFA4884YY1tdlOVeH/2Q==",
+  azucena:   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFAv/EACQQAAICAQMEAgMAAAAAAAAAAAECAxEABDESIVFhMSMyUdHw/8QAFwEAAwEAAAAAAAAAAAAAAAAAAAECA//EABoRAAICAwAAAAAAAAAAAAAAAAABAhESIUH/2gAMAwEAAhEDEQA/AI2lmkimj6HkV4wACD6P6yxu8k2qljLdRZUX4z9Sauxz+Mi6XcZtPIZI5irVRIRTx/DGDur6i3mXuOvPUTV5mrctlOktCkmjfyemXxMnK1xeGbm3XUyLXcpQrIBQ4U+xhjjl0Hjw/9k=",
+  acacia:    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAQBAgb/xAAjEAABBAIBAwUAAAAAAAAAAAABAAIDEQQhEhMxUQUyQWFi/8QAFgEBAQEAAAAAAAAAAAAAAAAABAID/8QAGhEAAwADAQAAAAAAAAAAAAAAAAECAxETQf/aAAwDAQACEQMRAD8AiOVs1hzpBf57K0+I7fRc559zq1x+6WWblTN7SOTEfquWzYlJNVsXpCeCk9pje0tDMscpld1nB4O+fkeUJAZuQ26kIs/CFspsjpHp/9k=",
+  orquidea:  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUBAwQG/8QAJxAAAgEDAQcFAQAAAAAAAAAAAQIDAAQREhMUITFRYXEFFSJBobH/xAAWAQEBAQAAAAAAAAAAAAAAAAACAwT/xAAZEQACAwEAAAAAAAAAAAAAAAAAAQISIRH/2gAMAwEAAhEDEQA/AMe8JPbGOJVVw4ClnJYDseXmmsVhbRnZyu8mzAZGzjnnOOtcrEW16BwbOcD+0z9waOA2wQfFdOT+1mrFMdnzSPVrRbNg0ZZ45DqVSeXXJ+6KouLvfLeOPDCUHJIPBu/miqYDT//Z",
+  jazmin:    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEBf/EACUQAAIBAgQGAwAAAAAAAAAAAAECAwAEERIhUQUTIjFBcRShsf/EABYBAQEBAAAAAAAAAAAAAAAAAAABA//EABcRAQEBAQAAAAAAAAAAAAAAAAABEhH/2gAMAwEAAhEDEQA/AJ+GwQrDnvER8xxVT2A0/adfQ20ZjuWjDYELlRek7aeqwpLtuyFgMQQCcfunzXY+NJBnYuxBO3qs6Re9+2PIWJY4gTmHgbHTsaKyYLggctmKq56iB42opldcf//Z",
+  castano:   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAMFAgT/xAAjEAACAQQBAwUAAAAAAAAAAAABAgMABBEhEgUTMRRhgZHw/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwT/xAAbEQACAQUAAAAAAAAAAAAAAAAAARECEiHR8P/aAAwDAQACEQMRAD8An95mjKle8cclkXAZKVHOrFwx7ILBj7Efs1lEuFiIeFNeMkH7pMq+onVooRHrD4Omqe6SmIKFvatIXZlHMnIUbdfjwKK67bqN/AFAhTgDpRjAooXX2NiJM//Z",
+  rauli:     "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAPABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAIBAwb/xAAjEAABAwQCAQUAAAAAAAAAAAABAAIRAxITMSEiMkFRYXGR/8QAFgEBAQEAAAAAAAAAAAAAAAAAAwEC/8QAFxEBAQEBAAAAAAAAAAAAAAAAAQARIf/aAAwDAQACEQMRAD8AzTBdTt2PYbHyowiMl/X65SisyAMQJHrJVwpOLL4FseM8/qLpKYyOFrLR1G4O3ISGsyCMUEiJkoWgaKX/2Q==",
+} as const;
 
 type FuneralPlan = {
   id: string;
@@ -20,13 +27,13 @@ type FuneralPlan = {
 };
 
 const PLANS: readonly FuneralPlan[] = [
-  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita", blurDataURL: MARGARITA_BLUR },
-  { id: "azucena",   name: "Azucena",   price: "$1.390.000", image: "/assets/images/planes/plan-azucena.jpg",   href: "/planes#azucena" },
-  { id: "acacia",    name: "Acacia",    price: "$1.990.000", image: "/assets/images/planes/plan-acacia.jpg",    href: "/planes#acacia" },
-  { id: "orquidea",  name: "Orquídea",  price: "$1.990.000", image: "/assets/images/planes/plan-orquidea.jpg",  href: "/planes#orquidea" },
-  { id: "jazmin",    name: "Jazmín",    price: "$2.790.000", image: "/assets/images/planes/plan-jazmin.jpg",    href: "/planes#jazmin" },
-  { id: "castano",   name: "Castaño",   price: "$3.990.000", image: "/assets/images/planes/plan-castano.jpg",   href: "/planes#castano" },
-  { id: "rauli",     name: "Raulí",     price: "$3.990.000", image: "/assets/images/planes/plan-rauli.jpg",     href: "/planes#rauli" },
+  { id: "margarita", name: "Margarita", price: "$1.290.000", image: "/assets/images/planes/plan-margarita.jpg", href: "/planes#margarita", blurDataURL: BLUR.margarita },
+  { id: "azucena",   name: "Azucena",   price: "$1.390.000", image: "/assets/images/planes/plan-azucena.jpg",   href: "/planes#azucena",   blurDataURL: BLUR.azucena   },
+  { id: "acacia",    name: "Acacia",    price: "$1.990.000", image: "/assets/images/planes/plan-acacia.jpg",    href: "/planes#acacia",    blurDataURL: BLUR.acacia    },
+  { id: "orquidea",  name: "Orquídea",  price: "$1.990.000", image: "/assets/images/planes/plan-orquidea.jpg",  href: "/planes#orquidea",  blurDataURL: BLUR.orquidea  },
+  { id: "jazmin",    name: "Jazmín",    price: "$2.790.000", image: "/assets/images/planes/plan-jazmin.jpg",    href: "/planes#jazmin",    blurDataURL: BLUR.jazmin    },
+  { id: "castano",   name: "Castaño",   price: "$3.990.000", image: "/assets/images/planes/plan-castano.jpg",   href: "/planes#castano",   blurDataURL: BLUR.castano   },
+  { id: "rauli",     name: "Raulí",     price: "$3.990.000", image: "/assets/images/planes/plan-rauli.jpg",     href: "/planes#rauli",     blurDataURL: BLUR.rauli     },
 ] as const;
 
 interface FuneralPlanCardProps {
@@ -139,18 +146,19 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           md:group-hover:-translate-y-[48%]
         "
       >
-        {/* Degradado superior — más alto y suave */}
+        {/* Degradado superior — alto y suave */}
         <div
           aria-hidden="true"
-          className="h-32 bg-gradient-to-t from-black/90 via-black/60 to-transparent"
+          className="h-32 bg-gradient-to-t from-black/70 via-black/40 to-transparent backdrop-blur-[2px]"
         />
-        {/* Cuerpo translúcido — blur ligero para mejor rendimiento */}
-        <div className="bg-gradient-to-b from-black/70 via-black/80 to-black/70 px-5 pb-6 pt-3 text-center backdrop-blur-[3px]">
+        {/* Cuerpo translúcido — blur para fundirse en imágenes claras u oscuras */}
+        <div className="bg-gradient-to-b from-black/55 via-black/65 to-black/55 px-5 pb-6 pt-3 text-center backdrop-blur-[8px]">
           <p
             className="
-              font-inter text-[15px] text-[#c4c7c7] tracking-tight
+              font-inter text-[15px] text-[#e8e2d8] tracking-tight
+              drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
               transition-colors duration-500 ease-out
-              md:group-hover:text-[#e8e2d8]
+              md:group-hover:text-[#f4ead2]
             "
           >
             {plan.price}
@@ -160,10 +168,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           <span
             aria-hidden="true"
             className="
-              block mx-auto mt-4 h-px w-16 bg-[rgba(142,145,146,0.3)]
+              block mx-auto mt-4 h-px w-16 bg-[rgba(232,226,216,0.35)]
               origin-center scale-x-50
               transition-[transform,background-color] duration-700 ease-out
-              md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/70
+              md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/80
             "
           />
 
@@ -173,6 +181,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               font-inter inline-block mt-4
               text-[10px] uppercase tracking-[0.3em]
               text-[#e9c176]
+              drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
               transition-colors duration-500 ease-out
               md:group-hover:text-[#f0cf92]
             "
@@ -180,10 +189,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             Ver detalle
           </span>
         </div>
-        {/* Degradado inferior — funde con el fondo */}
+        {/* Degradado inferior translúcido — funde sin tapar imágenes claras */}
         <div
           aria-hidden="true"
-          className="h-16 bg-gradient-to-b from-black/70 via-black/85 to-black"
+          className="h-20 bg-gradient-to-b from-black/55 via-black/30 to-transparent backdrop-blur-[3px]"
         />
       </div>
     </a>

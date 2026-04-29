@@ -80,7 +80,7 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
       />
 
       {/* Nombre del plan — centrado verticalmente */}
-      <div className="absolute inset-0 flex items-center justify-center px-4 pointer-events-none">
+      <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <h3
           className="
             font-playfair text-[#e8e2d8] text-center

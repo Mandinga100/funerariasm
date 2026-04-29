@@ -141,18 +141,23 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               "
             >
               {[
-                { sx: "-38px", sy: "-26px", delay: "0ms",   size: "3px" },
-                { sx: "-6px",  sy: "-34px", delay: "90ms",  size: "2.5px" },
-                { sx: "32px",  sy: "-28px", delay: "180ms", size: "3px" },
-                { sx: "-46px", sy: "-4px",  delay: "140ms", size: "2px" },
-                { sx: "44px",  sy: "-2px",  delay: "230ms", size: "2.5px" },
-                { sx: "-30px", sy: "20px",  delay: "280ms", size: "2px" },
-                { sx: "30px",  sy: "22px",  delay: "330ms", size: "2px" },
-                { sx: "0px",   sy: "26px",  delay: "380ms", size: "2.5px" },
+                { sx: "-72px",  sy: "-58px", delay: "0ms",   size: "4px" },
+                { sx: "-30px",  sy: "-78px", delay: "120ms", size: "3.5px" },
+                { sx: "10px",   sy: "-86px", delay: "60ms",  size: "4px" },
+                { sx: "48px",   sy: "-72px", delay: "200ms", size: "3.5px" },
+                { sx: "82px",   sy: "-46px", delay: "150ms", size: "4px" },
+                { sx: "-96px",  sy: "-18px", delay: "260ms", size: "3px" },
+                { sx: "100px",  sy: "-12px", delay: "320ms", size: "3.5px" },
+                { sx: "-88px",  sy: "26px",  delay: "380ms", size: "3px" },
+                { sx: "92px",   sy: "30px",  delay: "440ms", size: "3.5px" },
+                { sx: "-50px",  sy: "60px",  delay: "500ms", size: "3px" },
+                { sx: "-14px",  sy: "78px",  delay: "560ms", size: "3.5px" },
+                { sx: "26px",   sy: "82px",  delay: "620ms", size: "3px" },
+                { sx: "62px",   sy: "64px",  delay: "680ms", size: "4px" },
               ].map((p, i) => (
                 <span
                   key={i}
-                  className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#f3dca8] animate-sparkle-burst opacity-0"
+                  className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#fcecc4] animate-sparkle-burst opacity-0"
                   style={{
                     width: p.size,
                     height: p.size,
@@ -160,7 +165,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                     "--sx": p.sx,
                     "--sy": p.sy,
                     animationDelay: p.delay,
-                    boxShadow: "0 0 6px 0.5px rgba(243,220,168,0.45), 0 0 12px 1px rgba(233,193,118,0.18)",
+                    boxShadow: "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
                   }}
                 />
               ))}

@@ -150,8 +150,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           absolute inset-x-0 bottom-0
           translate-y-0
           transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          motion-reduce:transition-none
           will-change-transform
           md:group-hover:-translate-y-[32%]
+          motion-reduce:md:group-hover:translate-y-0
         "
       >
         {/* Degradado superior — alto y suave */}

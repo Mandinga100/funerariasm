@@ -343,7 +343,7 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
   };
 
   return (
-    <Sheet open={!!lead} onOpenChange={() => onClose()}>
+    <Sheet open={!!lead} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <SheetContent className="w-full sm:w-[480px] sm:max-w-[480px] overflow-y-auto p-4 sm:p-6">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
@@ -470,6 +470,7 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
               persistService(serviceType, v);
             }}
             onAmountChange={(v) => {
+              valueDirtyRef.current = true;
               setEstimatedValue(v);
             }}
             amountLabel="Valor Estimado (CLP)"

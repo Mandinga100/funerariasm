@@ -347,27 +347,20 @@ const FuneralPlansSection = () => {
           </p>
         </header>
 
-        {/* Lista — mobile: scroll snap | md+: grid 7 columnas */}
+        {/* Mobile: carrusel de un plan a la vez (Margarita por defecto) */}
+        <MobilePlansCarousel />
+
+        {/* Desktop / tablet: grid editorial */}
         <ul
           className="
-            flex gap-3 overflow-x-auto snap-x snap-mandatory
-            -mx-6 px-6 pb-2
-            [scrollbar-width:none] [-ms-overflow-style:none]
-            [&::-webkit-scrollbar]:hidden
-            md:mx-0 md:px-0 md:pb-0 md:overflow-visible md:snap-none
+            hidden
             md:grid md:grid-cols-3 md:gap-3
             lg:grid-cols-4
             xl:grid-cols-7 xl:gap-2
           "
         >
           {PLANS.map((plan, index) => (
-            <li
-              key={plan.id}
-              className="
-                shrink-0 snap-start basis-[78vw] sm:basis-[55vw]
-                md:basis-auto md:shrink md:snap-align-none
-              "
-            >
+            <li key={plan.id}>
               <FuneralPlanCard plan={plan} priority={index === 0} />
             </li>
           ))}

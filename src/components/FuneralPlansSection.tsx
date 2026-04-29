@@ -168,7 +168,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               {/* Skeleton precio */}
               <span
                 aria-hidden="true"
-                className="block mx-auto h-[15px] w-24 rounded-sm bg-[rgba(232,226,216,0.12)] animate-pulse"
+                className="block mx-auto h-[15px] w-24 rounded-sm bg-[rgba(232,226,216,0.12)] animate-pulse motion-reduce:animate-none"
               />
               {/* Skeleton divisor */}
               <span
@@ -178,7 +178,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               {/* Skeleton CTA */}
               <span
                 aria-hidden="true"
-                className="block mx-auto mt-4 h-[10px] w-20 rounded-sm bg-[rgba(233,193,118,0.18)] animate-pulse"
+                className="block mx-auto mt-4 h-[10px] w-20 rounded-sm bg-[rgba(233,193,118,0.18)] animate-pulse motion-reduce:animate-none"
               />
             </>
           ) : (

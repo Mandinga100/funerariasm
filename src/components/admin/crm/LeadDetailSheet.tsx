@@ -176,7 +176,8 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
     if (!lead) return;
     const { error } = await supabase.from("contact_leads").update({ [field]: value } as any).eq("id", lead.id);
     if (!error) {
-      onUpdate();
+      if (field === "estimated_value") valueDirtyRef.current = false;
+      await syncLead();
       toast({ title: "Actualizado" });
     }
   };
@@ -188,8 +189,7 @@ export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: L
     if (sOption) updates.selected_plan = sOption;
     const { error } = await supabase.from("contact_leads").update(updates).eq("id", lead.id);
     if (!error) {
-      // refrescar lead en el padre para mantener consistencia
-      onUpdate();
+      await syncLead();
     }
   };
 

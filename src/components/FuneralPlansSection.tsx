@@ -96,9 +96,11 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         className={`
           absolute inset-0 h-full w-full object-cover
           transition-[opacity,filter] duration-700 ease-out
+          motion-reduce:transition-none
           ${hasBlur && !loaded ? "opacity-0" : "opacity-80"}
           md:group-hover:opacity-100
           md:group-hover:[filter:contrast(1.08)_saturate(1.12)_brightness(1.08)]
+          motion-reduce:md:group-hover:[filter:none]
         `}
       />
 
@@ -116,6 +118,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           bg-gradient-to-r from-transparent via-[#e9c176] to-transparent
           opacity-0
           transition-opacity duration-500 ease-out
+          motion-reduce:transition-none
           md:group-hover:opacity-90
         "
       />
@@ -128,8 +131,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
             text-[1.7rem] md:text-[2rem] lg:text-[2.15rem] leading-tight
             [text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
             transition-[color,text-shadow] duration-700 ease-out
+            motion-reduce:transition-none
             md:group-hover:text-[#f6ecd0]
             md:group-hover:[text-shadow:0_0_22px_rgba(233,193,118,0.55),0_0_44px_rgba(233,193,118,0.25),0_2px_18px_rgba(0,0,0,0.65)]
+            motion-reduce:md:group-hover:[text-shadow:0_2px_18px_rgba(0,0,0,0.65)]
           "
         >
           {plan.name}
@@ -145,8 +150,10 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           absolute inset-x-0 bottom-0
           translate-y-0
           transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+          motion-reduce:transition-none
           will-change-transform
           md:group-hover:-translate-y-[32%]
+          motion-reduce:md:group-hover:translate-y-0
         "
       >
         {/* Degradado superior — alto y suave */}
@@ -161,7 +168,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               {/* Skeleton precio */}
               <span
                 aria-hidden="true"
-                className="block mx-auto h-[15px] w-24 rounded-sm bg-[rgba(232,226,216,0.12)] animate-pulse"
+                className="block mx-auto h-[15px] w-24 rounded-sm bg-[rgba(232,226,216,0.12)] animate-pulse motion-reduce:animate-none"
               />
               {/* Skeleton divisor */}
               <span
@@ -171,7 +178,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
               {/* Skeleton CTA */}
               <span
                 aria-hidden="true"
-                className="block mx-auto mt-4 h-[10px] w-20 rounded-sm bg-[rgba(233,193,118,0.18)] animate-pulse"
+                className="block mx-auto mt-4 h-[10px] w-20 rounded-sm bg-[rgba(233,193,118,0.18)] animate-pulse motion-reduce:animate-none"
               />
             </>
           ) : (
@@ -181,8 +188,9 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   font-inter text-[15px] text-[#e8e2d8] tracking-tight
                   drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
                   transition-colors duration-500 ease-out
+                  motion-reduce:transition-none
                   md:group-hover:text-[#f4ead2]
-                  animate-fade-in
+                  animate-fade-in motion-reduce:animate-none
                 "
               >
                 {plan.price}
@@ -195,6 +203,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   block mx-auto mt-4 h-px w-16 bg-[rgba(232,226,216,0.35)]
                   origin-center scale-x-50
                   transition-[transform,background-color] duration-700 ease-out
+                  motion-reduce:transition-none motion-reduce:scale-x-100
                   md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/80
                 "
               />
@@ -207,8 +216,9 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
                   text-[#e9c176]
                   drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
                   transition-colors duration-500 ease-out
+                  motion-reduce:transition-none
                   md:group-hover:text-[#f0cf92]
-                  animate-fade-in
+                  animate-fade-in motion-reduce:animate-none
                 "
               >
                 Ver detalle

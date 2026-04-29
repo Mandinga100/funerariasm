@@ -155,41 +155,65 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
         />
         {/* Cuerpo translúcido — blur para fundirse en imágenes claras u oscuras */}
         <div className="bg-gradient-to-b from-black/55 via-black/65 to-black/55 px-5 pb-6 pt-3 text-center backdrop-blur-[8px]">
-          <p
-            className="
-              font-inter text-[15px] text-[#e8e2d8] tracking-tight
-              drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
-              transition-colors duration-500 ease-out
-              md:group-hover:text-[#f4ead2]
-            "
-          >
-            {plan.price}
-          </p>
+          {!loaded ? (
+            <>
+              {/* Skeleton precio */}
+              <span
+                aria-hidden="true"
+                className="block mx-auto h-[15px] w-24 rounded-sm bg-[rgba(232,226,216,0.12)] animate-pulse"
+              />
+              {/* Skeleton divisor */}
+              <span
+                aria-hidden="true"
+                className="block mx-auto mt-4 h-px w-10 bg-[rgba(232,226,216,0.18)]"
+              />
+              {/* Skeleton CTA */}
+              <span
+                aria-hidden="true"
+                className="block mx-auto mt-4 h-[10px] w-20 rounded-sm bg-[rgba(233,193,118,0.18)] animate-pulse"
+              />
+            </>
+          ) : (
+            <>
+              <p
+                className="
+                  font-inter text-[15px] text-[#e8e2d8] tracking-tight
+                  drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
+                  transition-colors duration-500 ease-out
+                  md:group-hover:text-[#f4ead2]
+                  animate-fade-in
+                "
+              >
+                {plan.price}
+              </p>
 
-          {/* Divisor — animado por transform (GPU) en lugar de width */}
-          <span
-            aria-hidden="true"
-            className="
-              block mx-auto mt-4 h-px w-16 bg-[rgba(232,226,216,0.35)]
-              origin-center scale-x-50
-              transition-[transform,background-color] duration-700 ease-out
-              md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/80
-            "
-          />
+              {/* Divisor — animado por transform (GPU) en lugar de width */}
+              <span
+                aria-hidden="true"
+                className="
+                  block mx-auto mt-4 h-px w-16 bg-[rgba(232,226,216,0.35)]
+                  origin-center scale-x-50
+                  transition-[transform,background-color] duration-700 ease-out
+                  md:group-hover:scale-x-100 md:group-hover:bg-[#e9c176]/80
+                "
+              />
 
-          {/* CTA — solo color (evita reflow por letter-spacing) */}
-          <span
-            className="
-              font-inter inline-block mt-4
-              text-[10px] uppercase tracking-[0.3em]
-              text-[#e9c176]
-              drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
-              transition-colors duration-500 ease-out
-              md:group-hover:text-[#f0cf92]
-            "
-          >
-            Ver detalle
-          </span>
+              {/* CTA — solo color (evita reflow por letter-spacing) */}
+              <span
+                className="
+                  font-inter inline-block mt-4
+                  text-[10px] uppercase tracking-[0.3em]
+                  text-[#e9c176]
+                  drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
+                  transition-colors duration-500 ease-out
+                  md:group-hover:text-[#f0cf92]
+                  animate-fade-in
+                "
+              >
+                Ver detalle
+              </span>
+            </>
+          )}
         </div>
         {/* Degradado inferior translúcido — funde sin tapar imágenes claras */}
         <div

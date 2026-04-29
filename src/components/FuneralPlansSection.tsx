@@ -36,12 +36,10 @@ const FuneralPlanCard = ({ plan }: FuneralPlanCardProps) => {
         group relative block overflow-hidden rounded-sm isolate
         bg-black border border-[rgba(142,145,146,0.18)]
         h-[460px] sm:h-[520px] md:h-[640px] lg:h-[680px] xl:h-[720px]
-        transition-[border-color,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+        transition-[border-color,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
         focus:outline-none focus-visible:ring-1 focus-visible:ring-[#e9c176]
         focus-visible:ring-offset-2 focus-visible:ring-offset-black
         md:hover:border-[#e9c176]/50
-        md:hover:-translate-y-1
-        md:hover:shadow-[0_30px_60px_-30px_rgba(233,193,118,0.35)]
       "
     >
       {/* Imagen — solo se ilumina sutilmente al hover (sin zoom) */}

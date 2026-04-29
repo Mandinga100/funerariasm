@@ -164,11 +164,11 @@ const FuneralPlansSection = () => {
     <section
       id="planes-funerarios"
       aria-labelledby="planes-funerarios-title"
-      className="bg-black pt-28 pb-20 md:pt-36 md:pb-28"
+      className="bg-black pt-12 pb-20 md:pt-16 md:pb-24"
     >
       <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10 xl:px-14">
         {/* Header editorial */}
-        <header className="text-center mb-14 md:mb-20">
+        <header className="text-center mb-8 md:mb-12">
           <h2
             id="planes-funerarios-title"
             className="font-playfair text-[#e8e2d8] text-3xl md:text-4xl lg:text-[2.6rem] font-normal tracking-tight"
@@ -177,8 +177,11 @@ const FuneralPlansSection = () => {
           </h2>
           <span
             aria-hidden="true"
-            className="mt-6 inline-block h-px w-12 bg-[#e9c176]/70"
+            className="mt-5 inline-block h-px w-12 bg-[#e9c176]/70"
           />
+          <p className="mx-auto mt-6 max-w-2xl font-inter text-[15px] md:text-[15.5px] leading-relaxed text-[#c4c7c7]">
+            Acompañamos a cada familia con dignidad, cercanía y respeto. Conozca nuestras alternativas de servicio funerario, diseñadas para entregar tranquilidad y un cuidado humano en cada detalle.
+          </p>
         </header>
 
         {/* Lista — mobile: scroll snap | md+: grid 7 columnas */}

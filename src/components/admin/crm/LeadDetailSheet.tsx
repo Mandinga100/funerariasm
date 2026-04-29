@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useLiveRecord } from "@/hooks/use-live-record";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,11 @@ const PIPELINE_STAGES = [
   { id: "cerrado", label: "Cerrado" },
 ];
 
-export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailSheetProps) {
+export default function LeadDetailSheet({ lead: leadProp, onClose, onUpdate }: LeadDetailSheetProps) {
+  // Lead "vivo": refresh local tras save + Realtime entre operadores
+  const { record: liveLead, refresh } = useLiveRecord<any>("contact_leads", leadProp);
+  const lead = liveLead ?? leadProp;
+
   const [notes, setNotes] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [newNote, setNewNote] = useState("");
@@ -50,12 +55,21 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
   const [localSummary, setLocalSummary] = useState<string | null>(null);
   const [classificationHistory, setClassificationHistory] = useState<any[]>([]);
   const [personInfo, setPersonInfo] = useState<any>(null);
+  const valueDirtyRef = useRef(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Refresh + propagar al padre tras cualquier mutación local del lead
+  const syncLead = useCallback(async () => {
+    await refresh();
+    onUpdate();
+  }, [refresh, onUpdate]);
+
   useEffect(() => {
     if (!lead) return;
-    setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    if (!valueDirtyRef.current) {
+      setEstimatedValue(lead.estimated_value?.toString() ?? "");
+    }
     // Mapear intent del lead → tipo de servicio
     const intentMap: Record<string, ServiceTypeId> = {
       servicio_funerario_urgente: "servicio_funerario",
@@ -70,11 +84,29 @@ export default function LeadDetailSheet({ lead, onClose, onUpdate }: LeadDetailS
     setServiceOption(meta.service_option ?? lead.selected_plan ?? "");
     setLocalClassification(lead.ai_classification && Object.keys(lead.ai_classification).length > 0 ? lead.ai_classification : null);
     setLocalSummary(lead.ai_summary ?? null);
+  }, [lead?.id, lead?.updated_at, lead?.estimated_value, lead?.metadata, lead?.selected_plan, lead?.ai_classification, lead?.ai_summary, lead?.intent]);
+
+  // Reset dirty + cargar collections cuando cambia el lead seleccionado
+  useEffect(() => {
+    if (!leadProp?.id) return;
+    valueDirtyRef.current = false;
     loadNotes();
     loadActivities();
     loadClassificationHistory();
     loadPersonInfo();
-  }, [lead?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadProp?.id]);
+
+  // Auto-guardar valor estimado pendiente al cerrar el sheet
+  const handleClose = useCallback(async () => {
+    if (valueDirtyRef.current && lead) {
+      const v = parseInt(estimatedValue) || 0;
+      await supabase.from("contact_leads").update({ estimated_value: v } as any).eq("id", lead.id);
+      valueDirtyRef.current = false;
+      onUpdate();
+    }
+    onClose();
+  }, [estimatedValue, lead, onClose, onUpdate]);
 
   const loadPersonInfo = async () => {
     if (!lead?.person_id) { setPersonInfo(null); return; }

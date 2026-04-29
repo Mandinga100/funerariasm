@@ -130,47 +130,56 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
       {/* Nombre del plan — con aura dorada y destellos al hover */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <div className="relative">
-          {/* Destellos dorados — explosión one-shot al hacer hover sobre la tarjeta */}
-          {burstKey > 0 && (
-            <div
-              key={burstKey}
-              aria-hidden="true"
-              className="
-                pointer-events-none absolute inset-0
-                motion-reduce:hidden
-              "
-            >
-              {[
-                { sx: "-72px",  sy: "-58px", delay: "0ms",   size: "4px" },
-                { sx: "-30px",  sy: "-78px", delay: "120ms", size: "3.5px" },
-                { sx: "10px",   sy: "-86px", delay: "60ms",  size: "4px" },
-                { sx: "48px",   sy: "-72px", delay: "200ms", size: "3.5px" },
-                { sx: "82px",   sy: "-46px", delay: "150ms", size: "4px" },
-                { sx: "-96px",  sy: "-18px", delay: "260ms", size: "3px" },
-                { sx: "100px",  sy: "-12px", delay: "320ms", size: "3.5px" },
-                { sx: "-88px",  sy: "26px",  delay: "380ms", size: "3px" },
-                { sx: "92px",   sy: "30px",  delay: "440ms", size: "3.5px" },
-                { sx: "-50px",  sy: "60px",  delay: "500ms", size: "3px" },
-                { sx: "-14px",  sy: "78px",  delay: "560ms", size: "3.5px" },
-                { sx: "26px",   sy: "82px",  delay: "620ms", size: "3px" },
-                { sx: "62px",   sy: "64px",  delay: "680ms", size: "4px" },
-              ].map((p, i) => (
-                <span
-                  key={i}
-                  className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#fcecc4] animate-sparkle-burst opacity-0"
-                  style={{
-                    width: p.size,
-                    height: p.size,
-                    // @ts-expect-error CSS custom props
-                    "--sx": p.sx,
-                    "--sy": p.sy,
-                    animationDelay: p.delay,
-                    boxShadow: "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
-                  }}
-                />
-              ))}
-            </div>
-          )}
+          {/*
+            Área calibrada para destellos — overflow oculto y dimensiones fijas
+            garantizan que las partículas nunca invadan el divisor superior del
+            precio ni otros elementos del layout. Centrada sobre el título.
+            Tamaño uniforme en todas las tarjetas → explosión idéntica.
+          */}
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none absolute left-1/2 top-1/2
+              -translate-x-1/2 -translate-y-1/2
+              w-[240px] h-[200px]
+              overflow-hidden
+              motion-reduce:hidden
+            "
+          >
+            {burstKey > 0 && (
+              <div key={burstKey} className="absolute inset-0">
+                {[
+                  { sx: "-72px",  sy: "-58px", delay: "0ms",   size: "4px" },
+                  { sx: "-30px",  sy: "-78px", delay: "120ms", size: "3.5px" },
+                  { sx: "10px",   sy: "-86px", delay: "60ms",  size: "4px" },
+                  { sx: "48px",   sy: "-72px", delay: "200ms", size: "3.5px" },
+                  { sx: "82px",   sy: "-46px", delay: "150ms", size: "4px" },
+                  { sx: "-96px",  sy: "-18px", delay: "260ms", size: "3px" },
+                  { sx: "100px",  sy: "-12px", delay: "320ms", size: "3.5px" },
+                  { sx: "-88px",  sy: "26px",  delay: "380ms", size: "3px" },
+                  { sx: "92px",   sy: "30px",  delay: "440ms", size: "3.5px" },
+                  { sx: "-50px",  sy: "60px",  delay: "500ms", size: "3px" },
+                  { sx: "-14px",  sy: "78px",  delay: "560ms", size: "3.5px" },
+                  { sx: "26px",   sy: "82px",  delay: "620ms", size: "3px" },
+                  { sx: "62px",   sy: "64px",  delay: "680ms", size: "4px" },
+                ].map((p, i) => (
+                  <span
+                    key={i}
+                    className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#fcecc4] animate-sparkle-burst opacity-0"
+                    style={{
+                      width: p.size,
+                      height: p.size,
+                      // @ts-expect-error CSS custom props
+                      "--sx": p.sx,
+                      "--sy": p.sy,
+                      animationDelay: p.delay,
+                      boxShadow: "0 0 4px 0.5px rgba(252,236,196,0.95), 0 0 10px 1.5px rgba(243,220,168,0.6), 0 0 20px 2px rgba(233,193,118,0.35)",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <h3
             className="

@@ -118,6 +118,7 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
           bg-gradient-to-r from-transparent via-[#e9c176] to-transparent
           opacity-0
           transition-opacity duration-500 ease-out
+          motion-reduce:transition-none
           md:group-hover:opacity-90
         "
       />

@@ -50,8 +50,8 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
     <a
       href={plan.href}
       aria-label={`Ver detalle del Plan ${plan.name}`}
-      onMouseEnter={() => setBurstKey((k) => k + 1)}
-      onFocus={() => setBurstKey((k) => k + 1)}
+      onMouseEnter={() => setBurstKey((k) => (k % 1024) + 1)}
+      onFocus={() => setBurstKey((k) => (k % 1024) + 1)}
       style={
         hasBlur
           ? {

@@ -43,12 +43,15 @@ interface FuneralPlanCardProps {
 
 const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
   const [loaded, setLoaded] = useState(false);
+  const [burstKey, setBurstKey] = useState(0);
   const hasBlur = Boolean(plan.blurDataURL);
 
   return (
     <a
       href={plan.href}
       aria-label={`Ver detalle del Plan ${plan.name}`}
+      onMouseEnter={() => setBurstKey((k) => k + 1)}
+      onFocus={() => setBurstKey((k) => k + 1)}
       style={
         hasBlur
           ? {
@@ -127,40 +130,42 @@ const FuneralPlanCard = ({ plan, priority = false }: FuneralPlanCardProps) => {
       {/* Nombre del plan — con aura dorada y destellos al hover */}
       <div className="absolute inset-x-0 top-[34%] flex items-center justify-center px-4 pointer-events-none md:top-[30%]">
         <div className="relative">
-          {/* Destellos dorados — visibles solo en hover, ocultos para reduce-motion */}
-          <div
-            aria-hidden="true"
-            className="
-              pointer-events-none absolute inset-0 -m-10
-              opacity-0 transition-opacity duration-700 ease-out
-              md:group-hover:opacity-100
-              motion-reduce:hidden
-            "
-          >
-            {[
-              { sx: "-46px", sy: "-38px", delay: "0ms",    size: "5px" },
-              { sx: "0px",   sy: "-52px", delay: "260ms",  size: "4px" },
-              { sx: "48px",  sy: "-36px", delay: "520ms",  size: "5px" },
-              { sx: "-58px", sy: "-6px",  delay: "780ms",  size: "3px" },
-              { sx: "60px",  sy: "-4px",  delay: "1040ms", size: "4px" },
-              { sx: "-40px", sy: "22px",  delay: "1300ms", size: "3px" },
-              { sx: "42px",  sy: "24px",  delay: "1560ms", size: "3px" },
-            ].map((p, i) => (
-              <span
-                key={i}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f0cf92] animate-sparkle"
-                style={{
-                  width: p.size,
-                  height: p.size,
-                  // @ts-expect-error CSS custom props
-                  "--sx": p.sx,
-                  "--sy": p.sy,
-                  animationDelay: p.delay,
-                  boxShadow: "0 0 8px 1px rgba(240,207,146,0.85), 0 0 16px 2px rgba(233,193,118,0.45)",
-                }}
-              />
-            ))}
-          </div>
+          {/* Destellos dorados — explosión one-shot al hacer hover sobre la tarjeta */}
+          {burstKey > 0 && (
+            <div
+              key={burstKey}
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute inset-0
+                motion-reduce:hidden
+              "
+            >
+              {[
+                { sx: "-38px", sy: "-26px", delay: "0ms",   size: "5px" },
+                { sx: "-6px",  sy: "-34px", delay: "40ms",  size: "4px" },
+                { sx: "32px",  sy: "-28px", delay: "80ms",  size: "5px" },
+                { sx: "-46px", sy: "-4px",  delay: "60ms",  size: "3px" },
+                { sx: "44px",  sy: "-2px",  delay: "100ms", size: "4px" },
+                { sx: "-30px", sy: "20px",  delay: "120ms", size: "3px" },
+                { sx: "30px",  sy: "22px",  delay: "140ms", size: "3px" },
+                { sx: "0px",   sy: "26px",  delay: "160ms", size: "4px" },
+              ].map((p, i) => (
+                <span
+                  key={i}
+                  className="absolute left-1/2 top-1/2 -ml-px -mt-px rounded-full bg-[#f0cf92] animate-sparkle-burst opacity-0"
+                  style={{
+                    width: p.size,
+                    height: p.size,
+                    // @ts-expect-error CSS custom props
+                    "--sx": p.sx,
+                    "--sy": p.sy,
+                    animationDelay: p.delay,
+                    boxShadow: "0 0 8px 1px rgba(240,207,146,0.85), 0 0 16px 2px rgba(233,193,118,0.45)",
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           <h3
             className="
